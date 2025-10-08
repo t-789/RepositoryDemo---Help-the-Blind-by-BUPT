@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>管理员界面</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .section h2 {
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .button-group button {
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+<h1>管理员管理界面</h1>
+
+<div style="text-align: right; padding: 10px;">
+    <a href="/logout">Logout</a>
+</div>
+
+<!-- 用户列表 -->
+<div class="section">
+    <h2>用户信息</h2>
+    <table border="1">
+        <thead>
+        <tr>
+            <th>用户ID</th>
+            <th>用户名</th>
+            <th>用户类型</th>
+            <th>状态</th>
+            <th>封禁结束时间</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.username}"></td>
+            <td th:text="${user.type == 2 ? '管理员' : '普通用户'}"></td>
+            <td th:text="${user.isBanned ? '已封禁' : '正常'}"></td>
+            <td th:text="${user.banEndTime != null ? #dates.format(user.banEndTime, 'yyyy-MM-dd HH:mm:ss') : (user.isBanned ? '永久封禁' : 'N/A')}"></td>
+            <td>
+                <button th:if="${!user.isBanned}" th:onclick="banUser([[${user.id}]], [[${user.username}]])">封禁</button>
+                <button th:if="${user.isBanned}" th:onclick="unbanUser([[${user.id}]])">解封</button>
+                <button th:if="${user.type != 2}" th:onclick="grantAdmin([[${user.id}]])">设为管理员</button>
+                <button th:if="${user.type == 2}" th:onclick="revokeAdmin([[${user.id}]])">撤销管理员</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 点位管理 -->
+<div class="section">
+    <h2>点位管理</h2>
+    <div>
+        <label>删除阈值: <input type="number" id="thresholdInput" min="1" value="5"></label>
+        <button onclick="updateThreshold()">更新阈值</button>
+        <button onclick="loadPoints()">刷新点位列表</button>
+    </div>
+
+    <table id="pointsTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>用户ID</th>
+            <th>坐标(X,Y)</th>
+            <th>创建时间</th>
+            <th>状态</th>
+            <th>提议删除数</th>
+            <th>删除时间</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody id="pointsTableBody">
+        <!-- 点位数据将通过AJAX加载 -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // 页面加载时获取点位列表
+    $(document).ready(function() {
+        loadPoints();
+        loadThreshold();
+    });
+
+    function loadPoints() {
+        // 管理员使用新的接口获取所有点位
+        fetch('/api/points/all')
+            .then(response => response.json())
+            .then(points => {
+                const tbody = document.getElementById('pointsTableBody');
+                tbody.innerHTML = '';
+
+                points.forEach(point => {
+                    const row = document.createElement('tr');
+                    // 为已删除点位添加特殊样式
+                    if (point.deleted) {
+                        row.style.backgroundColor = '#ffcccc';
+                    }
+
+                    row.innerHTML = `                        <td>${point.id}</td>
+                        <td>${point.userId}</td>
+                        <td>(${point.x}, ${point.y})</td>
+                        <td>${formatDate(point.markedTime)}</td>
+                        <td>${point.deleted ? '已删除' : '活跃'}</td>
+                        <td>${point.proposeDelete || 0}</td>
+                        <td>${point.deletedTime ? formatDate(point.deletedTime) : 'N/A'}</td>
+                        <td class="button-group">
+                            <button onclick="deletePoint(${point.id})" ${point.deleted ? 'disabled' : ''}>删除</button>
+                            <button onclick="restorePoint(${point.id})" ${!point.deleted ? 'disabled' : ''}>恢复</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('获取点位列表失败:', error);
+            });
+    }
+
+    function loadThreshold() {
+        fetch('/api/points/threshold')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('thresholdInput').value = data.threshold;
+            })
+            .catch(error => {
+                console.error('获取阈值失败:', error);
+            });
+    }
+
+    function updateThreshold() {
+        const threshold = document.getElementById('thresholdInput').value;
+        if (threshold && threshold > 0) {
+            fetch('/api/points/threshold', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({threshold: parseInt(threshold)})
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert('阈值更新成功');
+                    loadThreshold();
+                })
+                .catch(error => {
+                    alert('阈值更新失败: ' + error);
+                });
+        }
+    }
+
+    function deletePoint(pointId) {
+        if (confirm(`确定要删除点位 ${pointId} 吗？`)) {
+            fetch(`/api/points/${pointId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    loadPoints();
+                })
+                .catch(error => {
+                    alert('删除失败: ' + error);
+                });
+        }
+    }
+
+    function restorePoint(pointId) {
+        if (confirm(`确定要恢复点位 ${pointId} 吗？`)) {
+            fetch(`/api/points/${pointId}/restore`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    loadPoints();
+                })
+                .catch(error => {
+                    alert('恢复失败: ' + error);
+                });
+        }
+    }
+
+    function banUser(userId, username) {
+        const banTime = prompt("请输入封禁时间 (格式: 1y2m3d4h 或 0 为永久封禁):", "0");
+        if (banTime !== null) {
+            fetch('/api/users/' + userId + '/ban', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({banTime: banTime})
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+
+    function unbanUser(userId) {
+        if (confirm("确定要解封该用户吗？")) {
+            fetch('/api/users/' + userId + '/unban', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+
+    function grantAdmin(userId) {
+        if (confirm("确定要授予该用户管理员权限吗？")) {
+            fetch('/api/users/' + userId + '/grant-admin', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+
+    function revokeAdmin(userId) {
+        if (confirm("确定要撤销该用户的管理员权限吗？")) {
+            fetch('/api/users/' + userId + '/revoke-admin', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+
+    function formatDate(timestamp) {
+        if (!timestamp) return 'N/A';
+        const date = new Date(timestamp);
+        return date.toLocaleString('zh-CN');
+    }
+</script>
+</body>
+</html>

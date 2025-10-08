@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <!-- 定义日志输出格式，其中包含高亮语法 -->
+        <Property name="LOG_PATTERN">%d{HH:mm:ss.SSS} %style{[%t]}{magenta} %highlight{%-5level}{FATAL=bright red, ERROR=bright red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=blue} %style{%logger{36}}{blue} - %msg%n</Property>
+        <Property name="LOG_FILE">logs/forum.log</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- 彩色控制台输出 (iTerm2 能完美显示) -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <!-- 关键配置：使用 %highlight 进行着色 -->
+            <PatternLayout pattern="${LOG_PATTERN}" disableAnsi="false"/>
+        </Console>
+
+        <!-- 同时输出到文件（可选，文件内通常不存储颜色代码） -->
+        <RollingFile name="File" fileName="${LOG_FILE}"
+                     filePattern="logs/forum-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- 为你论坛的主类设置日志级别 -->
+        <Logger name="RepositoryDemo" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
+        <!-- 根日志记录器 -->
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Root>
+    </Loggers>
+</Configuration>

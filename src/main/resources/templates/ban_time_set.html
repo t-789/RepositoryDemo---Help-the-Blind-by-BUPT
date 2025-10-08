@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Set ban time for ${user.id}: ${user.name}</title>
+</head>
+<body>
+<h2>Set ban time for ${user.id}: ${user.name}</h2>
+<form th:action="@{/ban_time_set}" method="post">
+    <input type="hidden" name="id" th:value="${user.id}">
+    <label>
+        <input type="text" name="years" placeholder="年"></input>
+        <input type="text" name="months" placeholder="月"></input>
+        <input type="text" name="days" placeholder="天"></input>
+        <input type="text" name="mins" placeholder="分钟"></input>
+    </label>
+    <input type="submit" value="提交"></input>
+    <input type="reset" value="重置"></input>
+
+</form>
+
+</body>
+</html>
