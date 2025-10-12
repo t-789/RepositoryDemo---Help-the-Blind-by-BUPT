@@ -36,7 +36,7 @@ curl -X POST http://localhost:8080/api/users/logout \
 curl -X POST http://localhost:8080/api/points/save \
   -H "Content-Type: application/json" \
   -b cookie.txt \
-  -d '{"x": 100.3, "y": 200.5}'
+  -d '{"x": 100.3, "y": 200.5, "type": 1, "description": "I don'\''t know."}'
 ```
 返回值：
 还没有登录
