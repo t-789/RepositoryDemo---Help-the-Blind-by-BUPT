@@ -1,0 +1,71 @@
+这是一个北京邮电大学雏雁项目的后端程序，是基于Spring框架实现的用户与数据管理。
+
+已实现的api：
+# 用户注册，成功注册后返回 "注册成功"
+```
+curl -X POST http://localhost:8080/api/users/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"api_test_user","password":"password123"}'
+```
+返回值：
+注册成功
+注册失败，用户名可能已存在
+
+# 用户登录，成功后会设置cookie
+```
+curl -X POST http://localhost:8080/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"api_test_user","password":"password123"}' \
+  -c cookie.txt
+```
+返回值：
+登录成功
+账户被封禁至2026-10-05 16:45:17.14
+登录失败，用户名或密码错误
+
+# 用户登出
+```
+curl -X POST http://localhost:8080/api/users/logout \
+  -b cookie.txt
+```
+返回值：
+登出成功
+
+# 保存点位 （需要认证）假设x为100.5，y为200.3
+```
+curl -X POST http://localhost:8080/api/points/save \
+  -H "Content-Type: application/json" \
+  -b cookie.txt \
+  -d '{"x": 100.3, "y": 200.5}'
+```
+返回值：
+还没有登录
+{"id": {id}, "message": "点位保存成功"}
+点位已存在
+点位保存失败
+
+
+# 获取点位列表
+```
+curl -X GET http://localhost:8080/api/points/active -b cookie.txt
+或者：curl -s -b cookie.txt http://localhost:8080/api/points/active
+```
+返回样例：
+```
+[{"id":4,"userId":4,"x":134.5,"y":20.3,"markedTime":"2025-10-05T08:30:48.475+00:00","deleted":false,"deletedTime":null,"proposeDelete":0},{"id":5,"userId":5,"x":1.5,"y":2.3,"markedTime":"2025-10-06T06:24:55.219+00:00","deleted":false,"deletedTime":null,"proposeDelete":0}]
+```
+
+# 提议删除点位（需要认证）假设点位ID为1
+```
+curl -X POST http://localhost:8080/api/points/1/propose-delete \
+  -H "Content-Type: application/json" \
+  -b cookie.txt \
+  -d '{}'
+```
+返回值：
+还没有登录
+提议删除成功
+提议删除失败，可能是因为点位不存在
+-2: 用户已提议过，不允许重复提议
+-4: 点位已删除
+操作失败，错误原因未知，请联系管理员。
