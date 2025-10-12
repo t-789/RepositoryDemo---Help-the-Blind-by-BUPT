@@ -35,7 +35,7 @@ public class PointServiceMockTest {
 
         when(pointRepository.savePoint(any(Point.class))).thenReturn(1);
 
-        int result = pointService.savePoint(1, 100.0, 200.0);
+        int result = pointService.savePoint(1, 100.0, 200.0, 1, "description");
         assertEquals(1, result);
 
         // 验证pointRepository的方法被调用了一次

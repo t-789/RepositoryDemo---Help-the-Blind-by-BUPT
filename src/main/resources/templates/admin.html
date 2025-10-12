@@ -89,6 +89,8 @@
             <th>状态</th>
             <th>提议删除数</th>
             <th>删除时间</th>
+            <th>类型</th>
+            <th>描述</th>
             <th>操作</th>
         </tr>
         </thead>
@@ -127,6 +129,8 @@
                         <td>${point.deleted ? '已删除' : '活跃'}</td>
                         <td>${point.proposeDelete || 0}</td>
                         <td>${point.deletedTime ? formatDate(point.deletedTime) : 'N/A'}</td>
+                        <td>${point.type == 0?'未知': point.type}</td>
+                        <td>${!point.description?'无':point.description}</td>
                         <td class="button-group">
                             <button onclick="deletePoint(${point.id})" ${point.deleted ? 'disabled' : ''}>删除</button>
                             <button onclick="restorePoint(${point.id})" ${!point.deleted ? 'disabled' : ''}>恢复</button>

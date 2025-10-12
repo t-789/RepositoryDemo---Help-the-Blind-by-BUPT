@@ -24,13 +24,41 @@ public class PointRepository {
                 "marked_time TIMESTAMP NOT NULL, " +
                 "deleted BOOLEAN NOT NULL DEFAULT 0, " +
                 "deleted_time TIMESTAMP NULL, " +
-                "propose_delete INTEGER NOT NULL DEFAULT 0)";
+                "propose_delete INTEGER NOT NULL DEFAULT 0, " +
+                "type INTEGER NOT NULL DEFAULT 0, " +
+                "description TEXT)";
         
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(createPointTableSQL);
+//            alterPointTable();
             logger.info("点位表初始化完成。");
         }
     }
+
+    public static void alterPointTable() throws SQLException {
+        // 检查并添加 type 列
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("ALTER TABLE points ADD COLUMN type INTEGER NOT NULL DEFAULT 0");
+            logger.info("成功添加 type 列");
+        } catch (SQLException e) {
+            // 列可能已经存在，忽略错误
+            if (!e.getMessage().contains("duplicate column name")) {
+                logger.warn("添加 type 列时出错: {}", e.getMessage());
+            }
+        }
+
+        // 检查并添加 description 列
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("ALTER TABLE points ADD COLUMN description TEXT");
+            logger.info("成功添加 description 列");
+        } catch (SQLException e) {
+            // 列可能已经存在，忽略错误
+            if (!e.getMessage().contains("duplicate column name")) {
+                logger.warn("添加 description 列时出错: {}", e.getMessage());
+            }
+        }
+    }
+
     
     // 添加配置表用于存储阈值
     public static void createConfigTable() throws SQLException {
@@ -66,7 +94,7 @@ public class PointRepository {
         try (PreparedStatement stmt = connection.prepareStatement(existsSQL)) {
             stmt.setDouble(1, point.x);
             stmt.setDouble(2, point.y);
-            ResultSet rs = stmt.executeQuery(existsSQL);
+            ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 logger.warn("点位({}, {})已存在", point.x, point.y);
                 return -1;
@@ -75,7 +103,7 @@ public class PointRepository {
             logger.error("点位查重失败: {}", e.getMessage());
         }
 
-        String sql = "INSERT INTO points (user_id, x, y, marked_time, deleted, propose_delete) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO points (user_id, x, y, marked_time, deleted, propose_delete, type, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setInt(1, point.userId);
             pstmt.setDouble(2, point.x);
@@ -83,7 +111,8 @@ public class PointRepository {
             pstmt.setTimestamp(4, point.markedTime);
             pstmt.setBoolean(5, point.deleted != null ? point.deleted : false);
             pstmt.setInt(6, point.proposeDelete != null ? point.proposeDelete : 0);
-            
+            pstmt.setInt(7, point.type);
+            pstmt.setString(8, point.description != null ? point.description : "没有描述");
             int result = pstmt.executeUpdate();
             if (result > 0) {
                 ResultSet rs = pstmt.getGeneratedKeys();
@@ -141,6 +170,8 @@ public class PointRepository {
         point.deleted = rs.getBoolean("deleted");
         point.deletedTime = rs.getTimestamp("deleted_time");
         point.proposeDelete = rs.getInt("propose_delete");
+        point.type = rs.getInt("type");
+        point.description = rs.getString("description");
         return point;
     }
 

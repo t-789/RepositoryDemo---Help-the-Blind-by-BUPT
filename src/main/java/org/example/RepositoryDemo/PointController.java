@@ -34,7 +34,7 @@ public class PointController {
                 return ResponseEntity.badRequest().body("还没有登录");
             }
             
-            int pointId = pointService.savePoint(user.id, pointRequest.getX(), pointRequest.getY());
+            int pointId = pointService.savePoint(user.id, pointRequest.getX(), pointRequest.getY(), pointRequest.getType(), pointRequest.getDescription());
             if (pointId > 0) {
                 return ResponseEntity.ok(Map.of("id", pointId, "message", "点位保存成功"));
             } else if (pointId == -1) {

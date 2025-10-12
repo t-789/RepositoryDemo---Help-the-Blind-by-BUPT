@@ -18,14 +18,14 @@ public class PointServiceTest {
 
     @Test
     public void testSavePoint() {
-        int pointId = pointService.savePoint(1, 100.0, 200.0);
+        int pointId = pointService.savePoint(1, 100.0, 200.0, 1, "description");
         assertTrue(pointId > 0);
     }
 
     @Test
     public void testGetAllActivePoints() {
         // 保存一个点位
-        pointService.savePoint(1, 100.0, 200.0);
+        pointService.savePoint(1, 100.0, 200.0, 1, "description");
 
         // 获取所有活跃点位
         List<Point> points = pointService.getAllActivePoints();
@@ -38,7 +38,7 @@ public class PointServiceTest {
     @Test
     public void testProposeDeletePoint() {
         // 保存一个点位
-        int pointId = pointService.savePoint(1, 100.0, 200.0);
+        int pointId = pointService.savePoint(1, 100.0, 200.0, 1, "description");
 
         // 提议删除
         int result = pointService.proposeDeletePoint(pointId, 1);
@@ -48,7 +48,7 @@ public class PointServiceTest {
     @Test
     public void testAdminDeletePoint() {
         // 保存一个点位
-        int pointId = pointService.savePoint(1, 100.0, 200.0);
+        int pointId = pointService.savePoint(1, 100.0, 200.0, 1, "description");
 
         // 管理员删除点位
         boolean result = pointService.adminDeletePoint(pointId);
@@ -58,7 +58,7 @@ public class PointServiceTest {
     @Test
     public void testAdminRestorePoint() {
         // 保存一个点位
-        int pointId = pointService.savePoint(1, 100.0, 200.0);
+        int pointId = pointService.savePoint(1, 100.0, 200.0, 1, "description");
 
         // 管理员删除点位
         pointService.adminDeletePoint(pointId);

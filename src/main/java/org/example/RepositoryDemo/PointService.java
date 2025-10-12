@@ -15,7 +15,7 @@ public class PointService {
     }
     
     // 保存点位
-    public int savePoint(int userId, double x, double y) {
+    public int savePoint(int userId, double x, double y, int type, String description) {
         Point point = new Point();
         point.userId = userId;
         point.x = x;
@@ -23,6 +23,8 @@ public class PointService {
         point.markedTime = new Timestamp(System.currentTimeMillis());
         point.deleted = false;
         point.proposeDelete = 0;
+        point.type = type;
+        point.description = description;
         
         return pointRepository.savePoint(point);
     }
