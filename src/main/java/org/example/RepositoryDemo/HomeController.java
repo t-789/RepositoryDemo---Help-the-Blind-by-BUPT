@@ -78,4 +78,9 @@ public class HomeController {
             return "redirect:/";
         }
     }
+    
+    @GetMapping("/release-notes")
+    public String releaseNotes() {
+        return "release_notes";
+    }
 }

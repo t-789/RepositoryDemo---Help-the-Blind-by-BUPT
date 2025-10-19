@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>论坛管理</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .button-group button {
+            margin: 2px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .logout {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .logout a {
+            color: #dc3545;
+            text-decoration: none;
+        }
+        .post-title {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .post-content {
+            max-width: 300px;
+            max-height: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+        }
+        .filter-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .filter-section label {
+            margin-right: 10px;
+        }
+        .filter-section input {
+            margin-right: 10px;
+            padding: 5px;
+        }
+        .filter-section button {
+            padding: 5px 10px;
+        }
+        .create-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .create-section input, .create-section textarea {
+            width: 100%;
+            padding: 5px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+        .create-section textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .create-section button {
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .create-section button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logout">
+        <a href="/logout">退出登录</a>
+    </div>
+    
+    <div class="back-link">
+        <a href="/admin">&larr; 返回管理员控制台</a>
+    </div>
+    
+    <h1>论坛管理</h1>
+    
+    <div class="create-section">
+        <h3>创建新帖子</h3>
+        <label>标题:</label>
+        <input type="text" id="forumTitle" placeholder="输入帖子标题">
+        <label>内容:</label>
+        <textarea id="forumContent" placeholder="输入帖子内容"></textarea>
+        <button onclick="createForum()">创建帖子</button>
+    </div>
+    
+    <div class="filter-section">
+        <label>用户ID: <input type="number" id="userIdFilter" placeholder="输入用户ID进行筛选"></label>
+        <button onclick="loadForums()">筛选</button>
+        <button onclick="clearFilter()">清除筛选</button>
+    </div>
+    
+    <table id="forumsTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>用户ID</th>
+            <th>用户名</th>
+            <th>标题</th>
+<!--            <th>内容</th>-->
+            <th>发布时间</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody id="forumsTableBody">
+        <!-- 论坛数据将通过AJAX加载 -->
+        </tbody>
+    </table>
+    
+    <div style="margin-top: 20px; text-align: center;">
+        <button onclick="loadForums()">刷新列表</button>
+    </div>
+</div>
+
+<script>
+    // 页面加载时获取论坛列表
+    $(document).ready(function() {
+        loadForums();
+    });
+
+    function createForum() {
+        const title = document.getElementById('forumTitle').value;
+        const content = document.getElementById('forumContent').value;
+        
+        if (!title || !content) {
+            alert('标题和内容不能为空');
+            return;
+        }
+        
+        const forumData = {
+            title: title,
+            content: content
+        };
+        
+        fetch('/api/forum/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(forumData)
+        })
+        .then(response => response.text())
+        .then(data => {
+            alert(data);
+            if (data === "帖子创建成功") {
+                document.getElementById('forumTitle').value = '';
+                document.getElementById('forumContent').value = '';
+                loadForums();
+            }
+        })
+        .catch(error => {
+            alert('创建帖子失败: ' + error);
+        });
+    }
+
+    function loadForums() {
+        // 获取所有论坛帖子或根据用户ID筛选
+        const userId = document.getElementById('userIdFilter').value;
+        let url = '/api/forum/all';
+        if (userId && userId.trim() !== '') {
+            url = `/api/forum/user/${userId}`;
+        }
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(forums => {
+                const tbody = document.getElementById('forumsTableBody');
+                tbody.innerHTML = '';
+
+                forums.forEach(forum => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${forum.id}</td>
+                        <td>${forum.user_id}</td>
+                        <td>${forum.username}</td>
+                        <td class="post-title">${forum.title}</td>
+<!--                        <td class="post-content">${forum.content}</td>-->
+                        <td>${formatDate(forum.release_time)}</td>
+                        <td class="button-group">
+                            <button onclick="viewForum(${forum.id})">查看</button>
+                            <button onclick="deleteForum(${forum.id})">删除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('获取论坛列表失败:', error);
+                alert('获取论坛列表失败: ' + error);
+            });
+    }
+    
+    function viewForum(forumId) {
+        fetch(`/api/forum/${forumId}`)
+            .then(response => response.json())
+            .then(forum => {
+                const content = `标题: ${forum.title}\n内容: ${forum.content}\n发布者: ${forum.username}\n发布时间: ${formatDate(forum.release_time)}`;
+                alert(content);
+            })
+            .catch(error => {
+                alert('获取帖子详情失败: ' + error);
+            });
+    }
+    
+    function clearFilter() {
+        document.getElementById('userIdFilter').value = '';
+        loadForums();
+    }
+
+    function deleteForum(forumId) {
+        if (confirm(`确定要删除帖子 ID ${forumId} 吗？`)) {
+            fetch(`/api/forum/${forumId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    loadForums();
+                })
+                .catch(error => {
+                    alert('删除失败: ' + error);
+                });
+        }
+    }
+
+    function formatDate(timestamp) {
+        if (!timestamp) return 'N/A';
+        const date = new Date(timestamp);
+        return date.toLocaleString('zh-CN');
+    }
+</script>
+</body>
+</html>
