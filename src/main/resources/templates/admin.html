@@ -47,6 +47,7 @@
             <th>用户ID</th>
             <th>用户名</th>
             <th>用户类型</th>
+            <th>积分</th>
             <th>状态</th>
             <th>封禁结束时间</th>
             <th>操作</th>
@@ -57,6 +58,7 @@
             <td th:text="${user.id}"></td>
             <td th:text="${user.username}"></td>
             <td th:text="${user.type == 2 ? '管理员' : '普通用户'}"></td>
+            <td th:text="${user.credit}"></td>
             <td th:text="${user.isBanned ? '已封禁' : '正常'}"></td>
             <td th:text="${user.banEndTime != null ? #dates.format(user.banEndTime, 'yyyy-MM-dd HH:mm:ss') : (user.isBanned ? '永久封禁' : 'N/A')}"></td>
             <td>

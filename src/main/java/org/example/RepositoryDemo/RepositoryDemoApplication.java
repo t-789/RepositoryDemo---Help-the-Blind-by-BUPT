@@ -21,12 +21,14 @@ public class RepositoryDemoApplication {
     public static Connection connection;
     private static void createTables() throws SQLException {
         UserRepository.createUserTable();
+        UserRepository.checkAndUpdateUserTable();
         PointRepository.createPointTable();
         PointRepository.createConfigTable();
         PointRepository.createPointProposalTable();
+        forumRepository.createForumTable();
     }
-    
-    public static void main(String[] args) {
+
+    static void main(String[] args) {
         String url = "jdbc:sqlite:test.db";
 
         try {

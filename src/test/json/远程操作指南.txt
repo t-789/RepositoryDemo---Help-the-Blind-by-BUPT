@@ -1,0 +1,26 @@
+
+java -jar RepositoryDemo-0.0.1.1.jar > app.log
+pgrep -f RepositoryDemo 找到id
+kill -TERM [id]
+tail logs/forum.log -f
+tail app.log -f
+
+screen:
+# 启动一个名为"myapp"的screen会话
+screen -S myapp
+
+# 在screen会话中启动应用
+java -jar RepositoryDemo-0.0.1.1.jar
+
+# 按 Ctrl+A 然后按 D 分离会话（应用继续运行）
+# 现在可以安全关闭终端
+
+# 查看所有screen会话
+screen -ls
+
+# 重新连接到myapp会话查看实时输出
+screen -r myapp
+
+# 如果想只看不交互，可以这样：
+screen -r myapp -X hardcopy /tmp/screen.log
+tail -f /tmp/screen.log

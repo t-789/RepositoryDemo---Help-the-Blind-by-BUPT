@@ -119,6 +119,18 @@ public class PointRepository {
                 if (rs.next()) {
                     point.id = rs.getInt(1);
                 }
+                String add_credit_sql = "UPDATE users SET credit = credit + 1 WHERE id = ?";
+                try (PreparedStatement add_credit_pstmt = connection.prepareStatement(add_credit_sql)) {
+                    add_credit_pstmt.setInt(1, point.userId);
+                    int creditResult = add_credit_pstmt.executeUpdate();
+                    if (creditResult > 0) {
+                        logger.info("用户{}积分增加成功", point.userId);
+                    } else {
+                        logger.warn("未找到用户{}，积分未增加", point.userId);
+                    }
+                } catch (SQLException e) {
+                    logger.error("更新用户{}积分失败: {}", point.userId, e.getMessage());
+                }
                 logger.info("点位保存成功，ID: {}", point.id);
                 return point.id;
             }

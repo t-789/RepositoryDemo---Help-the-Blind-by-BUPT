@@ -3,14 +3,13 @@ package org.example.RepositoryDemo;
 import org.example.RepositoryDemo.dto.RegisterRequest;
 import org.example.RepositoryDemo.dto.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +19,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 
 import java.util.Map;
 
+@CrossOrigin(origins = "http://127.0.0.1:5500")
 @RestController
 @RequestMapping("/api/users")
 @Validated
@@ -31,7 +31,7 @@ public class UserController {
     private UserDetailsService userDetailsService;
 
     // 注册接口
-    @PostMapping("/register")
+    @PostMapping(value = "/register", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
             boolean success = userService.register(registerRequest.getUsername(), registerRequest.getPassword(), 0);

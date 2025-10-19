@@ -43,12 +43,6 @@ public class UserService {
         return null;
     }
 
-    // 用户登出
-//    public boolean logout() {
-//        // 登出逻辑在Controller层通过使会话失效处理
-//        return true;
-//    }
-
     // 管理员权限管理
     public int grantAdminPermission(int userId) {
         return userRepository.updateUserType(userId, 2);

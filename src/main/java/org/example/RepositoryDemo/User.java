@@ -7,6 +7,7 @@ public class User {
     public String username;
     public String password_hash;
     public Integer type;
+    public int credit;
     public Boolean isBanned;
     public Timestamp banEndTime;
 
@@ -20,17 +21,24 @@ public class User {
         this.type = type;
     }
 
-    public User(Integer id, String username, String password_hash, Integer type, Boolean isBanned, Timestamp banEndTime) {
+    public User(Integer id, String username, String password_hash, Integer type, Integer credit, Boolean isBanned, Timestamp banEndTime) {
         this.id = id;
         this.username = username;
         this.password_hash = password_hash;
         this.type = type;
+        this.credit = credit;
         this.isBanned = isBanned;
         this.banEndTime = banEndTime;
     }
 
-    public User User(User user){
-        return assign(user);
+    public User(User user){
+        this.id = user.id;
+        this.username = user.username;
+        this.password_hash = user.password_hash;
+        this.type = user.type;
+        this.credit = user.credit;
+        this.isBanned = user.isBanned;
+        this.banEndTime = user.banEndTime;
     }
 
     public User assign(User user) {
@@ -44,6 +52,7 @@ public class User {
         this.username = user.username;
         this.password_hash = user.password_hash;
         this.type = user.type;
+        this.credit = user.credit;
         this.isBanned = user.isBanned;
         this.banEndTime = user.banEndTime;
         return this;

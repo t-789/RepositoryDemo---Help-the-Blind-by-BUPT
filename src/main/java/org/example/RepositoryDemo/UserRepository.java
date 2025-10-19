@@ -29,6 +29,7 @@ public class UserRepository {
                 "username TEXT UNIQUE NOT NULL, " +
                 "password_hash TEXT NOT NULL, " +
                 "type INTEGER NOT NULL DEFAULT 0, " +
+                "credit INTEGER NOT NULL DEFAULT 0," +
                 "isBanned BOOLEAN NOT NULL DEFAULT 0, " +
                 "banEndTime TIMESTAMP NULL)";
         try (Statement stmt = connection.createStatement()) {
@@ -37,6 +38,39 @@ public class UserRepository {
         }
     }
     
+    /**
+     * 检查并更新用户表结构
+     * 自动添加缺失的列以保证数据库结构完整性
+     */
+    public static void checkAndUpdateUserTable() {
+        try {
+            // 检查并添加 credit 列
+            addCreditColumnIfNotExists();
+            logger.info("用户表结构检查完成");
+        } catch (SQLException e) {
+            logger.error("检查用户表结构时发生错误: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 检查并添加 credit 列
+     */
+    private static void addCreditColumnIfNotExists() throws SQLException {
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("ALTER TABLE users ADD COLUMN credit INTEGER NOT NULL DEFAULT 0");
+            logger.info("成功添加 credit 列");
+        } catch (SQLException e) {
+            // 如果列已存在，则会抛出异常，我们检查是否是这个原因
+            if (!e.getMessage().contains("duplicate column name") &&
+                !e.getMessage().contains("column credit already exists")) {
+                // 如果是其他错误，则重新抛出
+                throw e;
+            }
+            // 列已存在，这是正常的，不需要处理
+            logger.debug("credit 列已存在，跳过添加");
+        }
+    }
+
     // 检查并创建默认管理员账户
     public void createDefaultAdminUser() {
         String sql = "SELECT COUNT(*) AS adminCount FROM users WHERE type = 2";
@@ -81,6 +115,7 @@ public class UserRepository {
                 user.username = rs.getString("username");
                 user.password_hash = rs.getString("password_hash");
                 user.type = rs.getInt("type");
+                user.credit = rs.getInt("credit");
                 user.isBanned = rs.getBoolean("isBanned");
                 user.banEndTime = rs.getTimestamp("banEndTime");
                 return user;
@@ -100,6 +135,7 @@ public class UserRepository {
                 user.username = rs.getString("username");
                 user.password_hash = rs.getString("password_hash");
                 user.type = rs.getInt("type");
+                user.credit = rs.getInt("credit");
                 user.isBanned = rs.getBoolean("isBanned");
                 user.banEndTime = rs.getTimestamp("banEndTime");
                 return user;
@@ -162,6 +198,7 @@ public class UserRepository {
                 user.username = rs.getString("username");
                 user.password_hash = rs.getString("password_hash");
                 user.type = rs.getInt("type");
+                user.credit = rs.getInt("credit");
                 user.isBanned = rs.getBoolean("isBanned");
                 user.banEndTime = rs.getTimestamp("banEndTime");
                 users.add(user);
@@ -296,6 +333,24 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             logger.error("解禁用户{}失败: {}", id, e.getMessage());
+        }
+    }
+
+    public static void deleteUser(String id) {
+        logger.info("正在删除用户{}", id);
+        try {
+            String sql = "DELETE FROM users WHERE id = ?";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setInt(1, Integer.parseInt(id));
+                int rowsDeleted = pstmt.executeUpdate();
+                if (rowsDeleted > 0) {
+                    logger.info("用户{}已被删除", id);
+                } else {
+                    logger.warn("用户{}不存在", id);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("删除用户{}失败: {}", id, e.getMessage());
         }
     }
 }

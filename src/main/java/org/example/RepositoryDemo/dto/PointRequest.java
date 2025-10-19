@@ -9,7 +9,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PointRequest {
-    
+
+    // getters and setters
     @NotNull(message = "X坐标不能为空")
     @DecimalMin(value = "-1000.0", message = "X坐标不能小于-1000.0")
     @DecimalMax(value = "1000.0", message = "X坐标不能大于1000.0")
@@ -25,37 +26,5 @@ public class PointRequest {
     private Integer type;
 
     private String description;
-    
-    // getters and setters
-    public Double getX() {
-        return x;
-    }
-    
-    public void setX(Double x) {
-        this.x = x;
-    }
-    
-    public Double getY() {
-        return y;
-    }
-    
-    public void setY(Double y) {
-        this.y = y;
-    }
 
-    public Integer getType() {
-        return type;
-    }
-
-    public void setType(Integer type) {
-        this.type = type;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 }

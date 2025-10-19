@@ -13,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -31,8 +30,8 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/users/register").permitAll()
                         .requestMatchers("/api/users/login").permitAll()
                         .requestMatchers("/api/users/logout").authenticated()
-                        .requestMatchers("api/users/{userId}/ban").hasRole("ADMIN")
-                        .requestMatchers("api/users/{userId}/unban").hasRole("ADMIN")
+                        .requestMatchers("/api/users/{userId}/ban").hasRole("ADMIN")
+                        .requestMatchers("/api/users/{userId}/unban").hasRole("ADMIN")
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/error").permitAll()
