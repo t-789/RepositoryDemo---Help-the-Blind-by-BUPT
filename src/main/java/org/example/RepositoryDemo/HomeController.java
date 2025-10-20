@@ -83,4 +83,9 @@ public class HomeController {
     public String releaseNotes() {
         return "release_notes";
     }
+    
+    @GetMapping("/about")
+    public String about() {
+        return "about";
+    }
 }
