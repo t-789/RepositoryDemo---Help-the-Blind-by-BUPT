@@ -35,6 +35,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/release-notes").permitAll()
                         .requestMatchers("/curl.txt").permitAll()
+                        .requestMatchers("/about").permitAll()
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/error").permitAll()
