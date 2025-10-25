@@ -35,10 +35,16 @@ public class FeedbackController {
                 }
             }
             
+            // 检查反馈内容
+            String content = feedbackRequest.getContent();
+            if (content == null || content.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "反馈内容不能为空"));
+            }
+            
             boolean success = feedbackService.saveUserFeedback(
                     userId, 
                     username, 
-                    feedbackRequest.getContent(),
+                    content,
                     feedbackRequest.getUrl(),
                     feedbackRequest.getUserAgent()
             );
@@ -70,10 +76,16 @@ public class FeedbackController {
                 }
             }
             
+            // 检查反馈内容
+            String content = feedbackRequest.getContent();
+            if (content == null || content.trim().isEmpty()) {
+                content = "未提供错误详情";
+            }
+            
             boolean success = feedbackService.saveSystemFeedback(
                     userId,
                     username,
-                    feedbackRequest.getContent(),
+                    content,
                     feedbackRequest.getUrl(),
                     feedbackRequest.getUserAgent(),
                     feedbackRequest.getStackTrace()

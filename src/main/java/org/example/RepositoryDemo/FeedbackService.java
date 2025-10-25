@@ -14,6 +14,11 @@ public class FeedbackService {
     
     // 保存用户反馈
     public boolean saveUserFeedback(Integer userId, String username, String content, String url, String userAgent) {
+        // 检查内容是否为空
+        if (content == null || content.trim().isEmpty()) {
+            content = "用户未提供具体反馈内容";
+        }
+        
         Feedback feedback = new Feedback();
         feedback.setUserId(userId);
         feedback.setUsername(username);
@@ -30,6 +35,11 @@ public class FeedbackService {
     // 保存系统错误反馈
     public boolean saveSystemFeedback(Integer userId, String username, String content, String url, 
                                     String userAgent, String stackTrace) {
+        // 检查内容是否为空
+        if (content == null || content.trim().isEmpty()) {
+            content = "未提供错误详情";
+        }
+        
         Feedback feedback = new Feedback();
         feedback.setUserId(userId);
         feedback.setUsername(username);

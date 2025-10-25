@@ -3,6 +3,7 @@ package org.example.RepositoryDemo;
 import org.example.RepositoryDemo.dto.RegisterRequest;
 import org.example.RepositoryDemo.dto.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @CrossOrigin(origins = "http://127.0.0.1:5500")
@@ -108,6 +110,29 @@ public class UserController {
             return ResponseEntity.ok("登出成功");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("登出失败: " + e.getMessage());
+        }
+    }
+
+    // 获取当前用户信息
+    @GetMapping("/current")
+    public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
+        try {
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                User user = (User) session.getAttribute("user");
+                if (user != null) {
+                    // 创建一个不包含敏感信息的用户对象
+                    Map<String, Object> userInfo = new HashMap<>();
+                    userInfo.put("id", user.id);
+                    userInfo.put("username", user.username);
+                    userInfo.put("type", user.type);
+                    userInfo.put("credit", user.credit);
+                    return ResponseEntity.ok(userInfo);
+                }
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未登录");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("获取用户信息失败: " + e.getMessage());
         }
     }
 

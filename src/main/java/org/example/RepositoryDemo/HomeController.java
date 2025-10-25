@@ -36,7 +36,7 @@ public class HomeController {
             return "admin_main";
         } else {
             // 如果不是管理员，重定向到首页或登录页
-            return "redirect:/";
+            return "redirect:/login";
         }
     }
 
@@ -50,7 +50,7 @@ public class HomeController {
             model.addAttribute("users", users);
             return "user_management";
         } else {
-            // 如果不是管理员，重定向到首页或登录页
+            // 如果不是管理员，重定向到首页
             return "redirect:/";
         }
     }
@@ -62,7 +62,7 @@ public class HomeController {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return "point_management";
         } else {
-            // 如果不是管理员，重定向到首页或登录页
+            // 如果不是管理员，重定向到首页
             return "redirect:/";
         }
     }
@@ -74,7 +74,7 @@ public class HomeController {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return "forum_management";
         } else {
-            // 如果不是管理员，重定向到首页或登录页
+            // 如果不是管理员，重定向到首页
             return "redirect:/";
         }
     }
@@ -86,7 +86,7 @@ public class HomeController {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return "feedback_management";
         } else {
-            // 如果不是管理员，重定向到首页或登录页
+            // 如果不是管理员，重定向到首页
             return "redirect:/";
         }
     }
@@ -100,4 +100,10 @@ public class HomeController {
     public String about() {
         return "about";
     }
+
+    @GetMapping("/index")
+    public String indexHtml() {
+        return "index";
+    }
+
 }

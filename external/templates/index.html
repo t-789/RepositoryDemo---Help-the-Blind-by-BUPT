@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点位管理系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        nav ul li {
+            margin-left: 20px;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .auth-section {
+            text-align: right;
+        }
+        .user-info {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .section {
+            margin: 30px 0;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .hidden {
+            display: none;
+        }
+        .point-actions button {
+            margin-right: 5px;
+            padding: 3px 8px;
+            font-size: 12px;
+        }
+        .forum-post {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .forum-post-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .forum-post-meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .forum-post-content {
+            margin-bottom: 10px;
+        }
+        .feedback-form textarea {
+            height: 100px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">点位管理系统</div>
+            <nav>
+                <ul>
+                    <li><a href="#" onclick="showSection('home')">首页</a></li>
+                    <li><a href="#" onclick="showSection('points')">点位</a></li>
+                    <li><a href="#" onclick="showSection('forum')">论坛</a></li>
+                    <li><a href="#" onclick="showSection('feedback')">反馈</a></li>
+                    <li><a href="../">回退</a></li>
+                </ul>
+            </nav>
+            <div class="auth-section">
+                <div id="user-info" class="user-info hidden">
+                    欢迎, <span id="username"></span> 
+                    <span id="user-type"></span>
+                    <button class="btn btn-danger" onclick="logout()">注销</button>
+                </div>
+                <div id="auth-buttons">
+                    <button class="btn" onclick="showSection('login')">登录</button>
+                    <button class="btn btn-secondary" onclick="showSection('register')">注册</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 首页 -->
+        <div id="home-section" class="section">
+            <div class="section-title">欢迎使用点位管理系统</div>
+            <p>这是一个简单的点位管理系统，您可以：</p>
+            <ul>
+                <li>注册和登录账户</li>
+                <li>查看和管理点位信息</li>
+                <li>参与论坛讨论</li>
+                <li>提交反馈和建议</li>
+            </ul>
+            <p>请使用上方导航栏访问不同功能模块。</p>
+        </div>
+
+        <!-- 登录 -->
+        <div id="login-section" class="section hidden">
+            <div class="section-title">用户登录</div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">用户名:</label>
+                    <input type="text" id="login-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">密码:</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn">登录</button>
+                <button type="button" class="btn btn-secondary" onclick="showSection('home')">取消</button>
+            </form>
+            <div id="login-message" class="alert hidden"></div>
+        </div>
+
+        <!-- 注册 -->
+        <div id="register-section" class="section hidden">
+            <div class="section-title">用户注册</div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-username">用户名:</label>
+                    <input type="text" id="register-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">密码:</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <button type="submit" class="btn">注册</button>
+                <button type="button" class="btn btn-secondary" onclick="showSection('home')">取消</button>
+            </form>
+            <div id="register-message" class="alert hidden"></div>
+        </div>
+
+        <!-- 点位 -->
+        <div id="points-section" class="section hidden">
+            <div class="section-title">点位管理</div>
+            <div id="points-content">
+                <!-- 点位内容将通过JavaScript加载 -->
+            </div>
+        </div>
+
+        <!-- 论坛 -->
+        <div id="forum-section" class="section hidden">
+            <div class="section-title">论坛</div>
+            <div id="forum-content">
+                <!-- 论坛内容将通过JavaScript加载 -->
+            </div>
+        </div>
+
+        <!-- 反馈 -->
+        <div id="feedback-section" class="section hidden">
+            <div class="section-title">提交反馈</div>
+            <div id="feedback-content">
+                <!-- 反馈内容将通过JavaScript加载 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentUser = null;
+        
+        // 页面加载时检查登录状态
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+            showSection('home');
+            
+            // 绑定表单事件
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+        });
+        
+        // 显示指定部分
+        function showSection(sectionId) {
+            // 隐藏所有部分
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // 显示指定部分
+            document.getElementById(sectionId + '-section').classList.remove('hidden');
+            
+            // 根据当前部分加载内容
+            switch(sectionId) {
+                case 'points':
+                    loadPoints();
+                    break;
+                case 'forum':
+                    loadForum();
+                    break;
+                case 'feedback':
+                    loadFeedback();
+                    break;
+            }
+        }
+        
+        // 检查登录状态
+        function checkLoginStatus() {
+            // 这里应该调用后端API检查登录状态
+            // 为简化起见，我们使用localStorage模拟
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                currentUser = JSON.parse(user);
+                document.getElementById('username').textContent = currentUser.username;
+                document.getElementById('user-type').textContent = currentUser.type === 2 ? '(管理员)' : '(普通用户)';
+                document.getElementById('user-info').classList.remove('hidden');
+                document.getElementById('auth-buttons').classList.add('hidden');
+            } else {
+                currentUser = null;
+                document.getElementById('user-info').classList.add('hidden');
+                document.getElementById('auth-buttons').classList.remove('hidden');
+            }
+        }
+        
+        // 处理登录
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            // 发送登录请求
+            fetch('/api/users/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({username, password})
+            })
+            .then(response => response.text())
+            .then(data => {
+                const messageDiv = document.getElementById('login-message');
+                if (data === '登录成功') {
+                    // 获取用户信息以确定用户类型
+                    fetch('/api/users/current')
+                    .then(response => response.json())
+                    .then(userData => {
+                        // 保存用户信息到localStorage
+                        const user = {
+                            username: userData.username, 
+                            type: userData.type
+                        };
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                        currentUser = user;
+                        
+                        // 更新UI
+                        document.getElementById('username').textContent = username;
+                        document.getElementById('user-type').textContent = userData.type === 2 ? '(管理员)' : '(普通用户)';
+                        document.getElementById('user-info').classList.remove('hidden');
+                        document.getElementById('auth-buttons').classList.add('hidden');
+                        messageDiv.classList.remove('alert-danger');
+                        messageDiv.classList.add('alert-success');
+                        messageDiv.textContent = '登录成功';
+                        messageDiv.classList.remove('hidden');
+                        
+                        // 延迟跳转到首页
+                        setTimeout(() => {
+                            showSection('home');
+                            messageDiv.classList.add('hidden');
+                        }, 1000);
+                    })
+                    .catch(error => {
+                        // 如果获取用户信息失败，使用默认值
+                        const user = {username, type: 0};
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                        currentUser = user;
+                        
+                        document.getElementById('username').textContent = username;
+                        document.getElementById('user-type').textContent = '(普通用户)';
+                        document.getElementById('user-info').classList.remove('hidden');
+                        document.getElementById('auth-buttons').classList.add('hidden');
+                        messageDiv.classList.remove('alert-danger');
+                        messageDiv.classList.add('alert-success');
+                        messageDiv.textContent = '登录成功';
+                        messageDiv.classList.remove('hidden');
+                        
+                        setTimeout(() => {
+                            showSection('home');
+                            messageDiv.classList.add('hidden');
+                        }, 1000);
+                    });
+                } else {
+                    messageDiv.classList.remove('alert-success');
+                    messageDiv.classList.add('alert-danger');
+                    messageDiv.textContent = data;
+                    messageDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                const messageDiv = document.getElementById('login-message');
+                messageDiv.classList.remove('alert-success');
+                messageDiv.classList.add('alert-danger');
+                messageDiv.textContent = '登录失败: ' + error.message;
+                messageDiv.classList.remove('hidden');
+            });
+        }
+        
+        // 处理注册
+        function handleRegister(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            
+            // 发送注册请求
+            fetch('/api/users/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({username, password})
+            })
+            .then(response => response.text())
+            .then(data => {
+                const messageDiv = document.getElementById('register-message');
+                if (data === '注册成功') {
+                    messageDiv.classList.remove('alert-danger');
+                    messageDiv.classList.add('alert-success');
+                    messageDiv.textContent = '注册成功，请登录';
+                    messageDiv.classList.remove('hidden');
+                    
+                    // 清空表单
+                    document.getElementById('register-form').reset();
+                    
+                    // 延迟跳转到登录页面
+                    setTimeout(() => {
+                        showSection('login');
+                        messageDiv.classList.add('hidden');
+                    }, 1500);
+                } else {
+                    messageDiv.classList.remove('alert-success');
+                    messageDiv.classList.add('alert-danger');
+                    messageDiv.textContent = data;
+                    messageDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                const messageDiv = document.getElementById('register-message');
+                messageDiv.classList.remove('alert-success');
+                messageDiv.classList.add('alert-danger');
+                messageDiv.textContent = '注册失败: ' + error.message;
+                messageDiv.classList.remove('hidden');
+            });
+        }
+        
+        // 注销
+        function logout() {
+            // 发送注销请求
+            fetch('/api/users/logout', {
+                method: 'POST'
+            })
+            .then(response => response.text())
+            .then(data => {
+                // 清除本地存储的用户信息
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+                
+                // 更新UI
+                document.getElementById('user-info').classList.add('hidden');
+                document.getElementById('auth-buttons').classList.remove('hidden');
+                
+                // 跳转到首页
+                showSection('home');
+            })
+            .catch(error => {
+                console.error('注销失败:', error);
+                // 即使服务器调用失败，也清除本地信息
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+                document.getElementById('user-info').classList.add('hidden');
+                document.getElementById('auth-buttons').classList.remove('hidden');
+                showSection('home');
+            });
+        }
+        
+        // 加载点位
+        function loadPoints() {
+            const contentDiv = document.getElementById('points-content');
+            
+            if (!currentUser) {
+                contentDiv.innerHTML = `
+                    <p>请先登录以查看点位信息。</p>
+                    <button class="btn" onclick="showSection('login')">登录</button>
+                `;
+                return;
+            }
+            
+            contentDiv.innerHTML = `
+                <div id="points-list">
+                    <p>正在加载点位信息...</p>
+                </div>
+            `;
+            
+            // 获取活跃点位
+            fetch('/api/points/active')
+            .then(response => response.json())
+            .then(data => {
+                renderPointsList(data);
+            })
+            .catch(error => {
+                contentDiv.innerHTML = `<p>加载点位信息失败: ${error.message}</p>`;
+            });
+        }
+        
+        // 渲染点位列表
+        function renderPointsList(points) {
+            const contentDiv = document.getElementById('points-content');
+            
+            let html = `
+                <h3>所有点位</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>坐标</th>
+                            <th>创建时间</th>
+                            <th>确认数</th>
+                            <th>等级</th>
+                            <th>类型</th>
+                            <th>描述</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            points.forEach(point => {
+                html += `
+                    <tr>
+                        <td>${point.id}</td>
+                        <td>(${point.x}, ${point.y})</td>
+                        <td>${new Date(point.markedTime).toLocaleString()}</td>
+                        <td>${point.confirmCount || 0}</td>
+                        <td>${point.level || 'N/A'}</td>
+                        <td>${point.typeName || point.type || 'N/A'}</td>
+                        <td>${point.description || '无'}</td>
+                        <td class="point-actions">
+                            <button class="btn" onclick="confirmPoint(${point.id})">确认</button>
+                            <button class="btn btn-danger" onclick="proposeDeletePoint(${point.id})">提议删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+                
+                <h3>添加新点位</h3>
+                <form id="add-point-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="point-x">X坐标:</label>
+                            <input type="number" id="point-x" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="point-y">Y坐标:</label>
+                            <input type="number" id="point-y" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="point-level">等级:</label>
+                            <select id="point-level" required>
+                                <option value="1">低</option>
+                                <option value="2">中</option>
+                                <option value="3" selected>高</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="point-type">类型:</label>
+                            <input type="number" id="point-type" min="1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="point-description">描述:</label>
+                        <textarea id="point-description"></textarea>
+                    </div>
+                    <button type="submit" class="btn">添加点位</button>
+                </form>
+                <div id="point-message" class="alert hidden"></div>
+            `;
+            
+            contentDiv.innerHTML = html;
+            
+            // 绑定添加点位表单事件
+            document.getElementById('add-point-form').addEventListener('submit', handleAddPoint);
+        }
+        
+        // 处理添加点位
+        function handleAddPoint(e) {
+            e.preventDefault();
+            
+            const pointData = {
+                x: parseFloat(document.getElementById('point-x').value),
+                y: parseFloat(document.getElementById('point-y').value),
+                level: parseInt(document.getElementById('point-level').value),
+                type: parseInt(document.getElementById('point-type').value),
+                description: document.getElementById('point-description').value
+            };
+            
+            fetch('/api/points/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(pointData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const messageDiv = document.getElementById('point-message');
+                if (data.message) {
+                    messageDiv.classList.remove('alert-danger');
+                    messageDiv.classList.add('alert-success');
+                    messageDiv.textContent = data.message;
+                    messageDiv.classList.remove('hidden');
+                    
+                    // 清空表单
+                    document.getElementById('add-point-form').reset();
+                    
+                    // 重新加载点位列表
+                    setTimeout(() => {
+                        loadPoints();
+                    }, 1000);
+                } else {
+                    messageDiv.classList.remove('alert-success');
+                    messageDiv.classList.add('alert-danger');
+                    messageDiv.textContent = '添加点位失败';
+                    messageDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                const messageDiv = document.getElementById('point-message');
+                messageDiv.classList.remove('alert-success');
+                messageDiv.classList.add('alert-danger');
+                messageDiv.textContent = '添加点位失败: ' + error.message;
+                messageDiv.classList.remove('hidden');
+            });
+        }
+        
+        // 确认点位
+        function confirmPoint(pointId) {
+            if (!confirm('确定要确认这个点位吗？')) {
+                return;
+            }
+            
+            fetch(`/api/points/${pointId}/confirm`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                // 重新加载点位列表
+                loadPoints();
+            })
+            .catch(error => {
+                alert('确认点位失败: ' + error.message);
+            });
+        }
+        
+        // 提议删除点位
+        function proposeDeletePoint(pointId) {
+            if (!confirm('确定要提议删除这个点位吗？')) {
+                return;
+            }
+            
+            fetch(`/api/points/${pointId}/propose-delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                // 重新加载点位列表
+                loadPoints();
+            })
+            .catch(error => {
+                alert('提议删除点位失败: ' + error.message);
+            });
+        }
+        
+        // 加载论坛
+        function loadForum() {
+            const contentDiv = document.getElementById('forum-content');
+            
+            contentDiv.innerHTML = `
+                <div id="forum-list">
+                    <p>正在加载论坛帖子...</p>
+                </div>
+            `;
+            
+            // 获取所有论坛帖子
+            fetch('/api/forum/all')
+            .then(response => response.json())
+            .then(data => {
+                renderForumList(data);
+            })
+            .catch(error => {
+                contentDiv.innerHTML = `<p>加载论坛帖子失败: ${error.message}</p>`;
+            });
+        }
+        
+        // 渲染论坛列表
+        function renderForumList(posts) {
+            const contentDiv = document.getElementById('forum-content');
+            
+            let html = `
+                <h3>所有帖子</h3>
+            `;
+            
+            if (currentUser) {
+                html += `
+                    <button class="btn" onclick="showCreatePostForm()">创建新帖子</button>
+                    <div id="create-post-form" class="hidden">
+                        <h4>创建新帖子</h4>
+                        <form id="new-post-form">
+                            <div class="form-group">
+                                <label for="post-title">标题:</label>
+                                <input type="text" id="post-title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="post-content">内容:</label>
+                                <textarea id="post-content" required></textarea>
+                            </div>
+                            <button type="submit" class="btn">发布</button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelCreatePost()">取消</button>
+                        </form>
+                        <div id="post-message" class="alert hidden"></div>
+                    </div>
+                `;
+            } else {
+                html += `<p>请先登录以创建新帖子。</p>`;
+            }
+            
+            html += `<div id="posts-list">`;
+            
+            posts.forEach(post => {
+                html += `
+                    <div class="forum-post">
+                        <div class="forum-post-title">${post.title}</div>
+                        <div class="forum-post-meta">
+                            作者: ${post.username} | 发布时间: ${new Date(post.release_time).toLocaleString()}
+                        </div>
+                        <div class="forum-post-content">
+                            ${post.content}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            
+            contentDiv.innerHTML = html;
+            
+            // 如果用户已登录，绑定创建帖子表单事件
+            if (currentUser) {
+                document.getElementById('new-post-form').addEventListener('submit', handleCreatePost);
+            }
+        }
+        
+        // 显示创建帖子表单
+        function showCreatePostForm() {
+            document.getElementById('create-post-form').classList.remove('hidden');
+        }
+        
+        // 取消创建帖子
+        function cancelCreatePost() {
+            document.getElementById('create-post-form').classList.add('hidden');
+            document.getElementById('new-post-form').reset();
+            document.getElementById('post-message').classList.add('hidden');
+        }
+        
+        // 处理创建帖子
+        function handleCreatePost(e) {
+            e.preventDefault();
+            
+            const postData = {
+                title: document.getElementById('post-title').value,
+                content: document.getElementById('post-content').value
+            };
+            
+            fetch('/api/forum/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(postData)
+            })
+            .then(response => response.text())
+            .then(data => {
+                const messageDiv = document.getElementById('post-message');
+                if (data === '帖子创建成功') {
+                    messageDiv.classList.remove('alert-danger');
+                    messageDiv.classList.add('alert-success');
+                    messageDiv.textContent = '帖子创建成功';
+                    messageDiv.classList.remove('hidden');
+                    
+                    // 清空表单
+                    document.getElementById('new-post-form').reset();
+                    
+                    // 隐藏表单
+                    setTimeout(() => {
+                        document.getElementById('create-post-form').classList.add('hidden');
+                        messageDiv.classList.add('hidden');
+                        // 重新加载帖子列表
+                        loadForum();
+                    }, 1500);
+                } else {
+                    messageDiv.classList.remove('alert-success');
+                    messageDiv.classList.add('alert-danger');
+                    messageDiv.textContent = data;
+                    messageDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                const messageDiv = document.getElementById('post-message');
+                messageDiv.classList.remove('alert-success');
+                messageDiv.classList.add('alert-danger');
+                messageDiv.textContent = '创建帖子失败: ' + error.message;
+                messageDiv.classList.remove('hidden');
+            });
+        }
+        
+        // 加载反馈
+        function loadFeedback() {
+            const contentDiv = document.getElementById('feedback-content');
+            
+            let html = `
+                <h3>提交反馈</h3>
+            `;
+            
+            if (!currentUser) {
+                html += `
+                    <p>请先登录以提交反馈。</p>
+                    <button class="btn" onclick="showSection('login')">登录</button>
+                `;
+            } else {
+                html += `
+                    <form id="feedback-form">
+                        <div class="form-group">
+                            <label for="feedback-text">反馈内容:</label>
+                            <textarea id="feedback-text" class="feedback-form" required></textarea>
+                        </div>
+                        <button type="submit" class="btn">提交反馈</button>
+                    </form>
+                    <div id="feedback-message" class="alert hidden"></div>
+                `;
+            }
+            
+            contentDiv.innerHTML = html;
+            
+            // 如果用户已登录，绑定反馈表单事件
+            if (currentUser) {
+                document.getElementById('feedback-form').addEventListener('submit', handleFeedback);
+            }
+        }
+        
+        // 处理反馈提交
+        function handleFeedback(e) {
+            e.preventDefault();
+            
+            const content = document.getElementById('feedback-text').value;
+            // 检查内容是否为空
+            if (!content || content.trim() === '') {
+                const messageDiv = document.getElementById('feedback-message');
+                messageDiv.classList.remove('alert-success');
+                messageDiv.classList.add('alert-danger');
+                messageDiv.textContent = '反馈内容不能为空';
+                messageDiv.classList.remove('hidden');
+                return;
+            }
+            
+            const feedbackData = {
+                content: content,
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            };
+            
+            fetch('/api/feedback/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(feedbackData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const messageDiv = document.getElementById('feedback-message');
+                if (data.message) {
+                    messageDiv.classList.remove('alert-danger');
+                    messageDiv.classList.add('alert-success');
+                    messageDiv.textContent = data.message;
+                    messageDiv.classList.remove('hidden');
+                    
+                    // 清空表单
+                    document.getElementById('feedback-form').reset();
+                    
+                    // 3秒后隐藏消息
+                    setTimeout(() => {
+                        messageDiv.classList.add('hidden');
+                    }, 3000);
+                } else {
+                    messageDiv.classList.remove('alert-success');
+                    messageDiv.classList.add('alert-danger');
+                    messageDiv.textContent = data.error || '提交反馈失败';
+                    messageDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                const messageDiv = document.getElementById('feedback-message');
+                messageDiv.classList.remove('alert-success');
+                messageDiv.classList.add('alert-danger');
+                messageDiv.textContent = '提交反馈失败: ' + error.message;
+                messageDiv.classList.remove('hidden');
+            });
+        }
+    </script>
+</body>
+</html>
