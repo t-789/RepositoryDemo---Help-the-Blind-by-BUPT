@@ -10,7 +10,7 @@
     </parent>
     <groupId>org.example</groupId>
     <artifactId>RepositoryDemo</artifactId>
-    <version>0.0.2.1</version>
+    <version>0.0.3</version>
     <name>RepositoryDemo</name>
     <description>This is a repository for ChuYan Project: Help the blind by BUPT</description>
     <url/>

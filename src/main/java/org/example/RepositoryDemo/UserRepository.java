@@ -353,4 +353,18 @@ public class UserRepository {
             logger.error("删除用户{}失败: {}", id, e.getMessage());
         }
     }
+    
+    // 更新用户密码
+    public boolean updateUserPassword(int userId, String newPasswordHash) {
+        String sql = "UPDATE users SET password_hash = ? WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, newPasswordHash);
+            pstmt.setInt(2, userId);
+            int rowsUpdated = pstmt.executeUpdate();
+            return rowsUpdated > 0;
+        } catch (SQLException e) {
+            logger.error("更新用户{}密码失败: {}", userId, e.getMessage());
+            return false;
+        }
+    }
 }

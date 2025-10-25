@@ -19,6 +19,14 @@ curl -X POST http://localhost:8080/api/users/logout \
   -b cookie.txt
 登出成功
 
+# 管理员重置用户密码（需要管理员权限）假设用户ID为3
+curl -X POST http://localhost:8080/api/users/admin/reset-password/3 \
+  -b cookie.txt
+权限不足
+密码重置成功，新密码为: 000000
+密码重置失败
+用户不存在
+
 # 保存点位 （需要认证）假设x为100.5，y为200.3
 curl -X POST http://localhost:8080/api/points/save \
   -H "Content-Type: application/json" \
@@ -34,7 +42,7 @@ curl -X POST http://localhost:8080/api/points/save \
 curl -X GET http://localhost:8080/api/points/active -b cookie.txt
 或者：curl -s -b cookie.txt http://localhost:8080/api/points/active
 返回样例：
-[{"id":4,"userId":4,"x":134.5,"y":20.3,"markedTime":"2025-10-05T08:30:48.475+00:00","deleted":false,"deletedTime":null,"proposeDelete":0},{"id":5,"userId":5,"x":1.5,"y":2.3,"markedTime":"2025-10-06T06:24:55.219+00:00","deleted":false,"deletedTime":null,"proposeDelete":0}]
+[{"id":4,"userId":4,"x":134.5,"y":20.3,"markedTime":"2025-10-05T08:30:48.475+00:00","deleted":false,"deletedTime":null,"proposeDelete":0,"confirmCount":1,"level":3,"type":0,"description":null,"typeName":"未知"},{"id":5,"userId":5,"x":1.5,"y":2.3,"markedTime":"2025-10-06T06:24:55.219+00:00","deleted":false,"deletedTime":null,"proposeDelete":0,"confirmCount":0,"level":3,"type":0,"description":null,"typeName":"未知"}]
 
 # 提议删除点位（需要认证）假设点位ID为1
 curl -X POST http://localhost:8080/api/points/1/propose-delete \
@@ -47,6 +55,71 @@ curl -X POST http://localhost:8080/api/points/1/propose-delete \
 -2: 用户已提议过，不允许重复提议
 -4: 点位已删除
 操作失败，错误原因未知，请联系管理员。
+
+# 确认点位存在（需要认证，不能确认自己创建的点位）假设点位ID为1
+curl -X POST http://localhost:8080/api/points/1/confirm \
+  -H "Content-Type: application/json" \
+  -b cookie.txt \
+  -d '{}'
+还没有登录
+确认点位成功
+确认点位失败，可能是因为点位不存在
+用户已确认过该点位，不允许重复确认
+点位已删除
+操作失败，错误原因未知，请联系管理员。
+
+# 设置类型映射（需要管理员权限）
+curl -X POST http://localhost:8080/api/points/type-map \
+  -H "Content-Type: application/json" \
+  -b cookie.txt \
+  -d '{"typeId": 1, "typeName": "危险区域"}'
+权限不足
+类型映射保存成功
+类型映射保存失败
+
+# 获取所有类型映射
+curl -X GET http://localhost:8080/api/points/type-map -b cookie.txt
+返回样例：
+{"1":"危险区域","2":"施工区域","3":"低风险区域"}
+
+# 提交用户反馈
+curl -X POST http://localhost:8080/api/feedback/submit \
+  -H "Content-Type: application/json" \
+  -b cookie.txt \
+  -d '{"content": "这个功能很好用", "url": "/points", "userAgent": "Mozilla/5.0..."}'
+返回样例：
+{"message": "反馈提交成功"}
+{"error": "反馈提交失败"}
+
+# 提交系统错误反馈（内部使用）
+curl -X POST http://localhost:8080/api/feedback/system-error \
+  -H "Content-Type: application/json" \
+  -b cookie.txt \
+  -d '{"content": "空指针异常", "url": "/points", "userAgent": "Mozilla/5.0...", "stackTrace": "java.lang.NullPointerException..."}'
+返回样例：
+{"message": "系统错误报告已提交"}
+{"error": "系统错误报告提交失败"}
+
+# 获取所有反馈（仅管理员）
+curl -X GET http://localhost:8080/api/feedback/all -b cookie.txt
+权限不足
+返回样例：
+[{"id":1,"userId":1,"username":"admin","content":"空指针异常","type":"system","url":"/points","userAgent":"Mozilla/5.0...","stackTrace":"java.lang.NullPointerException...","createTime":"2025-10-25T10:30:00.000+00:00","resolved":false,"resolvedBy":null,"resolvedTime":null}]
+
+# 根据类型获取反馈（仅管理员）system 或 user
+curl -X GET http://localhost:8080/api/feedback/type/system -b cookie.txt
+权限不足
+返回样例：
+[{"id":1,"userId":1,"username":"admin","content":"空指针异常","type":"system","url":"/points","userAgent":"Mozilla/5.0...","stackTrace":"java.lang.NullPointerException...","createTime":"2025-10-25T10:30:00.000+00:00","resolved":false,"resolvedBy":null,"resolvedTime":null}]
+
+# 更新反馈解决状态（仅管理员）
+curl -X POST http://localhost:8080/api/feedback/1/resolve \
+  -H "Content-Type: application/json" \
+  -b cookie.txt \
+  -d '{"resolved": true}'
+权限不足
+{"message": "反馈状态更新成功"}
+{"error": "反馈状态更新失败"}
 
 # 创建论坛帖子（需要认证）
 curl -X POST http://localhost:8080/api/forum/create \

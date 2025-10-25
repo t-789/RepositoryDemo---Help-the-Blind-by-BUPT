@@ -25,6 +25,8 @@ public class PointRepository {
                 "deleted BOOLEAN NOT NULL DEFAULT 0, " +
                 "deleted_time TIMESTAMP NULL, " +
                 "propose_delete INTEGER NOT NULL DEFAULT 0, " +
+                "confirm_count INTEGER NOT NULL DEFAULT 0, " +
+                "level INTEGER NOT NULL DEFAULT 3, " +
                 "type INTEGER NOT NULL DEFAULT 0, " +
                 "description TEXT)";
         
@@ -34,12 +36,24 @@ public class PointRepository {
             logger.info("点位表初始化完成。");
         }
     }
+    
+    // 创建类型映射表
+    public static void createTypeMapTable() throws SQLException {
+        String createTypeMapTableSQL = "CREATE TABLE IF NOT EXISTS type_map (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "type_id INTEGER NOT NULL UNIQUE, " +
+                "type_name TEXT NOT NULL)";
+        
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(createTypeMapTableSQL);
+            logger.info("类型映射表初始化完成。");
+        }
+    }
 
     public static void alterPointTable() throws SQLException {
-        // 检查并添加 type 列
         try (Statement stmt = connection.createStatement()) {
-            stmt.execute("ALTER TABLE points ADD COLUMN type INTEGER NOT NULL DEFAULT 0");
-            logger.info("成功添加 type 列");
+            stmt.execute("ALTER TABLE points ADD COLUMN confirm_count INTEGER NOT NULL DEFAULT 0");
+            logger.info("成功添加 confirm_count 列");
         } catch (SQLException e) {
             // 列可能已经存在，忽略错误
             if (!e.getMessage().contains("duplicate column name")) {
@@ -47,10 +61,9 @@ public class PointRepository {
             }
         }
 
-        // 检查并添加 description 列
         try (Statement stmt = connection.createStatement()) {
-            stmt.execute("ALTER TABLE points ADD COLUMN description TEXT");
-            logger.info("成功添加 description 列");
+            stmt.execute("ALTER TABLE points ADD COLUMN level INTEGER NOT NULL DEFAULT 3");
+            logger.info("成功添加 level 列");
         } catch (SQLException e) {
             // 列可能已经存在，忽略错误
             if (!e.getMessage().contains("duplicate column name")) {
@@ -88,6 +101,20 @@ public class PointRepository {
             logger.info("点位提议表初始化完成。");
         }
     }
+
+    public static void createPointConfirmTable() throws SQLException {
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS point_confirms (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "point_id INTEGER NOT NULL, " +
+                "user_id INTEGER NOT NULL, " +
+                "proposal_time TIMESTAMP NOT NULL, " +
+                "UNIQUE(point_id, user_id))";
+
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(createTableSQL);
+            logger.info("点位确认表初始化完成。");
+        }
+    }
     // 保存点位
     public int savePoint(Point point) {
         String existsSQL = "SELECT * FROM points WHERE x=? AND y=?";
@@ -103,7 +130,7 @@ public class PointRepository {
             logger.error("点位查重失败: {}", e.getMessage());
         }
 
-        String sql = "INSERT INTO points (user_id, x, y, marked_time, deleted, propose_delete, type, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO points (user_id, x, y, marked_time, deleted, propose_delete, confirm_count, level, type, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setInt(1, point.userId);
             pstmt.setDouble(2, point.x);
@@ -111,8 +138,10 @@ public class PointRepository {
             pstmt.setTimestamp(4, point.markedTime);
             pstmt.setBoolean(5, point.deleted != null ? point.deleted : false);
             pstmt.setInt(6, point.proposeDelete != null ? point.proposeDelete : 0);
-            pstmt.setInt(7, point.type);
-            pstmt.setString(8, point.description != null ? point.description : "没有描述");
+            pstmt.setInt(7, 0);
+            pstmt.setInt(8, point.level == null ? 3 : point.level);
+            pstmt.setInt(9, point.type);
+            pstmt.setString(10, point.description != null ? point.description : "没有描述");
             int result = pstmt.executeUpdate();
             if (result > 0) {
                 ResultSet rs = pstmt.getGeneratedKeys();
@@ -182,6 +211,8 @@ public class PointRepository {
         point.deleted = rs.getBoolean("deleted");
         point.deletedTime = rs.getTimestamp("deleted_time");
         point.proposeDelete = rs.getInt("propose_delete");
+        point.confirmCount = rs.getInt("confirm_count");
+        point.level = rs.getInt("level");
         point.type = rs.getInt("type");
         point.description = rs.getString("description");
         return point;
@@ -189,7 +220,7 @@ public class PointRepository {
 
     // 用户提议删除点位
     public int proposeDeletePoint(int pointId, int userId) {
-//        logger.info("用户{}尝试删除{}", userId, pointId);
+        logger.info("用户{}尝试删除{}", userId, pointId);
         // 检查用户是否已经提议过删除这个点位
         String checkSql = "SELECT COUNT(*) FROM point_proposals WHERE point_id = ? AND user_id = ?";
         try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
@@ -252,7 +283,7 @@ public class PointRepository {
                 }
                 return 1;
             } else {
-                logger.warn("点位{}不存在", pointId);
+                logger.warn("提议删除：点位{}不存在", pointId);
                 return -1;
 
             }
@@ -277,6 +308,69 @@ public class PointRepository {
             logger.error("管理员删除点位失败: {}", e.getMessage());
         }
         return false;
+    }
+
+    public int ConfirmPoint(int pointId, int userId) {
+        logger.info("用户{}尝试确认{}", userId, pointId);
+        // 检查用户是否已经提议过删除这个点位
+        String checkSql = "SELECT COUNT(*) FROM point_confirms WHERE point_id = ? AND user_id = ?";
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
+            checkStmt.setInt(1, pointId);
+            checkStmt.setInt(2, userId);
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    logger.info("用户{}已确认过点位{}", userId, pointId);
+                    return -2; // 用户已提议过，不允许重复提议
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("检查点位确认记录失败: {}", e.getMessage());
+            return -3;
+        }
+        String checkDeletedSql = "SELECT * FROM points WHERE id = ?";
+        try (PreparedStatement checkDeletedStmt = connection.prepareStatement(checkDeletedSql)) {
+            checkDeletedStmt.setInt(1, pointId);
+            try (ResultSet rs = checkDeletedStmt.executeQuery()) {
+                if (rs.next()) {
+                    if (rs.getBoolean("deleted")) {
+                        logger.info("点位{}已删除，无法再次删除。", pointId);
+                        return -4; // 点位已删除，无法再次删除
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("检查点位删除状态失败: {}", e.getMessage());
+            return -3;
+        }
+
+        // 更新点位的提议删除计数
+        String updateSql = "UPDATE points SET confirm_count = confirm_count + 1 WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(updateSql)) {
+            pstmt.setInt(1, pointId);
+            int rowsUpdated = pstmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                logger.info("用户{}确认点位{}", userId, pointId);
+                String insertSql = "INSERT INTO point_confirms (point_id, user_id, proposal_time) VALUES (?, ?, ?)";
+                try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+                    insertStmt.setInt(1, pointId);
+                    insertStmt.setInt(2, userId);
+                    insertStmt.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+                    insertStmt.executeUpdate();
+                    logger.info("记录用户{}对点位{}的确认成功", userId, pointId);
+                } catch (SQLException e) {
+                    logger.error("记录点位确认失败: {}", e.getMessage());
+                    return -1;
+                }
+                return 1;
+            } else {
+                logger.warn("确认：点位{}不存在", pointId);
+                return -1;
+
+            }
+        } catch (SQLException e) {
+            logger.error("确认点位失败: {}", e.getMessage());
+            return -3;
+        }
     }
     
     // 管理员恢复点位
@@ -374,5 +468,63 @@ public class PointRepository {
         }
         return points;
     }
-
+    
+    // 类型映射相关方法
+    
+    // 添加或更新类型映射
+    public boolean saveTypeMap(int typeId, String typeName) {
+        // 先尝试更新
+        String updateSql = "UPDATE type_map SET type_name = ? WHERE type_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(updateSql)) {
+            pstmt.setString(1, typeName);
+            pstmt.setInt(2, typeId);
+            int rowsUpdated = pstmt.executeUpdate();
+            
+            // 如果没有更新任何行，则插入新记录
+            if (rowsUpdated == 0) {
+                String insertSql = "INSERT INTO type_map (type_id, type_name) VALUES (?, ?)";
+                try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+                    insertStmt.setInt(1, typeId);
+                    insertStmt.setString(2, typeName);
+                    insertStmt.executeUpdate();
+                }
+            }
+            return true;
+        } catch (SQLException e) {
+            logger.error("保存类型映射失败: {}", e.getMessage());
+            return false;
+        }
+    }
+    
+    // 获取所有类型映射
+    public java.util.Map<Integer, String> getAllTypeMaps() {
+        java.util.Map<Integer, String> typeMaps = new java.util.HashMap<>();
+        String sql = "SELECT type_id, type_name FROM type_map ORDER BY type_id";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                typeMaps.put(rs.getInt("type_id"), rs.getString("type_name"));
+            }
+        } catch (SQLException e) {
+            logger.error("获取类型映射列表失败: {}", e.getMessage());
+        }
+        return typeMaps;
+    }
+    
+    // 根据类型ID获取类型名称
+    public String getTypeName(int typeId) {
+        String sql = "SELECT type_name FROM type_map WHERE type_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, typeId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("type_name");
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("获取类型名称失败: {}", e.getMessage());
+        }
+        return null;
+    }
 }

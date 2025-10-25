@@ -2,84 +2,96 @@ package org.example.RepositoryDemo;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.apache.logging.log4j.*;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Controller
 public class CustomErrorController implements ErrorController {
-    private static final Logger logger = LogManager.getLogger(CustomErrorController.class);
-
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private FeedbackService feedbackService;
+    
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    
     @RequestMapping("/error")
     public String handleError(HttpServletRequest request, Model model) {
+        // 获取错误信息
         Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
-        System.out.println("status: " + status);
-
-        if (status != null) {
-            try {
-                int statusCode = Integer.parseInt(status.toString());
-
-                if(statusCode == HttpStatus.FORBIDDEN.value()) {
-                    model.addAttribute("errorCode", "403");
-                    model.addAttribute("errorMessage", "访问被拒绝");
-                    model.addAttribute("errorDescription", "您没有权限访问该页面，请联系管理员。");
-                    return "error/403";
-                }
-                else if(statusCode == HttpStatus.NOT_FOUND.value()) {
-                    model.addAttribute("errorCode", "404");
-                    model.addAttribute("errorMessage", "页面未找到");
-                    model.addAttribute("errorDescription", "您访问的页面不存在。");
-                    return "error/404";
-                }
-                else if(statusCode == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
-                    model.addAttribute("errorCode", "500");
-                    model.addAttribute("errorMessage", "服务器内部错误");
-                    model.addAttribute("errorDescription", "服务器发生了未知错误，请稍后再试。");
-                    return "error/500";
-                }
-            } catch (NumberFormatException e) {
-                logger.error("Error parsing status code: {}", status);
-                logger.error(e.getMessage());
+        Object errorMessage = request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
+        Object requestUri = request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI);
+        
+        // 获取用户认证信息
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Integer userId = null;
+        String username = "Anonymous";
+        
+        if (authentication != null && authentication.isAuthenticated() && 
+            !"anonymousUser".equals(authentication.getPrincipal())) {
+            String authUsername = authentication.getName();
+            User user = userRepository.findByUsername(authUsername);
+            if (user != null) {
+                userId = user.id;
+                username = user.username;
             }
         }
-
-        model.addAttribute("errorCode", "未知错误");
-        model.addAttribute("errorMessage", "发生未知错误");
-        model.addAttribute("errorDescription", "系统发生了未知错误，请稍后再试。");
+        
+        // 自动提交系统错误反馈
+        if (status != null) {
+            try {
+                HttpStatus httpStatus = HttpStatus.valueOf(Integer.valueOf(status.toString()));
+                
+                // 记录5xx系列服务器错误
+                if (httpStatus.is5xxServerError()) {
+                    final Integer finalUserId = userId;
+                    final String finalUsername = username;
+                    String content = "HTTP " + status + ": " + (errorMessage != null ? errorMessage : "未知错误");
+                    String url = requestUri != null ? requestUri.toString() : request.getRequestURI();
+                    String userAgent = request.getHeader("User-Agent");
+                    String stackTrace = "Status: " + status + ", Message: " + errorMessage;
+                    
+                    // 异步提交错误反馈
+                    executorService.submit(() -> {
+                        feedbackService.saveSystemFeedback(finalUserId, finalUsername, content, url, userAgent, stackTrace);
+                    });
+                }
+            } catch (Exception e) {
+                // 忽略错误处理中的异常
+            }
+        }
+        
+        // 设置错误页面显示信息
+        model.addAttribute("statusCode", status);
+        model.addAttribute("errorMessage", errorMessage);
+        model.addAttribute("requestUri", requestUri);
+        
+        // 根据错误状态码返回不同的错误页面
+        if (status != null) {
+            int statusCode = Integer.valueOf(status.toString());
+            
+            switch (statusCode) {
+                case 403:
+                    return "error/403";
+                case 404:
+                    return "error/404";
+                case 500:
+                    return "error/500";
+                default:
+                    return "error/general";
+            }
+        }
+        
         return "error/general";
-    }
-
-    // 添加这个方法处理NoHandlerFoundException异常
-    @RequestMapping("/error/404")
-    public String handleError404(Model model) {
-        model.addAttribute("errorCode", "404");
-        model.addAttribute("errorMessage", "页面未找到");
-        model.addAttribute("errorDescription", "您访问的页面不存在。");
-        return "error/404";
-    }
-
-    @RequestMapping("/error/403")
-    public String handleError403(Model model) {
-        model.addAttribute("errorCode", "403");
-        model.addAttribute("errorMessage", "访问被拒绝");
-        model.addAttribute("errorDescription", "您没有权限访问该页面，请联系管理员。");
-        return "error/403";
-    }
-
-    @RequestMapping("/error/500")
-    public String handleError500(Model model) {
-        model.addAttribute("errorCode", "500");
-        model.addAttribute("errorMessage", "服务器内部错误");
-        model.addAttribute("errorDescription", "服务器发生了未知错误，请稍后再试。");
-        return "error/500";
-    }
-
-
-
-    public String getErrorPath() {
-        return "/error";
     }
 }

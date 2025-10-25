@@ -46,7 +46,7 @@ public class HomeController {
         if (authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             // 获取所有用户信息
-            List<User> users = UserRepository.ListUsers();
+            List<User> users = userRepository.ListUsers();
             model.addAttribute("users", users);
             return "user_management";
         } else {
@@ -73,6 +73,18 @@ public class HomeController {
         if (authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return "forum_management";
+        } else {
+            // 如果不是管理员，重定向到首页或登录页
+            return "redirect:/";
+        }
+    }
+    
+    @GetMapping("/feedback_management")
+    public String feedbackManagement(Authentication authentication) {
+        // 检查用户是否为管理员
+        if (authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            return "feedback_management";
         } else {
             // 如果不是管理员，重定向到首页或登录页
             return "redirect:/";

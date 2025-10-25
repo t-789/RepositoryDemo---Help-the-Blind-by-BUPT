@@ -16,16 +16,17 @@ public class RepositoryDemoApplication {
 
     @Autowired
     private UserRepository userRepository;
-    
+
     public static final Logger logger = LogManager.getLogger(RepositoryDemoApplication.class);
     public static Connection connection;
     private static void createTables() throws SQLException {
         UserRepository.createUserTable();
-        UserRepository.checkAndUpdateUserTable();
         PointRepository.createPointTable();
         PointRepository.createConfigTable();
         PointRepository.createPointProposalTable();
-        forumRepository.createForumTable();
+        PointRepository.createPointConfirmTable();
+        PointRepository.createTypeMapTable();
+        FeedbackRepository.createFeedbackTable();
     }
 
     static void main(String[] args) {
@@ -42,7 +43,7 @@ public class RepositoryDemoApplication {
         }
         SpringApplication.run(RepositoryDemoApplication.class, args);
     }
-    
+
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
         // 应用启动完成后创建默认管理员用户

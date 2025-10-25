@@ -5,6 +5,7 @@ import org.example.RepositoryDemo.dto.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -28,9 +29,21 @@ public class UserController {
     private UserService userService;
     
     @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    @Autowired
     private UserDetailsService userDetailsService;
 
-    // 注册接口
+    @Autowired
+    private PointService pointService;
+
+    @Autowired
+    private FeedbackService feedbackService;
+    
+    // 用户注册
     @PostMapping(value = "/register", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
@@ -155,6 +168,40 @@ public class UserController {
                 case -1 -> ResponseEntity.badRequest().body("用户" + userId + "不存在");
                 default -> ResponseEntity.badRequest().body("未知错误。请联系管理员");
             };
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("操作失败: " + e.getMessage());
+        }
+    }
+
+    // 管理员重置用户密码
+    @PostMapping("/admin/reset-password/{userId}")
+    public ResponseEntity<?> adminResetPassword(@PathVariable int userId, Authentication authentication) {
+        try {
+            // 检查权限
+            String username = authentication.getName();
+            User adminUser = userRepository.findByUsername(username);
+            if (adminUser == null || adminUser.type != 2) {
+                return ResponseEntity.badRequest().body("权限不足");
+            }
+            
+            // 查找要重置密码的用户
+            User targetUser = userRepository.findById(userId);
+            if (targetUser == null) {
+                return ResponseEntity.badRequest().body("用户不存在");
+            }
+            
+            // 重置密码为"000000"
+            String defaultPassword = "000000";
+            String encodedPassword = passwordEncoder.encode(defaultPassword);
+            boolean success = userRepository.updateUserPassword(targetUser.id, encodedPassword);
+            
+            if (success) {
+                // 记录日志
+                System.out.println("管理员 " + adminUser.username + " 重置了用户 " + targetUser.username + " 的密码");
+                return ResponseEntity.ok("密码重置成功，新密码为: " + defaultPassword);
+            } else {
+                return ResponseEntity.badRequest().body("密码重置失败");
+            }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("操作失败: " + e.getMessage());
         }

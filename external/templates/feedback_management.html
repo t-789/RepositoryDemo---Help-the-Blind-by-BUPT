@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>反馈管理</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .logout {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .logout a {
+            color: #dc3545;
+            text-decoration: none;
+        }
+        .filter-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .filter-section label {
+            margin-right: 10px;
+        }
+        .filter-section button {
+            margin-right: 10px;
+            padding: 5px 10px;
+        }
+        .resolved {
+            background-color: #d4edda;
+        }
+        .unresolved {
+            background-color: #f8d7da;
+        }
+        .system-error {
+            background-color: #fff3cd;
+        }
+        .detail-content {
+            max-height: 100px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .stack-trace {
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+        }
+        .toggle-details {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logout">
+        <a href="/logout">退出登录</a>
+    </div>
+    
+    <div class="back-link">
+        <a href="/admin">&larr; 返回管理员控制台</a>
+    </div>
+    
+    <h1>反馈管理</h1>
+    
+    <div class="filter-section">
+        <label>过滤条件:</label>
+        <button onclick="loadFeedback('all')">全部</button>
+        <button onclick="loadFeedback('system')">系统错误</button>
+        <button onclick="loadFeedback('user')">用户反馈</button>
+        <button onclick="loadFeedbackByStatus(true)">已解决</button>
+        <button onclick="loadFeedbackByStatus(false)">未解决</button>
+        <button onclick="loadFeedback('all')">刷新</button>
+    </div>
+
+    <table id="feedbackTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>用户</th>
+            <th>类型</th>
+            <th>内容</th>
+            <th>URL</th>
+            <th>时间</th>
+            <th>状态</th>
+            <th>解决人</th>
+            <th>解决时间</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody id="feedbackTableBody">
+        <!-- 反馈数据将通过AJAX加载 -->
+        </tbody>
+    </table>
+</div>
+
+<div style="text-align: center; margin-top: 15px;">
+    <a href="/">返回首页</a>
+</div>
+
+<script>
+    // 页面加载时获取所有反馈
+    $(document).ready(function() {
+        loadFeedback('all');
+    });
+
+    function loadFeedback(filter) {
+        let url = '/api/feedback/all';
+        if (filter === 'system' || filter === 'user') {
+            url = '/api/feedback/type/' + filter;
+        }
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(feedbacks => {
+                renderFeedbackTable(feedbacks);
+            })
+            .catch(error => {
+                console.error('获取反馈列表失败:', error);
+            });
+    }
+    
+    function loadFeedbackByStatus(resolved) {
+        // 这里需要获取所有反馈然后在前端过滤，因为后端没有提供此接口
+        fetch('/api/feedback/all')
+            .then(response => response.json())
+            .then(feedbacks => {
+                const filtered = feedbacks.filter(f => f.resolved === resolved);
+                renderFeedbackTable(filtered);
+            })
+            .catch(error => {
+                console.error('获取反馈列表失败:', error);
+            });
+    }
+
+    function renderFeedbackTable(feedbacks) {
+        const tbody = document.getElementById('feedbackTableBody');
+        tbody.innerHTML = '';
+
+        feedbacks.forEach(feedback => {
+            const row = document.createElement('tr');
+            
+            // 根据状态添加样式
+            if (feedback.resolved) {
+                row.className = 'resolved';
+            } else {
+                row.className = 'unresolved';
+            }
+            
+            if (feedback.type === 'system') {
+                row.classList.add('system-error');
+            }
+
+            row.innerHTML = `
+                <td>${feedback.id}</td>
+                <td>${feedback.username}${feedback.userId ? '(' + feedback.userId + ')' : ''}</td>
+                <td>${feedback.type === 'system' ? '系统错误' : '用户反馈'}</td>
+                <td>
+                    <div class="detail-content">${feedback.content.substring(0, 50)}${feedback.content.length > 50 ? '...' : ''}</div>
+                    ${feedback.content.length > 50 ? `<div class="toggle-details" onclick="toggleDetails(this)">显示全部</div>` : ''}
+                    ${feedback.stackTrace ? `<div class="toggle-details" onclick="toggleStackTrace(this)">显示堆栈</div>` : ''}
+                </td>
+                <td>${feedback.url || 'N/A'}</td>
+                <td>${formatDate(feedback.createTime)}</td>
+                <td>${feedback.resolved ? '已解决' : '未解决'}</td>
+                <td>${feedback.resolvedBy || 'N/A'}</td>
+                <td>${feedback.resolvedTime ? formatDate(feedback.resolvedTime) : 'N/A'}</td>
+                <td>
+                    ${!feedback.resolved ? 
+                        `<button onclick="resolveFeedback(${feedback.id})">标记为已解决</button>` : 
+                        `<button onclick="unresolveFeedback(${feedback.id})">标记为未解决</button>`}
+                </td>
+            `;
+            tbody.appendChild(row);
+            
+            // 添加详细内容和堆栈信息的隐藏元素
+            if (feedback.content.length > 50) {
+                const fullContent = document.createElement('div');
+                fullContent.className = 'detail-content';
+                fullContent.style.display = 'none';
+                fullContent.textContent = feedback.content;
+                row.appendChild(fullContent);
+            }
+            
+            if (feedback.stackTrace) {
+                const stackTrace = document.createElement('div');
+                stackTrace.className = 'stack-trace';
+                stackTrace.style.display = 'none';
+                stackTrace.textContent = feedback.stackTrace;
+                row.appendChild(stackTrace);
+            }
+        });
+    }
+    
+    function toggleDetails(element) {
+        const contentDiv = element.previousElementSibling;
+        if (contentDiv.style.display === 'none') {
+            contentDiv.style.display = 'block';
+            element.textContent = '收起';
+        } else {
+            contentDiv.style.display = 'none';
+            element.textContent = '显示全部';
+        }
+    }
+    
+    function toggleStackTrace(element) {
+        const stackTraceDiv = element.parentNode.lastChild;
+        if (stackTraceDiv.style.display === 'none') {
+            stackTraceDiv.style.display = 'block';
+            element.textContent = '隐藏堆栈';
+        } else {
+            stackTraceDiv.style.display = 'none';
+            element.textContent = '显示堆栈';
+        }
+    }
+
+    function resolveFeedback(feedbackId) {
+        if (confirm(`确定要将反馈 #${feedbackId} 标记为已解决吗？`)) {
+            fetch(`/api/feedback/${feedbackId}/resolve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({resolved: true})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        loadFeedback('all');
+                    } else if (data.error) {
+                        alert('操作失败: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+    
+    function unresolveFeedback(feedbackId) {
+        if (confirm(`确定要将反馈 #${feedbackId} 标记为未解决吗？`)) {
+            fetch(`/api/feedback/${feedbackId}/resolve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({resolved: false})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        loadFeedback('all');
+                    } else if (data.error) {
+                        alert('操作失败: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+
+    function formatDate(timestamp) {
+        if (!timestamp) return 'N/A';
+        const date = new Date(timestamp);
+        return date.toLocaleString('zh-CN');
+    }
+</script>
+</body>
+</html>

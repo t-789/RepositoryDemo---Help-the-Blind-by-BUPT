@@ -95,10 +95,15 @@
                 <button th:if="${user.isBanned}" th:onclick="unbanUser([[${user.id}]])">解封</button>
                 <button th:if="${user.type != 2}" th:onclick="grantAdmin([[${user.id}]])">设为管理员</button>
                 <button th:if="${user.type == 2}" th:onclick="revokeAdmin([[${user.id}]])">撤销管理员</button>
+                <button th:onclick="resetPassword([[${user.id}]])">重置密码</button>
             </td>
         </tr>
         </tbody>
     </table>
+    
+    <div style="text-align: center; margin-top: 15px;">
+        <a href="/">返回首页</a>
+    </div>
 </div>
 
 <script>
@@ -165,6 +170,25 @@
         if (confirm("确定要撤销该用户的管理员权限吗？")) {
             fetch('/api/users/' + userId + '/revoke-admin', {
                 method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+    
+    function resetPassword(userId) {
+        if (confirm("确定要重置该用户的密码吗？重置后密码将变为000000")) {
+            fetch('/api/users/admin/reset-password/' + userId, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 }

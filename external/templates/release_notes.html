@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Release Notes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #007bff;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #28a745;
+            margin-top: 20px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .version {
+            text-align: center;
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .date {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .api-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: none;
+            padding: 5px 10px;
+            border: 1px solid #007bff;
+            border-radius: 3px;
+        }
+        .api-link:hover {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Release Notes weekly 0.3.0</h1>
+    <div class="version">Version 0.3.0</div>
+    <div class="date">October 25, 2025</div>
+    
+    <div class="section">
+        <h2>新增功能</h2>
+        
+        <h3>点位确认功能</h3>
+        <ul>
+            <li>添加了点位确认功能，允许用户确认其他用户创建的点位存在</li>
+            <li>用户不能确认自己创建的点位</li>
+            <li>添加了confirm_count字段用于跟踪点位被确认的次数</li>
+            <li>新增API端点：POST /api/points/{pointId}/confirm</li>
+        </ul>
+        
+        <h3>点位类型映射</h3>
+        <ul>
+            <li>实现了点位类型映射功能，允许管理员自定义类型ID对应的名称</li>
+            <li>添加了类型映射管理界面，可在点位管理页面直接设置类型映射</li>
+            <li>点位列表会自动显示类型名称而不是数字ID</li>
+            <li>新增API端点：
+                <ul>
+                    <li>POST /api/points/type-map (管理员)</li>
+                    <li>GET /api/points/type-map</li>
+                </ul>
+            </li>
+        </ul>
+        
+        <h3>反馈管理系统</h3>
+        <ul>
+            <li>新增完整的反馈管理系统，包括用户反馈和系统错误自动收集</li>
+            <li>用户可以主动提交反馈</li>
+            <li>系统错误会自动捕获并记录到反馈系统</li>
+            <li>新增反馈管理界面，管理员可以查看和处理所有反馈</li>
+            <li>反馈分为用户反馈和系统错误两类，支持按类型和解决状态筛选</li>
+            <li>新增API端点：
+                <ul>
+                    <li>POST /api/feedback/submit</li>
+                    <li>POST /api/feedback/system-error</li>
+                    <li>GET /api/feedback/all (管理员)</li>
+                    <li>GET /api/feedback/type/{type} (管理员)</li>
+                    <li>POST /api/feedback/{id}/resolve (管理员)</li>
+                </ul>
+            </li>
+        </ul>
+        
+        <h3>管理员重置密码功能</h3>
+        <ul>
+            <li>新增管理员重置用户密码功能</li>
+            <li>管理员可以将任意用户密码重置为默认密码"000000"</li>
+            <li>在用户管理界面添加了重置密码按钮</li>
+            <li>新增API端点：POST /api/users/admin/reset-password/{userId}</li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>功能改进</h2>
+        
+        <h3>点位管理</h3>
+        <ul>
+            <li>为点位表添加了level字段，用于表示风险等级（1-低，2-中，3-高）</li>
+            <li>优化了点位管理界面，添加了返回首页链接</li>
+        </ul>
+        
+        <h3>管理界面</h3>
+        <ul>
+            <li>为所有管理界面添加了返回首页链接</li>
+            <li>修复了错误页面返回首页链接错误的问题</li>
+            <li>在管理员控制台添加了反馈管理的导航链接</li>
+        </ul>
+        
+        <h3>API文档</h3>
+        <ul>
+            <li>更新了curl.txt文档，包含了所有新增功能的API使用示例</li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>技术更新</h2>
+        <ul>
+            <li>新增Feedback实体类、Repository、Service和Controller</li>
+            <li>创建了反馈管理界面(feedback_management.html)</li>
+            <li>为点位相关类添加了confirm_count和level字段支持</li>
+            <li>实现了类型映射的存储和查询功能</li>
+            <li>增强了错误处理机制，系统错误会自动记录到反馈系统</li>
+        </ul>
+    </div>
+</div>
+<br/>
+    <div class="container">
+        <h1>Release Notes weekly 0.2.1</h1>
+        <div class="version">Version 0.2.1</div>
+        <div class="date">October 19, 2025</div>
+        
+        <div class="section">
+            <h2>新增功能</h2>
+            
+            <h3>论坛系统</h3>
+            <ul>
+                <li>添加了完整的论坛功能，用户可以创建和查看帖子</li>
+                <li>实现了论坛帖子的增删查功能</li>
+                <li>管理员可以删除不当帖子</li>
+                <li>支持按用户筛选查看帖子</li>
+            </ul>
+            
+            <h3>管理界面重构</h3>
+            <ul>
+                <li>将原有的复合式管理员页面拆分为三个独立的管理页面：
+                    <ul>
+                        <li>用户管理 (admin/user)</li>
+                        <li>点位管理 (admin/point)</li>
+                        <li>论坛管理 (admin/forum)</li>
+                    </ul>
+                </li>
+                <li>添加了新的管理员控制台主页，提供导航到各个管理模块的链接</li>
+                <li>优化了各管理页面的布局和用户体验</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>功能改进</h2>
+            
+            <h3>论坛管理</h3>
+            <ul>
+                <li>改进了论坛帖子列表的显示方式，对长标题和内容进行截断显示</li>
+                <li>添加了创建新帖子的功能到论坛管理页面</li>
+                <li>增加了查看帖子详情的功能</li>
+            </ul>
+            
+            <h3>API权限调整</h3>
+            <ul>
+                <li>获取论坛帖子列表不再需要管理员权限，普通用户即可查看</li>
+                <li>删除论坛帖子仍需要管理员权限，确保内容安全</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>问题修复</h2>
+            <ul>
+                <li>修复了论坛帖子中用户名显示为null的问题</li>
+                <li>修复了论坛帖子内容过长导致表格显示不美观的问题</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>技术更新</h2>
+            <ul>
+                <li>添加了ForumService服务类，遵循项目现有的服务层设计模式</li>
+                <li>创建了ForumRequest DTO用于处理论坛帖子创建请求</li>
+                <li>更新了API文档(curl.txt)，包含了所有论坛相关API的使用说明</li>
+                <li>增强了ForumController，提供了完整的RESTful API端点</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>API端点</h2>
+            
+            <h3>论坛相关</h3>
+            <ul>
+                <li>POST /api/forum/create - 创建新帖子</li>
+                <li>GET /api/forum/all - 获取所有帖子</li>
+                <li>GET /api/forum/user/{userId} - 获取指定用户的帖子</li>
+                <li>GET /api/forum/{forumId} - 获取特定帖子详情</li>
+                <li>DELETE /api/forum/{forumId} - 删除帖子(仅管理员)</li>
+            </ul>
+            
+            <h3>管理页面</h3>
+            <ul>
+                <li>GET /admin - 管理员控制台主页</li>
+                <li>GET /admin/user - 用户管理页面</li>
+                <li>GET /admin/point - 点位管理页面</li>
+                <li>GET /admin/forum - 论坛管理页面</li>
+            </ul>
+            
+            <h3>API文档</h3>
+            <a href="/curl.txt" class="api-link" target="_blank">查看完整API文档 (curl.txt)</a>
+        </div>
+    </div>
+    <a href="../" class="back-link">返回首页</a>
+</body>
+</html>

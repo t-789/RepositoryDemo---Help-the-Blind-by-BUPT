@@ -25,6 +25,11 @@ public class PointRequest {
     @DecimalMin(value = "1", message = "类型不能小于1")
     private Integer type;
 
+    @NotNull(message = "等级不能为空")
+    @DecimalMin(value = "1", message = "等级不能小于1")
+    @DecimalMax(value = "3", message = "等级不能大于3")
+    private Integer level;
+
     private String description;
 
 }
