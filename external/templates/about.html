@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>关于我们 - 助盲邮我—视障人士互助社区</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #007bff;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #28a745;
+            margin-top: 20px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .project-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .project-name {
+            font-size: 1.8em;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .project-description {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .team-members {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .team-member {
+            text-align: center;
+            margin: 10px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            flex: 1 1 150px;
+            min-width: 150px;
+        }
+        .team-leader {
+            flex: 2 1 200px;
+            min-width: 200px;
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .member-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .member-email {
+            color: #007bff;
+            font-size: 0.9em;
+        }
+        .features {
+            margin: 20px 0;
+        }
+        .feature {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .feature-title {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .api-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: none;
+            padding: 8px 15px;
+            border: 1px solid #007bff;
+            border-radius: 3px;
+        }
+        .api-link:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        .university {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>关于我们</h1>
+        
+        <div class="project-info">
+            <div class="project-name">助盲邮我—视障人士互助社区</div>
+            <div class="project-description">北京邮电大学雏雁计划项目</div>
+            <div class="university">北京邮电大学 (BUPT)</div>
+        </div>
+        
+        <h2>项目团队</h2>
+        <div class="team-members">
+            <div class="team-member team-leader">
+                <div class="member-name">王钰博</div>
+                <div class="member-email">3942008743@qq.com</div>
+                <div class="member-role">项目负责人</div>
+            </div>
+            <div class="team-member">
+                <div class="member-name">王彭一</div>
+                <div class="member-email">wpy411170@qq.com</div>
+                <div class="member-role">副组长 UI设计</div>
+            </div>
+        </div>
+        <div class="team-members">
+            <div class="team-member">
+                <div class="member-name">魏景浩</div>
+                <div class="member-email">42400889@qq.com</div>
+                <div class="member-role">前端开发</div>
+            </div>
+            <div class="team-member">
+                <div class="member-name">刘正扬</div>
+                <div class="member-email">liuzybj@bupt.edu.cn</div>
+                <div class="member-role">后端开发</div>
+            </div>
+            <div class="team-member">
+                <div class="member-name">杨汉声</div>
+                <div class="member-email">2076099616@qq.com</div>
+                <div class="member-role">灵活机动人员</div>
+            </div>
+        </div>
+        
+        <h2>项目简介</h2>
+        <p>
+            "助盲邮我—视障人士互助社区"是北京邮电大学雏雁计划的一个公益项目，旨在为视障人士提供一个互助交流的在线平台。
+            通过本系统，视障人士可以分享生活经验、寻求帮助、交流心得，构建一个温暖的互助社区。
+        </p>
+        
+        <h2>核心功能</h2>
+        <div class="features">
+            <div class="feature">
+                <div class="feature-title">用户管理系统</div>
+                <div class="feature-description">
+                    <ul>
+                        <li>用户注册与登录</li>
+                        <li>用户权限分级管理（普通用户、管理员）</li>
+                        <li>用户封禁与解封机制</li>
+                        <li>积分系统（未来扩展）</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-title">点位管理系统</div>
+                <div class="feature-description">
+                    <ul>
+                        <li>标记重要位置信息（如无障碍设施、危险区域等）</li>
+                        <li>点位信息的增删改查</li>
+                        <li>社区投票删除机制</li>
+                        <li>点位分类与描述</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-title">论坛交流系统</div>
+                <div class="feature-description">
+                    <ul>
+                        <li>发布与浏览帖子</li>
+                        <li>帖子分类管理</li>
+                        <li>管理员内容审核</li>
+                        <li>用户互动交流</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <h2>技术信息</h2>
+        <p>
+            本项目后端基于Spring Boot框架开发，采用SQLite数据库存储数据，通过RESTful API提供服务接口。
+            系统具有良好的安全性设计，包括用户认证、权限控制、会话管理等机制。
+        </p>
+        
+        <h2>API文档</h2>
+        <p>
+            详细的API接口文档可通过以下链接查看：
+        </p>
+        <a href="/curl.txt" class="api-link" target="_blank">查看完整API文档 (curl.txt)</a>
+        
+        <a href="/" class="back-link">返回首页</a>
+    </div>
+</body>
+</html>

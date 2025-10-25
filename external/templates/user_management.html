@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>用户管理</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .button-group button {
+            margin: 2px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .logout {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .logout a {
+            color: #dc3545;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logout">
+        <a href="/logout">退出登录</a>
+    </div>
+    
+    <div class="back-link">
+        <a href="/admin">&larr; 返回管理员控制台</a>
+    </div>
+    
+    <h1>用户管理</h1>
+    
+    <!-- 用户列表 -->
+    <table border="1">
+        <thead>
+        <tr>
+            <th>用户ID</th>
+            <th>用户名</th>
+            <th>用户类型</th>
+            <th>积分</th>
+            <th>状态</th>
+            <th>封禁结束时间</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.username}"></td>
+            <td th:text="${user.type == 2 ? '管理员' : '普通用户'}"></td>
+            <td th:text="${user.credit}"></td>
+            <td th:text="${user.isBanned ? '已封禁' : '正常'}"></td>
+            <td th:text="${user.banEndTime != null ? #dates.format(user.banEndTime, 'yyyy-MM-dd HH:mm:ss') : (user.isBanned ? '永久封禁' : 'N/A')}"></td>
+            <td class="button-group">
+                <button th:if="${!user.isBanned}" th:onclick="banUser([[${user.id}]])">封禁</button>
+                <button th:if="${user.isBanned}" th:onclick="unbanUser([[${user.id}]])">解封</button>
+                <button th:if="${user.type != 2}" th:onclick="grantAdmin([[${user.id}]])">设为管理员</button>
+                <button th:if="${user.type == 2}" th:onclick="revokeAdmin([[${user.id}]])">撤销管理员</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function banUser(userId) {
+        const banTime = prompt("请输入封禁时间 (格式: 1y2m3d4h 或 0 为永久封禁):", "0");
+        if (banTime !== null) {
+            fetch('/api/users/' + userId + '/ban', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({banTime: banTime})
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+
+    function unbanUser(userId) {
+        if (confirm("确定要解封该用户吗？")) {
+            fetch('/api/users/' + userId + '/unban', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+
+    function grantAdmin(userId) {
+        if (confirm("确定要授予该用户管理员权限吗？")) {
+            fetch('/api/users/' + userId + '/grant-admin', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+
+    function revokeAdmin(userId) {
+        if (confirm("确定要撤销该用户的管理员权限吗？")) {
+            fetch('/api/users/' + userId + '/revoke-admin', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('操作失败: ' + error);
+                });
+        }
+    }
+</script>
+</body>
+</html>
