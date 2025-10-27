@@ -1,5 +1,7 @@
 package org.example.RepositoryDemo;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.dto.RegisterRequest;
 import org.example.RepositoryDemo.dto.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +20,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.AbstractMap;
+import java.util.UUID;
 
 @CrossOrigin(origins = "http://127.0.0.1:5500")
 @RestController
@@ -44,8 +56,10 @@ public class UserController {
 
     @Autowired
     private FeedbackService feedbackService;
+
+    private static final Logger logger = LogManager.getLogger(RepositoryDemoApplication.class);
     
-    // 用户注册
+    // 用户注册 - JSON格式
     @PostMapping(value = "/register", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
@@ -57,6 +71,96 @@ public class UserController {
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("注册失败: " + e.getMessage());
+        }
+    }
+
+    // 用户注册 - 带头像上传和密保问题设置
+    @PostMapping(value = "/register-with-security", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> registerWithSecurity(
+            @RequestParam("username") String username,
+            @RequestParam("password") String password,
+            @RequestParam(value = "avatar", required = false) MultipartFile avatarFile,
+            @RequestParam("question1") int question1,
+            @RequestParam("answer1") String answer1,
+            @RequestParam("question2") int question2,
+            @RequestParam("answer2") String answer2) {
+        try {
+            // 先进行基本的注册
+            boolean success = userService.register(username, password, 0);
+            
+            if (success) {
+                // 查找刚创建的用户
+                User user = userRepository.findByUsername(username);
+                
+                // 如果提供了头像文件，则处理头像上传
+                if (avatarFile != null && !avatarFile.isEmpty()) {
+                    // 处理头像上传
+                    String avatarPath = saveAvatarFile(avatarFile);
+                    
+                    if (avatarPath != null) {
+                        // 更新用户头像信息
+                        userService.updateUserAvatar(user.id, avatarPath);
+                    }
+                }
+                
+                // 设置密保问题
+                userService.setSecurityQuestions(user.id, question1, answer1, question2, answer2);
+                
+                return ResponseEntity.ok("注册成功");
+            } else {
+                return ResponseEntity.badRequest().body("注册失败，用户名可能已存在");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("注册失败: " + e.getMessage());
+        }
+    }
+
+    // 保存头像文件的辅助方法
+    private String saveAvatarFile(MultipartFile file) {
+        try {
+            // 检查文件是否为空
+            if (file.isEmpty()) {
+                return null;
+            }
+
+            // 检查文件类型
+            String contentType = file.getContentType();
+            if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))) {
+                return null;
+            }
+
+            // 检查文件大小（限制为2MB）
+            if (file.getSize() > 2 * 1024 * 1024) {
+                return null;
+            }
+
+            // 创建头像存储目录
+            String uploadDir = "./external/static/avatars/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                if(!dir.mkdirs()){
+                    logger.fatal("创建头像存储目录失败");
+                    return null;
+                }
+            }
+
+            // 生成唯一文件名
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String fileName = UUID.randomUUID().toString() + extension;
+            Path filePath = Paths.get(uploadDir + fileName);
+
+            // 保存文件
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            // 返回头像访问路径
+            return "/avatars/" + fileName;
+        } catch (IOException e) {
+            logger.error("保存头像文件失败: " + e.getMessage());
+            return null;
         }
     }
 
@@ -127,12 +231,136 @@ public class UserController {
                     userInfo.put("username", user.username);
                     userInfo.put("type", user.type);
                     userInfo.put("credit", user.credit);
+                    userInfo.put("avatar", user.avatar); // 添加头像信息
                     return ResponseEntity.ok(userInfo);
                 }
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未登录");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("获取用户信息失败: " + e.getMessage());
+        }
+    }
+
+    // 上传用户头像
+    @PostMapping("/upload-avatar")
+    public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
+        try {
+            // 检查文件是否为空
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("请选择一个文件");
+            }
+
+            // 检查文件类型
+            String contentType = file.getContentType();
+            if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))) {
+                return ResponseEntity.badRequest().body("只允许上传JPEG或PNG格式的图片");
+            }
+
+            // 检查文件大小（限制为2MB）
+            if (file.getSize() > 2 * 1024 * 1024) {
+                return ResponseEntity.badRequest().body("文件大小不能超过2MB");
+            }
+
+            // 获取当前用户
+            HttpSession session = request.getSession(false);
+            if (session == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未登录");
+            }
+
+            User user = (User) session.getAttribute("user");
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未登录");
+            }
+
+            // 创建头像存储目录
+            String uploadDir = "./external/static/avatars/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    logger.fatal("创建头像存储目录失败");
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("创建头像存储目录失败");
+                }
+            }
+
+            // 生成唯一文件名
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String fileName = UUID.randomUUID().toString() + extension;
+            Path filePath = Paths.get(uploadDir + fileName);
+
+            // 保存文件
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            // 更新数据库中的用户头像路径
+            String avatarPath = "/avatars/" + fileName;
+            boolean success = userService.updateUserAvatar(user.id, avatarPath);
+            
+            if (success) {
+                // 更新会话中的用户信息
+                user.avatar = avatarPath;
+                session.setAttribute("user", user);
+                
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "头像上传成功");
+                response.put("avatarUrl", avatarPath);
+                return ResponseEntity.ok(response);
+            } else {
+                // 删除刚刚保存的文件
+                Files.deleteIfExists(filePath);
+                return ResponseEntity.badRequest().body("头像上传失败");
+            }
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body("文件上传失败: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("头像上传失败: " + e.getMessage());
+        }
+    }
+
+    // 获取所有安全问题
+    @GetMapping("/security-questions")
+    public ResponseEntity<?> getSecurityQuestions() {
+        logger.info("获取所有安全问题");
+        try {
+            Map<Integer, String> questions = userService.getAllSecurityQuestions();
+            return ResponseEntity.ok(questions);
+        } catch (Exception e) {
+            logger.error("获取安全问题失败: ", e);
+            return ResponseEntity.badRequest().body("获取安全问题失败: " + e.getMessage());
+        }
+    }
+
+    // 验证密保问题并重置密码
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, Object> payload) {
+        try {
+            String username = (String) payload.get("username");
+            String answer1 = (String) payload.get("answer1");
+            String answer2 = (String) payload.get("answer2");
+            
+            // 查找用户
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("用户不存在");
+            }
+            
+            // 验证密保问题答案
+            boolean isVerified = userService.verifySecurityAnswers(user.id, answer1, answer2);
+            if (!isVerified) {
+                return ResponseEntity.badRequest().body("密保问题答案不正确");
+            }
+            
+            // 重置密码为"000000"
+            boolean success = userService.resetPassword(user.id, "000000");
+            if (success) {
+                return ResponseEntity.ok("密码重置成功，新密码为: 000000");
+            } else {
+                return ResponseEntity.badRequest().body("密码重置失败");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("密码重置失败: " + e.getMessage());
         }
     }
 
@@ -222,10 +450,88 @@ public class UserController {
             
             if (success) {
                 // 记录日志
-                System.out.println("管理员 " + adminUser.username + " 重置了用户 " + targetUser.username + " 的密码");
+                logger.info("管理员 {} 重置了用户 {} 的密码", adminUser.username, targetUser.username);
                 return ResponseEntity.ok("密码重置成功，新密码为: " + defaultPassword);
             } else {
                 return ResponseEntity.badRequest().body("密码重置失败");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("操作失败: " + e.getMessage());
+        }
+    }
+    
+    // 添加安全问题（管理员接口）
+    @PostMapping("/admin/security-question")
+    public ResponseEntity<?> addSecurityQuestion(@RequestBody Map<String, Object> payload, Authentication authentication) {
+        try {
+            // 检查权限
+            String username = authentication.getName();
+            User adminUser = userRepository.findByUsername(username);
+            if (adminUser == null || adminUser.type != 2) {
+                return ResponseEntity.badRequest().body("权限不足");
+            }
+            
+            String questionText = (String) payload.get("questionText");
+            
+            if (questionText == null || questionText.isEmpty()) {
+                return ResponseEntity.badRequest().body("问题文本不能为空");
+            }
+            
+            boolean success = userService.addSecurityQuestion(questionText);
+            if (success) {
+                return ResponseEntity.ok("密保问题添加成功");
+            } else {
+                return ResponseEntity.badRequest().body("密保问题添加失败");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("操作失败: " + e.getMessage());
+        }
+    }
+    
+    // 删除安全问题（管理员接口）
+    @DeleteMapping("/admin/security-question/{questionId}")
+    public ResponseEntity<?> deleteSecurityQuestion(@PathVariable int questionId, Authentication authentication) {
+        try {
+            // 检查权限
+            String username = authentication.getName();
+            User adminUser = userRepository.findByUsername(username);
+            if (adminUser == null || adminUser.type != 2) {
+                return ResponseEntity.badRequest().body("权限不足");
+            }
+            
+            boolean success = userService.deleteSecurityQuestion(questionId);
+            if (success) {
+                return ResponseEntity.ok("密保问题删除成功");
+            } else {
+                return ResponseEntity.badRequest().body("密保问题删除失败");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("操作失败: " + e.getMessage());
+        }
+    }
+    
+    // 更新安全问题（管理员接口）
+    @PutMapping("/admin/security-question/{questionId}")
+    public ResponseEntity<?> updateSecurityQuestion(@PathVariable int questionId, @RequestBody Map<String, Object> payload, Authentication authentication) {
+        try {
+            // 检查权限
+            String username = authentication.getName();
+            User adminUser = userRepository.findByUsername(username);
+            if (adminUser == null || adminUser.type != 2) {
+                return ResponseEntity.badRequest().body("权限不足");
+            }
+            
+            String questionText = (String) payload.get("questionText");
+            
+            if (questionText == null || questionText.isEmpty()) {
+                return ResponseEntity.badRequest().body("问题文本不能为空");
+            }
+            
+            boolean success = userService.updateSecurityQuestion(questionId, questionText);
+            if (success) {
+                return ResponseEntity.ok("密保问题更新成功");
+            } else {
+                return ResponseEntity.badRequest().body("密保问题更新失败");
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("操作失败: " + e.getMessage());

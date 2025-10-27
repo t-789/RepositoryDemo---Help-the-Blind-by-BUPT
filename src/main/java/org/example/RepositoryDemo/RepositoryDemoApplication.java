@@ -21,6 +21,9 @@ public class RepositoryDemoApplication {
     public static Connection connection;
     private static void createTables() throws SQLException {
         UserRepository.createUserTable();
+//        UserRepository.checkAndUpdateUserTable();
+        UserRepository.createSecurityQuestionTable();
+        UserRepository.createSecurityQuestionMapTable();
         PointRepository.createPointTable();
         PointRepository.createConfigTable();
         PointRepository.createPointProposalTable();

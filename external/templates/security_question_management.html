@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>密保问题管理</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .button-group button {
+            margin: 2px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .logout {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .logout a {
+            color: #dc3545;
+            text-decoration: none;
+        }
+        .question-map-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-map-section table {
+            margin-top: 10px;
+        }
+        .question-map-form {
+            margin: 10px 0;
+        }
+        .question-map-form input {
+            margin-right: 10px;
+            padding: 5px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logout">
+        <a href="/logout">退出登录</a>
+    </div>
+    
+    <div class="back-link">
+        <a href="/admin">&larr; 返回管理员控制台</a>
+    </div>
+    
+    <h1>密保问题管理</h1>
+    
+    <div class="question-map-section">
+        <h3>密保问题管理</h3>
+        <div class="question-map-form">
+            <input type="number" id="questionIdInput" min="1" placeholder="问题ID（更新时使用）">
+            <input type="text" id="questionTextInput" placeholder="问题文本">
+            <button onclick="addQuestion()">添加密保问题</button>
+            <button onclick="updateQuestion()">更新密保问题</button>
+        </div>
+        <div id="question-message" class="alert hidden"></div>
+        <table id="questionMapTable">
+            <thead>
+                <tr>
+                    <th>问题ID</th>
+                    <th>问题文本</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="questionMapTableBody">
+                <!-- 密保问题数据将通过AJAX加载 -->
+            </tbody>
+        </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 15px;">
+        <a href="/">返回首页</a>
+    </div>
+</div>
+
+<script>
+    // 页面加载时获取密保问题列表
+    $(document).ready(function() {
+        loadQuestions();
+    });
+
+    function showQuestionMessage(message, isSuccess) {
+        const messageDiv = document.getElementById('question-message');
+        messageDiv.textContent = message;
+        messageDiv.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-danger');
+        messageDiv.classList.remove('hidden');
+        
+        // 3秒后自动隐藏消息
+        setTimeout(() => {
+            messageDiv.classList.add('hidden');
+        }, 3000);
+    }
+
+    function loadQuestions() {
+        fetch('/api/users/security-questions')
+            .then(response => response.json())
+            .then(questions => {
+                const tbody = document.getElementById('questionMapTableBody');
+                tbody.innerHTML = '';
+
+                // 检查返回的数据格式
+                if (Array.isArray(questions)) {
+                    // 处理数组格式 [{key: 1, value: "问题1"}, ...]
+                    questions.forEach(question => {
+                        const row = document.createElement('tr');
+                        const idCell = document.createElement('td');
+                        idCell.textContent = question.key;
+                        const textCell = document.createElement('td');
+                        textCell.textContent = question.value;
+                        const actionCell = document.createElement('td');
+                        actionCell.className = 'button-group';
+                        actionCell.innerHTML = `
+                            <button onclick="fillUpdateForm(${question.key}, this)">编辑</button>
+                            <button onclick="deleteQuestion(${question.key})">删除</button>
+                        `;
+                        
+                        row.appendChild(idCell);
+                        row.appendChild(textCell);
+                        row.appendChild(actionCell);
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    // 处理对象格式 {"1": "问题1", "2": "问题2", ...}
+                    for (const [id, text] of Object.entries(questions)) {
+                        const row = document.createElement('tr');
+                        const idCell = document.createElement('td');
+                        idCell.textContent = id;
+                        const textCell = document.createElement('td');
+                        textCell.textContent = text;
+                        const actionCell = document.createElement('td');
+                        actionCell.className = 'button-group';
+                        actionCell.innerHTML = `
+                            <button onclick="fillUpdateForm(${id}, this)">编辑</button>
+                            <button onclick="deleteQuestion(${id})">删除</button>
+                        `;
+                        
+                        row.appendChild(idCell);
+                        row.appendChild(textCell);
+                        row.appendChild(actionCell);
+                        tbody.appendChild(row);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('获取密保问题列表失败:', error);
+                showQuestionMessage('获取密保问题列表失败: ' + error.message, false);
+            });
+    }
+
+    function fillUpdateForm(questionId, buttonElement) {
+        // 通过DOM遍历找到问题文本
+        const row = buttonElement.closest('tr');
+        const questionText = row.cells[1].textContent;
+        
+        document.getElementById('questionIdInput').value = questionId;
+        document.getElementById('questionTextInput').value = questionText;
+    }
+
+    function addQuestion() {
+        const questionText = document.getElementById('questionTextInput').value;
+        
+        if (!questionText) {
+            showQuestionMessage('问题文本不能为空', false);
+            return;
+        }
+        
+        fetch('/api/users/admin/security-question', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                questionText: questionText
+            })
+        })
+        .then(response => response.text())
+        .then(data => {
+            showQuestionMessage(data, !data.includes('失败'));
+            if (!data.includes('失败')) {
+                // 清空输入框
+                document.getElementById('questionTextInput').value = '';
+                // 重新加载问题列表
+                loadQuestions();
+            }
+        })
+        .catch(error => {
+            showQuestionMessage('添加密保问题失败: ' + error.message, false);
+        });
+    }
+
+    function updateQuestion() {
+        const questionId = document.getElementById('questionIdInput').value;
+        const questionText = document.getElementById('questionTextInput').value;
+        
+        if (!questionId) {
+            showQuestionMessage('请先选择要更新的问题（点击编辑按钮）', false);
+            return;
+        }
+        
+        if (!questionText) {
+            showQuestionMessage('问题文本不能为空', false);
+            return;
+        }
+        
+        fetch(`/api/users/admin/security-question/${questionId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                questionText: questionText
+            })
+        })
+        .then(response => response.text())
+        .then(data => {
+            showQuestionMessage(data, !data.includes('失败'));
+            if (!data.includes('失败')) {
+                // 清空输入框
+                document.getElementById('questionIdInput').value = '';
+                document.getElementById('questionTextInput').value = '';
+                // 重新加载问题列表
+                loadQuestions();
+            }
+        })
+        .catch(error => {
+            showQuestionMessage('更新密保问题失败: ' + error.message, false);
+        });
+    }
+
+    function deleteQuestion(questionId) {
+        if (!confirm(`确定要删除ID为${questionId}的密保问题吗？`)) {
+            return;
+        }
+        
+        fetch(`/api/users/admin/security-question/${questionId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.text())
+        .then(data => {
+            showQuestionMessage(data, !data.includes('失败'));
+            if (!data.includes('失败')) {
+                // 重新加载问题列表
+                loadQuestions();
+            }
+        })
+        .catch(error => {
+            showQuestionMessage('删除密保问题失败: ' + error.message, false);
+        });
+    }
+</script>
+</body>
+</html>

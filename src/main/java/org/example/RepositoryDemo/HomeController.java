@@ -35,8 +35,8 @@ public class HomeController {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return "admin_main";
         } else {
-            // 如果不是管理员，重定向到首页或登录页
-            return "redirect:/login";
+            // 如果不是管理员，重定向到403错误页面
+            return "redirect:/error/403";
         }
     }
 
@@ -50,8 +50,8 @@ public class HomeController {
             model.addAttribute("users", users);
             return "user_management";
         } else {
-            // 如果不是管理员，重定向到首页
-            return "redirect:/";
+            // 如果不是管理员，重定向到403错误页面
+            return "redirect:/error/403";
         }
     }
 
@@ -62,8 +62,8 @@ public class HomeController {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return "point_management";
         } else {
-            // 如果不是管理员，重定向到首页
-            return "redirect:/";
+            // 如果不是管理员，重定向到403错误页面
+            return "redirect:/error/403";
         }
     }
 
@@ -74,8 +74,19 @@ public class HomeController {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return "forum_management";
         } else {
-            // 如果不是管理员，重定向到首页
-            return "redirect:/";
+            // 如果不是管理员，重定向到403错误页面
+            return "redirect:/error/403";
+        }
+    }
+    @GetMapping("/admin/security_question_management")
+    public String securityQuestionManagement(Authentication authentication) {
+        // 检查用户是否为管理员
+        if (authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            return "security_question_management";
+        } else {
+            // 如果不是管理员，重定向到403错误页面
+            return "redirect:/error/403";
         }
     }
     
@@ -86,8 +97,8 @@ public class HomeController {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             return "feedback_management";
         } else {
-            // 如果不是管理员，重定向到首页
-            return "redirect:/";
+            // 如果不是管理员，重定向到403错误页面
+            return "redirect:/error/403";
         }
     }
     

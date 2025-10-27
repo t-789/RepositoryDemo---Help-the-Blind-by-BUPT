@@ -94,4 +94,9 @@ public class CustomErrorController implements ErrorController {
         
         return "error/general";
     }
+    
+    @RequestMapping("/error/403")
+    public String handle403Error() {
+        return "error/403";
+    }
 }

@@ -5,6 +5,33 @@ curl -X POST http://localhost:8080/api/users/register \
 注册成功
 注册失败，用户名可能已存在
 
+# 用户注册（带头像和密保问题）
+# 注意：需要使用 multipart/form-data 格式
+curl -X POST http://localhost:8080/api/users/register-with-security \
+  -F "username=api_test_user_with_avatar" \
+  -F "password=password123" \
+  -F "avatar=@/path/to/avatar.jpg" \
+  -F "question1=1" \
+  -F "answer1=北京" \
+  -F "question2=2" \
+  -F "answer2=蓝色"
+注册成功
+注册失败，用户名可能已存在
+
+# 获取安全问题列表
+curl -X GET http://localhost:8080/api/users/security-questions
+返回样例：
+[{"key":1,"value":"你的出生地是哪里？"},{"key":2,"value":"你最喜欢的颜色是什么？"},{"key":3,"value":"你母亲的姓名是？"}]
+
+# 通过密保问题重置密码
+curl -X POST http://localhost:8080/api/users/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{"username":"api_test_user","answer1":"北京","answer2":"蓝色"}'
+密码重置成功，新密码为: 000000
+用户不存在
+密保问题答案不正确
+密码重置失败
+
 # 用户登录，成功后会设置cookie
 curl -X POST http://localhost:8080/api/users/login \
   -H "Content-Type: application/json" \
@@ -153,3 +180,10 @@ curl -X DELETE http://localhost:8080/api/forum/1 -b cookie.txt
 权限不足
 帖子删除成功
 删除帖子失败: 帖子不存在
+
+
+# DeepSeek调用
+curl -X POST "http://localhost:8080/api/ai/deepseek" \
+   -H "Content-Type: application/json" \
+   -d '{"prompt":"你好，DeepSeek！"}'
+{"type":"ai","content":"你好！很高兴见到你！\uD83D\uDE0A\n\n我是DeepSeek，由深度求索公司创造的AI助手。我在这里随时准备为你提供帮助，无论是回答问题、协助思考问题、创作内容，还是进行有趣的对话。\n\n有什么我可以帮你的吗？不管是学习、工作还是生活中的任何话题，我都很乐意和你一起探讨！✨","timestamp":"2025-10-26T23:02:12.760216","messageCount":null}

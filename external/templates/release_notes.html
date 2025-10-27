@@ -172,12 +172,69 @@
 </head>
 <body>
     <h1>项目发布说明</h1>
+    <div class="container">
+        <div class="week-header">
+            <h2 class="week-title">Weekly 3a</h2>
+            <div class="version">Version 0.0.3.2</div>
+            <div class="date">October 27, 2025</div>
+        </div>
+        <div class="section">
+            <div class="feature-list">
+                <h3>新增功能</h3>
+                <h4>用户头像</h4>
+                <ul>
+                    <li>为用户添加头像，用户头像存储在数据库中</li>
+                    <li>如果没有头像，则使用默认头像（默认头像为default.jpg）</li>
+                    <li>用户头像存储在服务器的static/avatar目录下</li>
+                    <li>提供了用户修改头像的接口</li>
+                </ul>
+                <h4>密保信息<span class="new-badge">NEW</span></h4>
+                <ul>
+                    <li>为每个用户记录密保信息，以供重置密码</li>
+                    <li>密保信息存储在数据库中，管理员可以编辑</li>
+                </ul>
+                <a href="/curl.txt" class="api-link" target="_blank">查看完整API文档 (curl.txt)</a>
+            </div>
+        </div>
+        <div class="section">
+            <div class="fix-list">
+                <h3>问题修复</h3>
+                <ul>
+                    <li>修复了登录界面在账号或密码错误的时候显示true</li>
+                    <li>修复了非管理员访问管理员页面时显示404而非403</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+    <div class="container">
+        <div class="week-header">
+            <h2 class="week-title">Weekly 2b</h2>
+            <div class="version">Version 0.0.3.1</div>
+            <div class="date">October 26, 2025</div>
+        </div>
+
+        <div class="section">
+            <div class="feature-list">
+                <h3>新增功能</h3>
+                <h4>DeepSeek接入<span class="new-badge">NEW</span></h4>
+                <ul>
+                    <li>DeepSeek加入项目</li>
+                    <li>现在已开放对话api，调用方法详见curl.txt尾部</li>
+                </ul>
+                <a href="/curl.txt" class="api-link" target="_blank">查看完整API文档 (curl.txt)</a>
+            </div>
+        </div>
+        <div class="section">
+            <h5>AI植入是临时起意的，bug是一点没修的，下周的事情下周再说吧。下班！</h5>
+        </div>
+    </div>
     
     <!-- 第二周周报 -->
     <div class="container">
         <div class="week-header">
-            <h2 class="week-title">Weekly 2</h2>
-            <div class="version">Version 0.3.0</div>
+            <h2 class="week-title">Weekly 2a</h2>
+            <div class="version">Version 0.0.3</div>
             <div class="date">October 25, 2025</div>
         </div>
 
@@ -281,21 +338,25 @@
             <div class="known-issues-list">
                 <h3>已知问题或未实现功能</h3>
                 <div class="critical-issue">
-                    <p><span class="issue-severity severity-critical">严重</span> <strong>普通用户进入管理员页面时显示404而非登录页面或503错误</strong></p>
+                    <p><span class="issue-severity severity-critical">严重</span> <strong>普通用户进入管理员页面时显示404而非登录页面或403错误（FIXED v0.0.3.2）</strong></p>
                     <p>我怀疑跟权限管理或跳转错误有关，下周修复</p>
                 </div>
-<!--                <div class="major-issue">-->
-<!--                    <p><span class="issue-severity severity-major">重要</span> <strong>反馈系统在提交特殊字符时可能出现乱码</strong></p>-->
-<!--                    <p>用户提交包含特殊字符（如emoji）的反馈时，系统可能无法正确处理。建议暂时避免在反馈中使用特殊字符。</p>-->
-<!--                </div>-->
-                    <div class="major-issue">
-                        <p><span class="issue-severity severity-major">重要</span> <strong>按照定位提供点位</strong></p>
-                        <p>目前系统中并没有提供按照定位提供点位的功能。预计下个版本添加</p>
-                    </div>
-                    <div class="minor-issue">
-                        <p><span class="issue-severity severity-minor">一般</span> <strong>个人首页</strong></p>
-                        <p>目前没有开发个个人首页功能。等有空闲精力的时候开发</p>
-                    </div>
+                <div class="major-issue">
+                    <p><span class="issue-severity severity-major">重要</span> <strong>反馈系统对系统提交的错误似乎无法记录</strong></p>
+                    <p>原因未知，下周尝试修复</p>
+                </div>
+                <div class="major-issue">
+                    <p><span class="issue-severity severity-major">重要</span> <strong>按照定位提供点位</strong></p>
+                    <p>目前系统中并没有提供按照定位提供点位的功能。预计下个版本添加</p>
+                </div>
+                <div class="major-issue">
+                    <p><span class="issue-severity severity-major">重要</span> <strong>管理员登录页面（FIXED v0.0.3.2）</strong></p>
+                    <p>在登录的时候输入错误的密码返回的是true而不是账号或密码错误</p>
+                </div>
+                <div class="minor-issue">
+                    <p><span class="issue-severity severity-minor">一般</span> <strong>个人首页</strong></p>
+                    <p>目前没有开发个个人首页功能。等有空闲精力的时候开发</p>
+                </div>
             </div>
         </div>
     </div>
@@ -304,7 +365,7 @@
     <div class="container">
         <div class="week-header">
             <h2 class="week-title">Weekly 1</h2>
-            <div class="version">Version 0.2.1</div>
+            <div class="version">Version 0.0.2.1</div>
             <div class="date">October 19, 2025</div>
         </div>
         

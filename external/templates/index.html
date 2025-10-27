@@ -166,6 +166,25 @@
             background-color: #f8d7da;
             border-color: #f5c6cb;
         }
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        .security-question {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -178,11 +197,13 @@
                     <li><a href="#" onclick="showSection('points')">点位</a></li>
                     <li><a href="#" onclick="showSection('forum')">论坛</a></li>
                     <li><a href="#" onclick="showSection('feedback')">反馈</a></li>
+                    <li><a href="#" onclick="showSection('reset-password')">重置密码</a></li>
                     <li><a href="../">回退</a></li>
                 </ul>
             </nav>
             <div class="auth-section">
                 <div id="user-info" class="user-info hidden">
+                    <img id="user-avatar" class="user-avatar" src="" alt="用户头像">
                     欢迎, <span id="username"></span> 
                     <span id="user-type"></span>
                     <button class="btn btn-danger" onclick="logout()">注销</button>
@@ -203,6 +224,7 @@
                 <li>查看和管理点位信息</li>
                 <li>参与论坛讨论</li>
                 <li>提交反馈和建议</li>
+                <li>通过密保问题重置密码</li>
             </ul>
             <p>请使用上方导航栏访问不同功能模块。</p>
         </div>
@@ -237,10 +259,48 @@
                     <label for="register-password">密码:</label>
                     <input type="password" id="register-password" required>
                 </div>
+                <div class="form-group">
+                    <label for="register-avatar">头像 (可选，支持 JPG/PNG，最大2MB):</label>
+                    <input type="file" id="register-avatar" accept="image/jpeg, image/png">
+                    <img id="avatar-preview" class="avatar-preview hidden" src="" alt="头像预览">
+                </div>
+                <div class="form-group">
+                    <label for="register-question1">密保问题1:</label>
+                    <select id="register-question1" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="register-answer1">答案1:</label>
+                    <input type="text" id="register-answer1" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-question2">密保问题2:</label>
+                    <select id="register-question2" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="register-answer2">答案2:</label>
+                    <input type="text" id="register-answer2" required>
+                </div>
                 <button type="submit" class="btn">注册</button>
                 <button type="button" class="btn btn-secondary" onclick="showSection('home')">取消</button>
             </form>
             <div id="register-message" class="alert hidden"></div>
+        </div>
+
+        <!-- 重置密码 -->
+        <div id="reset-password-section" class="section hidden">
+            <div class="section-title">重置密码</div>
+            <form id="reset-password-form">
+                <div class="form-group">
+                    <label for="reset-username">用户名:</label>
+                    <input type="text" id="reset-username" required>
+                </div>
+                <div id="security-questions-container">
+                    <!-- 密保问题将通过JavaScript动态加载 -->
+                </div>
+                <button type="submit" class="btn">重置密码</button>
+                <button type="button" class="btn btn-secondary" onclick="showSection('home')">取消</button>
+            </form>
+            <div id="reset-password-message" class="alert hidden"></div>
         </div>
 
         <!-- 点位 -->
@@ -271,6 +331,11 @@
     <script>
         // 全局变量
         let currentUser = null;
+        let avatarFile = null; // 用于存储头像文件
+        let securityQuestions = []; // 用于存储安全问题
+        
+        // 默认头像路径
+        const DEFAULT_AVATAR = '/avatars/default.jpg';
         
         // 页面加载时检查登录状态
         document.addEventListener('DOMContentLoaded', function() {
@@ -280,6 +345,44 @@
             // 绑定表单事件
             document.getElementById('login-form').addEventListener('submit', handleLogin);
             document.getElementById('register-form').addEventListener('submit', handleRegister);
+            document.getElementById('reset-password-form').addEventListener('submit', handleResetPassword);
+            
+            // 绑定头像预览事件
+            document.getElementById('register-avatar').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // 检查文件类型
+                    if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
+                        alert('只支持 JPG 或 PNG 格式的图片');
+                        e.target.value = '';
+                        return;
+                    }
+                    
+                    // 检查文件大小 (2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('图片大小不能超过 2MB');
+                        e.target.value = '';
+                        return;
+                    }
+                    
+                    avatarFile = file;
+                    
+                    // 预览图片
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.getElementById('avatar-preview');
+                        preview.src = e.target.result;
+                        preview.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    avatarFile = null;
+                    document.getElementById('avatar-preview').classList.add('hidden');
+                }
+            });
+            
+            // 加载安全问题
+            loadSecurityQuestions();
         });
         
         // 显示指定部分
@@ -303,6 +406,9 @@
                 case 'feedback':
                     loadFeedback();
                     break;
+                case 'reset-password':
+                    loadSecurityQuestionsForReset();
+                    break;
             }
         }
         
@@ -315,6 +421,15 @@
                 currentUser = JSON.parse(user);
                 document.getElementById('username').textContent = currentUser.username;
                 document.getElementById('user-type').textContent = currentUser.type === 2 ? '(管理员)' : '(普通用户)';
+                
+                // 设置用户头像
+                const userAvatar = document.getElementById('user-avatar');
+                if (currentUser.avatar) {
+                    userAvatar.src = currentUser.avatar;
+                } else {
+                    userAvatar.src = DEFAULT_AVATAR;
+                }
+                
                 document.getElementById('user-info').classList.remove('hidden');
                 document.getElementById('auth-buttons').classList.add('hidden');
             } else {
@@ -343,14 +458,15 @@
             .then(data => {
                 const messageDiv = document.getElementById('login-message');
                 if (data === '登录成功') {
-                    // 获取用户信息以确定用户类型
+                    // 获取用户信息以确定用户类型和头像
                     fetch('/api/users/current')
                     .then(response => response.json())
                     .then(userData => {
                         // 保存用户信息到localStorage
                         const user = {
                             username: userData.username, 
-                            type: userData.type
+                            type: userData.type,
+                            avatar: userData.avatar // 保存头像信息
                         };
                         localStorage.setItem('currentUser', JSON.stringify(user));
                         currentUser = user;
@@ -358,6 +474,15 @@
                         // 更新UI
                         document.getElementById('username').textContent = username;
                         document.getElementById('user-type').textContent = userData.type === 2 ? '(管理员)' : '(普通用户)';
+                        
+                        // 设置用户头像
+                        const userAvatar = document.getElementById('user-avatar');
+                        if (userData.avatar) {
+                            userAvatar.src = userData.avatar;
+                        } else {
+                            userAvatar.src = DEFAULT_AVATAR;
+                        }
+                        
                         document.getElementById('user-info').classList.remove('hidden');
                         document.getElementById('auth-buttons').classList.add('hidden');
                         messageDiv.classList.remove('alert-danger');
@@ -373,12 +498,16 @@
                     })
                     .catch(error => {
                         // 如果获取用户信息失败，使用默认值
-                        const user = {username, type: 0};
+                        const user = {username, type: 0, avatar: null};
                         localStorage.setItem('currentUser', JSON.stringify(user));
                         currentUser = user;
                         
                         document.getElementById('username').textContent = username;
                         document.getElementById('user-type').textContent = '(普通用户)';
+                        
+                        // 设置默认头像
+                        document.getElementById('user-avatar').src = DEFAULT_AVATAR;
+                        
                         document.getElementById('user-info').classList.remove('hidden');
                         document.getElementById('auth-buttons').classList.add('hidden');
                         messageDiv.classList.remove('alert-danger');
@@ -407,20 +536,95 @@
             });
         }
         
+        // 加载安全问题（用于注册）
+        function loadSecurityQuestions() {
+            fetch('/api/users/security-questions')
+            .then(response => response.json())
+            .then(data => {
+                const question1Select = document.getElementById('register-question1');
+                const question2Select = document.getElementById('register-question2');
+                
+                // 清空现有选项
+                question1Select.innerHTML = '';
+                question2Select.innerHTML = '';
+                
+                // 添加选项
+                for (const [id, question] of Object.entries(data)) {
+                    const option1 = document.createElement('option');
+                    option1.value = id;
+                    option1.textContent = question;
+                    question1Select.appendChild(option1);
+                    
+                    const option2 = document.createElement('option');
+                    option2.value = id;
+                    option2.textContent = question;
+                    question2Select.appendChild(option2);
+                }
+            })
+            .catch(error => {
+                console.error('加载安全问题失败:', error);
+            });
+        }
+        
+        // 加载安全问题（用于重置密码）
+        function loadSecurityQuestionsForReset() {
+            const container = document.getElementById('security-questions-container');
+            
+            fetch('/api/users/security-questions')
+            .then(response => response.json())
+            .then(data => {
+                container.innerHTML = '';
+                
+                // 添加密保问题输入字段
+                let index = 0;
+                for (const [id, question] of Object.entries(data)) {
+                    if (index < 2) { // 只显示前两个问题
+                        const div = document.createElement('div');
+                        div.className = 'security-question';
+                        div.innerHTML = `
+                            <div class="form-group">
+                                <label>密保问题${index + 1}: ${question}</label>
+                                <input type="text" id="reset-answer${index + 1}" required>
+                            </div>
+                        `;
+                        container.appendChild(div);
+                        index++;
+                    }
+                }
+            })
+            .catch(error => {
+                container.innerHTML = '<p>加载密保问题失败</p>';
+                console.error('加载安全问题失败:', error);
+            });
+        }
+        
         // 处理注册
         function handleRegister(e) {
             e.preventDefault();
             
             const username = document.getElementById('register-username').value;
             const password = document.getElementById('register-password').value;
+            const question1 = parseInt(document.getElementById('register-question1').value);
+            const answer1 = document.getElementById('register-answer1').value;
+            const question2 = parseInt(document.getElementById('register-question2').value);
+            const answer2 = document.getElementById('register-answer2').value;
             
-            // 发送注册请求
-            fetch('/api/users/register', {
+            // 使用 FormData 发送注册请求（包含文件上传）
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            if (avatarFile) {
+                formData.append('avatar', avatarFile);
+            }
+            formData.append('question1', question1);
+            formData.append('answer1', answer1);
+            formData.append('question2', question2);
+            formData.append('answer2', answer2);
+            
+            // 发送注册请求（带安全问题）
+            fetch('/api/users/register-with-security', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({username, password})
+                body: formData
             })
             .then(response => response.text())
             .then(data => {
@@ -433,6 +637,8 @@
                     
                     // 清空表单
                     document.getElementById('register-form').reset();
+                    document.getElementById('avatar-preview').classList.add('hidden');
+                    avatarFile = null;
                     
                     // 延迟跳转到登录页面
                     setTimeout(() => {
@@ -451,6 +657,60 @@
                 messageDiv.classList.remove('alert-success');
                 messageDiv.classList.add('alert-danger');
                 messageDiv.textContent = '注册失败: ' + error.message;
+                messageDiv.classList.remove('hidden');
+            });
+        }
+        
+        // 处理重置密码
+        function handleResetPassword(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('reset-username').value;
+            const answer1 = document.getElementById('reset-answer1').value;
+            const answer2 = document.getElementById('reset-answer2').value;
+            
+            const payload = {
+                username: username,
+                answer1: answer1,
+                answer2: answer2
+            };
+            
+            fetch('/api/users/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.text())
+            .then(data => {
+                const messageDiv = document.getElementById('reset-password-message');
+                if (data.includes('密码重置成功')) {
+                    messageDiv.classList.remove('alert-danger');
+                    messageDiv.classList.add('alert-success');
+                    messageDiv.textContent = data;
+                    messageDiv.classList.remove('hidden');
+                    
+                    // 清空表单
+                    document.getElementById('reset-password-form').reset();
+                    
+                    // 延迟跳转到登录页面
+                    setTimeout(() => {
+                        showSection('login');
+                        messageDiv.classList.add('hidden');
+                    }, 1500);
+                } else {
+                    messageDiv.classList.remove('alert-success');
+                    messageDiv.classList.add('alert-danger');
+                    messageDiv.textContent = data;
+                    messageDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                const messageDiv = document.getElementById('reset-password-message');
+                messageDiv.classList.remove('alert-success');
+                messageDiv.classList.add('alert-danger');
+                messageDiv.textContent = '密码重置失败: ' + error.message;
                 messageDiv.classList.remove('hidden');
             });
         }
