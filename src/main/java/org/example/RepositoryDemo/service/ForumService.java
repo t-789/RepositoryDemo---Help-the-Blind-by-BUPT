@@ -1,14 +1,20 @@
 // ForumService.java
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.Repository.UserRepository;
+import org.example.RepositoryDemo.entity.Forum;
+import org.example.RepositoryDemo.Repository.forumRepository;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.List;
 
 @Service
 public class ForumService {
+    private static final Logger logger = LogManager.getLogger(ForumService.class);
+    
     private final forumRepository forumRepository;
     private final UserRepository userRepository;
 
@@ -19,7 +25,10 @@ public class ForumService {
 
     // 创建论坛帖子
     public int createForum(int userId, String title, String content) throws SQLException {
-        return forumRepository.createForum(userId, title, content);
+        logger.debug("开始创建论坛帖子: userId={}, title={}", userId, title);
+        int result = forumRepository.createForum(userId, title, content);
+        logger.debug("论坛帖子创建结果: userId={}, title={}, result={}", userId, title, result);
+        return result;
     }
 
     // 获取所有论坛帖子

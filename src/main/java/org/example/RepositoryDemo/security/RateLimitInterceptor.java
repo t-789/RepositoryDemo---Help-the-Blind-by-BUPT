@@ -1,9 +1,12 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.Repository.UserRepository;
+import org.example.RepositoryDemo.entity.User;
+import org.example.RepositoryDemo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

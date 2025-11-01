@@ -1,7 +1,9 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.Repository;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.RepositoryDemoApplication;
+import org.example.RepositoryDemo.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,7 +24,7 @@ public class UserRepository {
     @Autowired
     private PasswordEncoder passwordEncoder;
     
-    private static final Logger logger = LogManager.getLogger(RepositoryDemoApplication.class);
+    private static final Logger logger = LogManager.getLogger(UserRepository.class);
     private static final Connection connection = RepositoryDemoApplication.connection;
 
     public static void createUserTable() throws SQLException {
@@ -38,33 +40,12 @@ public class UserRepository {
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(createUserTableSQL);
             logger.info("用户表创建成功！");
+        } catch (Exception e) {
+            logger.error("创建用户表时发生错误: {}", e.getMessage());
         }
     }
 
-    public static void createSecurityQuestionTable() throws SQLException {
-        String createSecurityQuestionTableSQL = "CREATE TABLE IF NOT EXISTS security_questions (" +
-                "id INTEGER PRIMARY KEY NOT NULL, " +
-                "question1 INTEGER NOT NULL, " +
-                "answer1 TEXT NOT NULL, " +
-                "question2 INTEGER NOT NULL, " +
-                "answer2 TEXT NOT NULL, " +
-                "FOREIGN KEY (id) REFERENCES users(id))";
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute(createSecurityQuestionTableSQL);
-            logger.info("安全提问表创建成功！");
-        }
-    }
-    public static void createSecurityQuestionMapTable() throws SQLException {
-        String createSecurityQuestionMapTableSQL = "CREATE TABLE IF NOT EXISTS security_question_map (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "question TEXT NOT NULL)";
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute(createSecurityQuestionMapTableSQL);
-            logger.info("安全提问映射表创建成功！");
-        }
-    }
 
-    
     /**
      * 检查并更新用户表结构
      * 自动添加缺失的列以保证数据库结构完整性
@@ -147,6 +128,7 @@ public class UserRepository {
             pstmt.setString(4, user.avatar); // 插入头像字段，可以为null
             pstmt.executeUpdate();
             logger.info("用户{}注册成功！", user.username);
+            StatisticRepository.updateUserCount(1);
             return 1; // 注册成功
         } catch (SQLException e) {
             logger.error("用户{}注册失败: {}", user.username, e.getMessage());
@@ -171,6 +153,10 @@ public class UserRepository {
                 return user;
             });
         } catch (DataAccessException e) {
+            if (e.getMessage().contains("Incorrect result size: expected 1, actual 0")){
+                logger.info("用户{}不存在",  username);
+                return null;
+            }
             logger.error("findByUsername()：查询用户失败: {}", e.getMessage());
             return null; // 用户不存在
         }
@@ -411,6 +397,7 @@ public class UserRepository {
                 int rowsDeleted = pstmt.executeUpdate();
                 if (rowsDeleted > 0) {
                     logger.info("用户{}已被删除", id);
+                    StatisticRepository.updateUserCount(-1);
                 } else {
                     logger.warn("用户{}不存在", id);
                 }
@@ -569,16 +556,16 @@ public class UserRepository {
     
     // 添加安全问题
     public boolean addSecurityQuestion(String question) {
-        return SecurityQuestionManagement.addQuestion(question);
+        return SecurityQuestionRepository.addQuestion(question);
     }
     
     // 删除安全问题
     public boolean deleteSecurityQuestion(int questionId) {
-        return SecurityQuestionManagement.deleteQuestion(questionId);
+        return SecurityQuestionRepository.deleteQuestion(questionId);
     }
     
     // 更新安全问题
     public boolean updateSecurityQuestion(int questionId, String newQuestion) {
-        return SecurityQuestionManagement.updateQuestion(questionId, newQuestion);
+        return SecurityQuestionRepository.updateQuestion(questionId, newQuestion);
     }
 }

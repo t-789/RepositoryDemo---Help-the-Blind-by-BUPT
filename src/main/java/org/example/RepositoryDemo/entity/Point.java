@@ -1,5 +1,5 @@
 // Point.java
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.entity;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +31,9 @@ public class Point {
     
     // 添加类型名称字段，用于存储映射后的类型名称
     public String typeName;
+
+    // 添加图片描述字段，用于存储图片描述
+    public String image_description;
     
     public Point() {
         // 默认构造函数

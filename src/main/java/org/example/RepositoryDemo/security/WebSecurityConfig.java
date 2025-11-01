@@ -1,5 +1,8 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.security;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +23,8 @@ import java.nio.charset.StandardCharsets;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
+    private static final Logger logger = LogManager.getLogger(WebSecurityConfig.class);
+    
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
@@ -33,12 +38,14 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/users/{userId}/ban").hasRole("ADMIN")
                         .requestMatchers("/api/users/{userId}/unban").hasRole("ADMIN")
                         .requestMatchers("/api/users/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/*/security-questions").permitAll()
                         .requestMatchers("/api/ai/**").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/release-notes").permitAll()
                         .requestMatchers("/curl.txt").permitAll()
                         .requestMatchers("/about").permitAll()
                         .requestMatchers("/index").permitAll()
+                        .requestMatchers("/index*").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/error/**").permitAll()
@@ -46,6 +53,10 @@ public class WebSecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/feedback_management").hasRole("ADMIN")
                         .requestMatchers("/api/users/security-questions").permitAll()
+                        .requestMatchers("/api/users/register-with-security").permitAll()
+                        .requestMatchers("api/points/distance").permitAll()
+                        .requestMatchers("/errortest").permitAll()
+                        .requestMatchers("api/statistic/**").permitAll()
                         .requestMatchers("/").permitAll()
                         .anyRequest().authenticated()
                 )

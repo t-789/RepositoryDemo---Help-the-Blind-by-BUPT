@@ -1,6 +1,10 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.controller;
 
 import lombok.Getter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.Repository.UserRepository;
+import org.example.RepositoryDemo.entity.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,6 +16,7 @@ import java.util.List;
 @Controller
 public class HomeController {
 
+    private static final Logger logger = LogManager.getLogger(HomeController.class);
     private final UserRepository userRepository;
 
     public HomeController(UserRepository userRepository) {
@@ -117,4 +122,8 @@ public class HomeController {
         return "index";
     }
 
+    @GetMapping("/errortest")
+    public String errorTest() { // 测试错误
+        throw new RuntimeException("测试错误");
+    }
 }

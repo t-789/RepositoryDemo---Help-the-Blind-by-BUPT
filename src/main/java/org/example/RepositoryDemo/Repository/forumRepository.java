@@ -1,7 +1,10 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.Repository;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.RepositoryDemoApplication;
+import org.example.RepositoryDemo.entity.Forum;
+import org.example.RepositoryDemo.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -11,7 +14,7 @@ import java.util.List;
 
 @Repository
 public class forumRepository {
-    private static final Logger logger = LogManager.getLogger(RepositoryDemoApplication.class);
+    private static final Logger logger = LogManager.getLogger(forumRepository.class);
     private static final Connection connection = RepositoryDemoApplication.connection;
     
     @Autowired
@@ -42,6 +45,7 @@ public class forumRepository {
             stmt.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
             stmt.executeUpdate();
             logger.info("{}创建的帖子{}创建成功！", userId, title);
+            StatisticRepository.updatePostCount(1);
             return 1;
         } catch (SQLException e) {
             logger.error("创建帖子{}失败: {}", title, e.getMessage());
@@ -129,6 +133,7 @@ public class forumRepository {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
+            StatisticRepository.updatePostCount(-1);
             logger.info("删除帖子{}成功！", id);
         } catch (SQLException e) {
             logger.error("删除帖子{}失败: {}", id, e.getMessage());

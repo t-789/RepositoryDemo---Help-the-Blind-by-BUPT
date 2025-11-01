@@ -1,9 +1,10 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.ChatResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -28,7 +29,7 @@ public class AIService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static final Logger logger = LogManager.getLogger(RepositoryDemoApplication.class);
+    private static final Logger logger = LogManager.getLogger(AIService.class);
 
     public ChatResponse processMessage(String userId, String message) {
         try {

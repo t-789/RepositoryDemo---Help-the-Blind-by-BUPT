@@ -1,5 +1,8 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.controller;
 
+import org.example.RepositoryDemo.service.AIService;
+import org.example.RepositoryDemo.ChatRequest;
+import org.example.RepositoryDemo.ChatResponse;
 import org.example.RepositoryDemo.dto.DeepSeekRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

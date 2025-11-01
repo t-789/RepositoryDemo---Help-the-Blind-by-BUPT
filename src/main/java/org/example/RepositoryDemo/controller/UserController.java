@@ -1,9 +1,18 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.controller;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.Repository.UserRepository;
+import org.example.RepositoryDemo.dto.UserProfileResponse;
+import org.example.RepositoryDemo.dto.registerWithSecurityRequest;
+import org.example.RepositoryDemo.entity.Forum;
+import org.example.RepositoryDemo.entity.Point;
+import org.example.RepositoryDemo.service.UserService;
 import org.example.RepositoryDemo.dto.RegisterRequest;
 import org.example.RepositoryDemo.dto.LoginRequest;
+import org.example.RepositoryDemo.entity.User;
+import org.example.RepositoryDemo.service.PointService;
+import org.example.RepositoryDemo.service.ForumService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,7 +40,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.AbstractMap;
 import java.util.UUID;
 
 @CrossOrigin(origins = "http://127.0.0.1:5500")
@@ -55,9 +63,9 @@ public class UserController {
     private PointService pointService;
 
     @Autowired
-    private FeedbackService feedbackService;
+    private ForumService forumService;
 
-    private static final Logger logger = LogManager.getLogger(RepositoryDemoApplication.class);
+    private static final Logger logger = LogManager.getLogger(UserController.class);
     
     // 用户注册 - JSON格式
     @PostMapping(value = "/register", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE})
@@ -76,26 +84,19 @@ public class UserController {
 
     // 用户注册 - 带头像上传和密保问题设置
     @PostMapping(value = "/register-with-security", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> registerWithSecurity(
-            @RequestParam("username") String username,
-            @RequestParam("password") String password,
-            @RequestParam(value = "avatar", required = false) MultipartFile avatarFile,
-            @RequestParam("question1") int question1,
-            @RequestParam("answer1") String answer1,
-            @RequestParam("question2") int question2,
-            @RequestParam("answer2") String answer2) {
+    public ResponseEntity<?> registerWithSecurity(@Valid @ModelAttribute registerWithSecurityRequest request) {
         try {
             // 先进行基本的注册
-            boolean success = userService.register(username, password, 0);
+            boolean success = userService.register(request.getUsername(), request.getPassword(), 0);
             
             if (success) {
                 // 查找刚创建的用户
-                User user = userRepository.findByUsername(username);
+                User user = userRepository.findByUsername(request.getUsername());
                 
                 // 如果提供了头像文件，则处理头像上传
-                if (avatarFile != null && !avatarFile.isEmpty()) {
+                if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
                     // 处理头像上传
-                    String avatarPath = saveAvatarFile(avatarFile);
+                    String avatarPath = saveAvatarFile(request.getAvatar());
                     
                     if (avatarPath != null) {
                         // 更新用户头像信息
@@ -104,7 +105,7 @@ public class UserController {
                 }
                 
                 // 设置密保问题
-                userService.setSecurityQuestions(user.id, question1, answer1, question2, answer2);
+                userService.setSecurityQuestions(user.id, request.getQuestion1(), request.getAnswer1(), request.getQuestion2(), request.getAnswer2());
                 
                 return ResponseEntity.ok("注册成功");
             } else {
@@ -150,7 +151,7 @@ public class UserController {
             if (originalFilename != null && originalFilename.contains(".")) {
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
-            String fileName = UUID.randomUUID().toString() + extension;
+            String fileName = UUID.randomUUID() + extension;
             Path filePath = Paths.get(uploadDir + fileName);
 
             // 保存文件
@@ -288,7 +289,7 @@ public class UserController {
             if (originalFilename != null && originalFilename.contains(".")) {
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
-            String fileName = UUID.randomUUID().toString() + extension;
+            String fileName = UUID.randomUUID() + extension;
             Path filePath = Paths.get(uploadDir + fileName);
 
             // 保存文件
@@ -329,6 +330,33 @@ public class UserController {
         } catch (Exception e) {
             logger.error("获取安全问题失败: ", e);
             return ResponseEntity.badRequest().body("获取安全问题失败: " + e.getMessage());
+        }
+    }
+
+    // 获取用户安全问题（用于密码重置）
+    @GetMapping("/{username}/security-questions")
+    public ResponseEntity<?> getUserSecurityQuestions(@PathVariable String username) {
+        try {
+            // 查找用户
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("用户不存在");
+            }
+            
+            // 获取用户的安全问题
+            UserRepository.QuestionSet questionSet = userRepository.getQuestionsById(user.id);
+            if (questionSet == null) {
+                return ResponseEntity.badRequest().body("该用户未设置密保问题");
+            }
+            
+            // 返回用户的安全问题（不返回答案）
+            Map<String, String> questions = new HashMap<>();
+            questions.put("question1", questionSet.question1);
+            questions.put("question2", questionSet.question2);
+            
+            return ResponseEntity.ok(questions);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("获取用户安全问题失败: " + e.getMessage());
         }
     }
 
@@ -535,6 +563,37 @@ public class UserController {
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("操作失败: " + e.getMessage());
+        }
+    }
+
+    // 获取用户个人主页信息
+    @GetMapping("/profile")
+    public ResponseEntity<?> getUserProfile(Authentication authentication) {
+        try {
+            // 获取当前认证用户
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
+            
+            // 获取用户点位数量
+            List<Point> userPoints = pointService.getPointsByUserId(user.id);
+            int pointCount = userPoints != null ? userPoints.size() : 0;
+            
+            // 获取用户帖子数量
+            List<Forum> userPosts = forumService.getForumsByUserId(user.id);
+            int postCount = userPosts != null ? userPosts.size() : 0;
+            
+            // 获取用户积分
+            int credit = user.credit;
+            
+            // 构造响应对象
+            UserProfileResponse profileResponse = new UserProfileResponse(pointCount, postCount, credit);
+            
+            return ResponseEntity.ok(profileResponse);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("获取用户信息失败: " + e.getMessage());
         }
     }
 }

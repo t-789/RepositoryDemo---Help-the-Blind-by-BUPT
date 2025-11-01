@@ -1,6 +1,10 @@
 // PointService.java
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.Repository.PointRepository;
+import org.example.RepositoryDemo.entity.Point;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -8,6 +12,7 @@ import java.util.List;
 
 @Service
 public class PointService {
+    private static final Logger logger = LogManager.getLogger(PointService.class);
     private final PointRepository pointRepository;
     
     public PointService(PointRepository pointRepository) {
@@ -15,7 +20,8 @@ public class PointService {
     }
     
     // 保存点位
-    public int savePoint(int userId, double x, double y, int level, int type, String description) {
+    public int savePoint(int userId, double x, double y, int level, int type, String description, String image) {
+        logger.debug("开始保存点位: userId={}, x={}, y={}, level={}, type={}, description={}", userId, x, y, level, type, description);
         Point point = new Point();
         point.userId = userId;
         point.x = x;
@@ -27,8 +33,11 @@ public class PointService {
         point.level = level;
         point.type = type;
         point.description = description;
+        point.image_description = image;
         
-        return pointRepository.savePoint(point);
+        int result = pointRepository.savePoint(point);
+        logger.debug("点位保存结果: userId={}, result={}", userId, result);
+        return result;
     }
     
     // 获取所有活跃点位
@@ -104,4 +113,13 @@ public class PointService {
         return pointRepository.saveTypeMap(typeId, typeName);
     }
 
+    // 根据距离获取点位
+    public List<Point> getPointsByDistance(double x, double y, double distance) {
+        return pointRepository.getPointsByDistance(x, y, distance);
+    }
+
+    // 根据用户ID获取点位
+    public List<Point> getPointsByUserId(int userId) {
+        return pointRepository.getPointsByUserId(userId);
+    }
 }

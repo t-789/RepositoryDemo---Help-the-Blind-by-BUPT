@@ -195,14 +195,33 @@
                 row.classList.add('system-error');
             }
 
+            // 创建内容单元格
+            let contentCell = `
+                <div class="detail-content">${feedback.content.substring(0, 50)}${feedback.content.length > 50 ? '...' : ''}</div>
+            `;
+            
+            // 添加详细内容的隐藏元素
+            let fullContentElement = '';
+            if (feedback.content.length > 50) {
+                fullContentElement = `<div class="detail-content" style="display: none;">${feedback.content}</div>`;
+                contentCell += `<div class="toggle-details" onclick="toggleDetails(this)">显示全部</div>`;
+            }
+            
+            // 添加堆栈跟踪的隐藏元素和切换按钮
+            let stackTraceElement = '';
+            if (feedback.stackTrace) {
+                stackTraceElement = `<div class="stack-trace" style="display: none;">${feedback.stackTrace}</div>`;
+                contentCell += `<div class="toggle-details" onclick="toggleStackTrace(this)">显示堆栈</div>`;
+            }
+
             row.innerHTML = `
                 <td>${feedback.id}</td>
                 <td>${feedback.username}${feedback.userId ? '(' + feedback.userId + ')' : ''}</td>
                 <td>${feedback.type === 'system' ? '系统错误' : '用户反馈'}</td>
                 <td>
-                    <div class="detail-content">${feedback.content.substring(0, 50)}${feedback.content.length > 50 ? '...' : ''}</div>
-                    ${feedback.content.length > 50 ? `<div class="toggle-details" onclick="toggleDetails(this)">显示全部</div>` : ''}
-                    ${feedback.stackTrace ? `<div class="toggle-details" onclick="toggleStackTrace(this)">显示堆栈</div>` : ''}
+                    ${contentCell}
+                    ${fullContentElement}
+                    ${stackTraceElement}
                 </td>
                 <td>${feedback.url || 'N/A'}</td>
                 <td>${formatDate(feedback.createTime)}</td>
@@ -216,45 +235,39 @@
                 </td>
             `;
             tbody.appendChild(row);
-            
-            // 添加详细内容和堆栈信息的隐藏元素
-            if (feedback.content.length > 50) {
-                const fullContent = document.createElement('div');
-                fullContent.className = 'detail-content';
-                fullContent.style.display = 'none';
-                fullContent.textContent = feedback.content;
-                row.appendChild(fullContent);
-            }
-            
-            if (feedback.stackTrace) {
-                const stackTrace = document.createElement('div');
-                stackTrace.className = 'stack-trace';
-                stackTrace.style.display = 'none';
-                stackTrace.textContent = feedback.stackTrace;
-                row.appendChild(stackTrace);
-            }
         });
     }
     
     function toggleDetails(element) {
-        const contentDiv = element.previousElementSibling;
-        if (contentDiv.style.display === 'none') {
-            contentDiv.style.display = 'block';
-            element.textContent = '收起';
-        } else {
-            contentDiv.style.display = 'none';
-            element.textContent = '显示全部';
+        // 查找详细内容元素（前一个兄弟元素中的隐藏详细内容）
+        const parent = element.parentNode;
+        const detailDivs = parent.querySelectorAll('.detail-content');
+        const fullContentDiv = detailDivs[1] || detailDivs[0]; // 第二个detail-content是完整内容
+        
+        if (fullContentDiv) {
+            if (fullContentDiv.style.display === 'none') {
+                fullContentDiv.style.display = 'block';
+                element.textContent = '收起';
+            } else {
+                fullContentDiv.style.display = 'none';
+                element.textContent = '显示全部';
+            }
         }
     }
     
     function toggleStackTrace(element) {
-        const stackTraceDiv = element.parentNode.lastChild;
-        if (stackTraceDiv.style.display === 'none') {
-            stackTraceDiv.style.display = 'block';
-            element.textContent = '隐藏堆栈';
-        } else {
-            stackTraceDiv.style.display = 'none';
-            element.textContent = '显示堆栈';
+        // 查找堆栈跟踪元素
+        const parent = element.parentNode;
+        const stackTraceDiv = parent.querySelector('.stack-trace');
+        
+        if (stackTraceDiv) {
+            if (stackTraceDiv.style.display === 'none') {
+                stackTraceDiv.style.display = 'block';
+                element.textContent = '隐藏堆栈';
+            } else {
+                stackTraceDiv.style.display = 'none';
+                element.textContent = '显示堆栈';
+            }
         }
     }
 

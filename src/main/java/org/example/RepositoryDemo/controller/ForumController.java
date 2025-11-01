@@ -1,6 +1,12 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.controller;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.service.ForumService;
+import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.dto.ForumRequest;
+import org.example.RepositoryDemo.entity.Forum;
+import org.example.RepositoryDemo.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,6 +23,8 @@ import java.util.List;
 @Validated
 public class ForumController {
 
+    private static final Logger logger = LogManager.getLogger(ForumController.class);
+    
     @Autowired
     private ForumService forumService;
 

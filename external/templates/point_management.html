@@ -136,6 +136,7 @@
             <th>等级</th>
             <th>类型</th>
             <th>描述</th>
+            <th>图片描述</th>
             <th>操作</th>
         </tr>
         </thead>
@@ -184,6 +185,7 @@
                         <td>${point.level}</td>
                         <td>${point.typeName || point.type}</td>
                         <td>${!point.description?'无':point.description}</td>
+                        <td>${point.image_description != null ? '<img src="' + point.image_description + '" style="max-width: 100px; max-height: 100px;">' : '无'}</td>
                         <td class="button-group">
                             <button onclick="deletePoint(${point.id})" ${point.deleted ? 'disabled' : ''}>删除</button>
                             <button onclick="restorePoint(${point.id})" ${!point.deleted ? 'disabled' : ''}>恢复</button>

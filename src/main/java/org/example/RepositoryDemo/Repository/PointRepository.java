@@ -1,8 +1,10 @@
 // PointRepository.java
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.Repository;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.RepositoryDemoApplication;
+import org.example.RepositoryDemo.entity.Point;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -28,7 +30,8 @@ public class PointRepository {
                 "confirm_count INTEGER NOT NULL DEFAULT 0, " +
                 "level INTEGER NOT NULL DEFAULT 3, " +
                 "type INTEGER NOT NULL DEFAULT 0, " +
-                "description TEXT)";
+                "description TEXT NULL, " +
+                "image_description TEXT NULL)";
         
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(createPointTableSQL);
@@ -52,22 +55,12 @@ public class PointRepository {
 
     public static void alterPointTable() throws SQLException {
         try (Statement stmt = connection.createStatement()) {
-            stmt.execute("ALTER TABLE points ADD COLUMN confirm_count INTEGER NOT NULL DEFAULT 0");
-            logger.info("成功添加 confirm_count 列");
+            stmt.execute("ALTER TABLE points ADD COLUMN image_description TEXT NULL");
+            logger.info("成功添加 image_description 列");
         } catch (SQLException e) {
             // 列可能已经存在，忽略错误
             if (!e.getMessage().contains("duplicate column name")) {
-                logger.warn("添加 type 列时出错: {}", e.getMessage());
-            }
-        }
-
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute("ALTER TABLE points ADD COLUMN level INTEGER NOT NULL DEFAULT 3");
-            logger.info("成功添加 level 列");
-        } catch (SQLException e) {
-            // 列可能已经存在，忽略错误
-            if (!e.getMessage().contains("duplicate column name")) {
-                logger.warn("添加 description 列时出错: {}", e.getMessage());
+                logger.warn("添加 image_description 列时出错: {}", e.getMessage());
             }
         }
     }
@@ -130,7 +123,7 @@ public class PointRepository {
             logger.error("点位查重失败: {}", e.getMessage());
         }
 
-        String sql = "INSERT INTO points (user_id, x, y, marked_time, deleted, propose_delete, confirm_count, level, type, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO points (user_id, x, y, marked_time, deleted, propose_delete, confirm_count, level, type, description, image_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setInt(1, point.userId);
             pstmt.setDouble(2, point.x);
@@ -142,6 +135,7 @@ public class PointRepository {
             pstmt.setInt(8, point.level == null ? 3 : point.level);
             pstmt.setInt(9, point.type);
             pstmt.setString(10, point.description != null ? point.description : "没有描述");
+            pstmt.setString(11, point.image_description != null ? "static/" + point.image_description : "没有图片描述");
             int result = pstmt.executeUpdate();
             if (result > 0) {
                 ResultSet rs = pstmt.getGeneratedKeys();
@@ -161,6 +155,7 @@ public class PointRepository {
                     logger.error("更新用户{}积分失败: {}", point.userId, e.getMessage());
                 }
                 logger.info("点位保存成功，ID: {}", point.id);
+                StatisticRepository.updatePointCount(1);
                 return point.id;
             }
         } catch (SQLException e) {
@@ -215,6 +210,7 @@ public class PointRepository {
         point.level = rs.getInt("level");
         point.type = rs.getInt("type");
         point.description = rs.getString("description");
+        point.image_description = rs.getString("image_description");
         return point;
     }
 
@@ -524,6 +520,58 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("获取类型名称失败: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    public List<Point> getPointsByDistance(double x, double y, double distance){
+        List<Point> points = new ArrayList<>();
+        String sql = "SELECT * FROM points WHERE x >= ? AND x <= ? AND y >= ? AND y <= ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setDouble(1, x - distance);
+            pstmt.setDouble(2, x + distance);
+            pstmt.setDouble(3, y - distance);
+            pstmt.setDouble(4, y + distance);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    if (checkDis(rs.getDouble("x"), rs.getDouble("y"), x, y, distance)){
+                        points.add(getPoint(rs));
+                    }
+                }
+                if (!points.isEmpty()){
+                    logger.info("获取指定距离内的点位成功，共有{}个点位", points.size());
+                    return points;
+                } else {
+                    return null;
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("获取指定距离内的点位失败: {}", e.getMessage());
+        }
+        return null;
+    }
+    private static boolean checkDis(double x1, double y1, double x2, double y2, double distance){
+        return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)) <= distance;
+    }
+
+    public List<Point> getPointsByUserId(int userId) {
+        List<Point> points = new ArrayList<>();
+        String sql = "SELECT * FROM points WHERE user_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    points.add(getPoint(rs));
+                }
+                if (!points.isEmpty()){
+                    logger.info("获取用户{}的点位成功，共有{}个点位", userId, points.size());
+                    return points;
+                } else {
+                    return null;
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("获取用户{}的点位失败: {}", userId, e.getMessage());
         }
         return null;
     }

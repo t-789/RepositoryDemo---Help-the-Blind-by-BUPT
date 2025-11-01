@@ -185,6 +185,30 @@
         .security-question {
             margin-bottom: 10px;
         }
+        /* 统计信息样式 */
+        .statistics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .statistic-item {
+            text-align: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        .statistic-item h4 {
+            margin: 0 0 10px 0;
+            color: #6c757d;
+        }
+        .statistic-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -206,6 +230,7 @@
                     <img id="user-avatar" class="user-avatar" src="" alt="用户头像">
                     欢迎, <span id="username"></span> 
                     <span id="user-type"></span>
+                    <span id="user-stats"></span>
                     <button class="btn btn-danger" onclick="logout()">注销</button>
                 </div>
                 <div id="auth-buttons">
@@ -218,6 +243,12 @@
         <!-- 首页 -->
         <div id="home-section" class="section">
             <div class="section-title">欢迎使用点位管理系统</div>
+            <div id="statistics-container">
+                <h3>系统统计</h3>
+                <div id="statistics-content">
+                    <p>正在加载统计信息...</p>
+                </div>
+            </div>
             <p>这是一个简单的点位管理系统，您可以：</p>
             <ul>
                 <li>注册和登录账户</li>
@@ -289,17 +320,37 @@
         <!-- 重置密码 -->
         <div id="reset-password-section" class="section hidden">
             <div class="section-title">重置密码</div>
-            <form id="reset-password-form">
-                <div class="form-group">
-                    <label for="reset-username">用户名:</label>
-                    <input type="text" id="reset-username" required>
-                </div>
-                <div id="security-questions-container">
-                    <!-- 密保问题将通过JavaScript动态加载 -->
-                </div>
-                <button type="submit" class="btn">重置密码</button>
-                <button type="button" class="btn btn-secondary" onclick="showSection('home')">取消</button>
-            </form>
+            
+            <!-- 第一步：输入用户名 -->
+            <div id="reset-password-step1">
+                <form id="reset-password-step1-form">
+                    <div class="form-group">
+                        <label for="reset-username">用户名:</label>
+                        <input type="text" id="reset-username" required>
+                    </div>
+                    <button type="submit" class="btn">下一步</button>
+                    <button type="button" class="btn btn-secondary" onclick="showSection('home')">取消</button>
+                </form>
+            </div>
+            
+            <!-- 第二步：回答安全问题 -->
+            <div id="reset-password-step2" style="display:none;">
+                <form id="reset-password-step2-form">
+                    <input type="hidden" id="reset-final-username">
+                    <div class="form-group">
+                        <label id="reset-question1-label">密保问题1:</label>
+                        <input type="text" id="reset-answer1" required>
+                    </div>
+                    <div class="form-group">
+                        <label id="reset-question2-label">密保问题2:</label>
+                        <input type="text" id="reset-answer2" required>
+                    </div>
+                    <button type="submit" class="btn">重置密码</button>
+                    <button type="button" class="btn btn-secondary" onclick="backToStep1()">上一步</button>
+                    <button type="button" class="btn btn-secondary" onclick="showSection('home')">取消</button>
+                </form>
+            </div>
+            
             <div id="reset-password-message" class="alert hidden"></div>
         </div>
 
@@ -341,11 +392,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkLoginStatus();
             showSection('home');
+            loadStatistics(); // 加载统计信息
             
             // 绑定表单事件
             document.getElementById('login-form').addEventListener('submit', handleLogin);
             document.getElementById('register-form').addEventListener('submit', handleRegister);
-            document.getElementById('reset-password-form').addEventListener('submit', handleResetPassword);
+            
+            // 绑定重置密码表单事件
+            document.getElementById('reset-password-step1-form').addEventListener('submit', handleResetPasswordStep1);
+            document.getElementById('reset-password-step2-form').addEventListener('submit', handleResetPasswordStep2);
             
             // 绑定头像预览事件
             document.getElementById('register-avatar').addEventListener('change', function(e) {
@@ -388,15 +443,19 @@
         // 显示指定部分
         function showSection(sectionId) {
             // 隐藏所有部分
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.add('hidden');
-            });
+            var sections = document.querySelectorAll('.section');
+            for (var i = 0; i < sections.length; i++) {
+                sections[i].classList.add('hidden');
+            }
             
             // 显示指定部分
             document.getElementById(sectionId + '-section').classList.remove('hidden');
             
             // 根据当前部分加载内容
             switch(sectionId) {
+                case 'home':
+                    loadStatistics();
+                    break;
                 case 'points':
                     loadPoints();
                     break;
@@ -407,9 +466,44 @@
                     loadFeedback();
                     break;
                 case 'reset-password':
-                    loadSecurityQuestionsForReset();
+                    // 初始化重置密码表单状态
+                    initResetPasswordForm();
                     break;
             }
+        }
+        
+        // 加载统计信息
+        function loadStatistics() {
+            fetch('/api/statistic/get')
+                .then(response => response.json())
+                .then(data => {
+                    const statisticsContent = document.getElementById('statistics-content');
+                    if (data) {
+                        statisticsContent.innerHTML = `
+                            <div class="statistics-grid">
+                                <div class="statistic-item">
+                                    <h4>用户数</h4>
+                                    <p class="statistic-value">${data.user_count}</p>
+                                </div>
+                                <div class="statistic-item">
+                                    <h4>点位数</h4>
+                                    <p class="statistic-value">${data.point_count}</p>
+                                </div>
+                                <div class="statistic-item">
+                                    <h4>帖子数</h4>
+                                    <p class="statistic-value">${data.post_count}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        statisticsContent.innerHTML = '<p>无法加载统计信息</p>';
+                    }
+                })
+                .catch(error => {
+                    const statisticsContent = document.getElementById('statistics-content');
+                    statisticsContent.innerHTML = '<p>加载统计信息失败</p>';
+                    console.error('加载统计信息失败:', error);
+                });
         }
         
         // 检查登录状态
@@ -430,6 +524,9 @@
                     userAvatar.src = DEFAULT_AVATAR;
                 }
                 
+                // 获取并显示用户统计数据
+                loadUserProfile();
+                
                 document.getElementById('user-info').classList.remove('hidden');
                 document.getElementById('auth-buttons').classList.add('hidden');
             } else {
@@ -437,6 +534,32 @@
                 document.getElementById('user-info').classList.add('hidden');
                 document.getElementById('auth-buttons').classList.remove('hidden');
             }
+        }
+        
+        // 加载用户个人主页信息
+        function loadUserProfile() {
+            fetch('/api/users/profile')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        const statsElement = document.getElementById('user-stats');
+                        statsElement.textContent = ` (点位: ${data.pointCount}, 帖子: ${data.postCount}, 积分: ${data.credit})`;
+                        // 同时更新localStorage中的用户信息
+                        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                        user.pointCount = data.pointCount;
+                        user.postCount = data.postCount;
+                        user.credit = data.credit;
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                    }
+                })
+                .catch(error => {
+                    console.error('加载用户个人主页信息失败:', error);
+                });
         }
         
         // 处理登录
@@ -475,6 +598,9 @@
                         document.getElementById('username').textContent = username;
                         document.getElementById('user-type').textContent = userData.type === 2 ? '(管理员)' : '(普通用户)';
                         
+                        // 获取并显示用户统计数据
+                        loadUserProfile();
+                        
                         // 设置用户头像
                         const userAvatar = document.getElementById('user-avatar');
                         if (userData.avatar) {
@@ -504,6 +630,9 @@
                         
                         document.getElementById('username').textContent = username;
                         document.getElementById('user-type').textContent = '(普通用户)';
+                        
+                        // 获取并显示用户统计数据
+                        loadUserProfile();
                         
                         // 设置默认头像
                         document.getElementById('user-avatar').src = DEFAULT_AVATAR;
@@ -568,35 +697,10 @@
         
         // 加载安全问题（用于重置密码）
         function loadSecurityQuestionsForReset() {
-            const container = document.getElementById('security-questions-container');
-            
-            fetch('/api/users/security-questions')
-            .then(response => response.json())
-            .then(data => {
-                container.innerHTML = '';
-                
-                // 添加密保问题输入字段
-                let index = 0;
-                for (const [id, question] of Object.entries(data)) {
-                    if (index < 2) { // 只显示前两个问题
-                        const div = document.createElement('div');
-                        div.className = 'security-question';
-                        div.innerHTML = `
-                            <div class="form-group">
-                                <label>密保问题${index + 1}: ${question}</label>
-                                <input type="text" id="reset-answer${index + 1}" required>
-                            </div>
-                        `;
-                        container.appendChild(div);
-                        index++;
-                    }
-                }
-            })
-            .catch(error => {
-                container.innerHTML = '<p>加载密保问题失败</p>';
-                console.error('加载安全问题失败:', error);
-            });
+            // 由于我们已经改为两步流程，这个函数不再需要
         }
+        // 添加一个属性来存储上一次查询的用户名
+        loadSecurityQuestionsForReset.lastUsername = '';
         
         // 处理注册
         function handleRegister(e) {
@@ -661,58 +765,149 @@
             });
         }
         
-        // 处理重置密码
-        function handleResetPassword(e) {
+        // 初始化重置密码表单
+        function initResetPasswordForm() {
+            document.getElementById('reset-password-step1').style.display = 'block';
+            document.getElementById('reset-password-step2').style.display = 'none';
+            document.getElementById('reset-password-message').classList.add('hidden');
+            document.getElementById('reset-username').value = '';
+        }
+        
+        // 返回上一步
+        function backToStep1() {
+            document.getElementById('reset-password-step1').style.display = 'block';
+            document.getElementById('reset-password-step2').style.display = 'none';
+        }
+        
+        // 处理用户名提交
+        function handleResetPasswordStep1(e) {
             e.preventDefault();
             
-            const username = document.getElementById('reset-username').value;
-            const answer1 = document.getElementById('reset-answer1').value;
-            const answer2 = document.getElementById('reset-answer2').value;
+            var username = document.getElementById('reset-username').value;
+            if (!username || username.length === 0) {
+                var messageDiv = document.getElementById('reset-password-message');
+                messageDiv.classList.remove('alert-success');
+                messageDiv.classList.add('alert-danger');
+                messageDiv.innerHTML = '请输入用户名';
+                messageDiv.classList.remove('hidden');
+                return;
+            }
             
-            const payload = {
+            // 根据用户名获取该用户的安全问题
+            var url = '/api/users/' + encodeURIComponent(username) + '/security-questions';
+            
+            // 使用XMLHttpRequest替代fetch以提高Safari兼容性
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    // 检查响应的Content-Type
+                    var contentType = xhr.getResponseHeader('Content-Type');
+                    console.log("响应状态: ", xhr.status);
+                    console.log("响应内容类型: ", contentType);
+                    console.log("响应文本: ", xhr.responseText);
+                    
+                    if (xhr.status === 200 && contentType && contentType.indexOf('application/json') !== -1) {
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            
+                            // 检查数据格式
+                            if (!data.question1 || !data.question2) {
+                                throw new Error("响应数据格式不正确");
+                            }
+                            
+                            // 保存用户名到隐藏字段
+                            document.getElementById('reset-final-username').value = username;
+                            
+                            // 显示用户特定的安全问题
+                            document.getElementById('reset-question1-label').innerHTML = '密保问题1: ' + data.question1;
+                            document.getElementById('reset-question2-label').innerHTML = '密保问题2: ' + data.question2;
+                            
+                            // 切换到第二步
+                            document.getElementById('reset-password-step1').style.display = 'none';
+                            document.getElementById('reset-password-step2').style.display = 'block';
+                        } catch (e) {
+                            console.error("解析错误: ", e);
+                            var messageDiv = document.getElementById('reset-password-message');
+                            messageDiv.classList.remove('alert-success');
+                            messageDiv.classList.add('alert-danger');
+                            messageDiv.innerHTML = '解析响应数据失败: ' + e.message;
+                            messageDiv.classList.remove('hidden');
+                        }
+                    } else if (xhr.status === 404) {
+                        var messageDiv = document.getElementById('reset-password-message');
+                        messageDiv.classList.remove('alert-success');
+                        messageDiv.classList.add('alert-danger');
+                        messageDiv.innerHTML = '错误: 用户不存在';
+                        messageDiv.classList.remove('hidden');
+                    } else if (xhr.status === 400) {
+                        var messageDiv = document.getElementById('reset-password-message');
+                        messageDiv.classList.remove('alert-success');
+                        messageDiv.classList.add('alert-danger');
+                        messageDiv.innerHTML = '错误: 该用户未设置密保问题';
+                        messageDiv.classList.remove('hidden');
+                    } else {
+                        // 服务器返回了错误页面或其他非JSON响应
+                        var messageDiv = document.getElementById('reset-password-message');
+                        messageDiv.classList.remove('alert-success');
+                        messageDiv.classList.add('alert-danger');
+                        messageDiv.innerHTML = '错误: 服务器返回了意外的响应，请检查用户名是否正确';
+                        messageDiv.classList.remove('hidden');
+                    }
+                }
+            };
+            xhr.send();
+        }
+        
+        // 处理重置密码
+        function handleResetPasswordStep2(e) {
+            e.preventDefault();
+            
+            var username = document.getElementById('reset-final-username').value;
+            var answer1 = document.getElementById('reset-answer1').value;
+            var answer2 = document.getElementById('reset-answer2').value;
+            
+            var payload = {
                 username: username,
                 answer1: answer1,
                 answer2: answer2
             };
             
-            fetch('/api/users/reset-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.text())
-            .then(data => {
-                const messageDiv = document.getElementById('reset-password-message');
-                if (data.includes('密码重置成功')) {
-                    messageDiv.classList.remove('alert-danger');
-                    messageDiv.classList.add('alert-success');
-                    messageDiv.textContent = data;
-                    messageDiv.classList.remove('hidden');
-                    
-                    // 清空表单
-                    document.getElementById('reset-password-form').reset();
-                    
-                    // 延迟跳转到登录页面
-                    setTimeout(() => {
-                        showSection('login');
-                        messageDiv.classList.add('hidden');
-                    }, 1500);
-                } else {
-                    messageDiv.classList.remove('alert-success');
-                    messageDiv.classList.add('alert-danger');
-                    messageDiv.textContent = data;
-                    messageDiv.classList.remove('hidden');
+            // 使用XMLHttpRequest替代fetch以提高Safari兼容性
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/users/reset-password', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    var messageDiv = document.getElementById('reset-password-message');
+                    if (xhr.status === 200) {
+                        var data = xhr.responseText;
+                        if (data.indexOf('密码重置成功') !== -1) {
+                            messageDiv.classList.remove('alert-danger');
+                            messageDiv.classList.add('alert-success');
+                            messageDiv.innerHTML = data;
+                            messageDiv.classList.remove('hidden');
+                            
+                            // 延迟跳转到登录页面
+                            setTimeout(function() {
+                                showSection('login');
+                                messageDiv.classList.add('hidden');
+                            }, 1500);
+                        } else {
+                            messageDiv.classList.remove('alert-success');
+                            messageDiv.classList.add('alert-danger');
+                            messageDiv.innerHTML = data;
+                            messageDiv.classList.remove('hidden');
+                        }
+                    } else {
+                        messageDiv.classList.remove('alert-success');
+                        messageDiv.classList.add('alert-danger');
+                        messageDiv.innerHTML = '密码重置失败: 服务器错误';
+                        messageDiv.classList.remove('hidden');
+                    }
                 }
-            })
-            .catch(error => {
-                const messageDiv = document.getElementById('reset-password-message');
-                messageDiv.classList.remove('alert-success');
-                messageDiv.classList.add('alert-danger');
-                messageDiv.textContent = '密码重置失败: ' + error.message;
-                messageDiv.classList.remove('hidden');
-            });
+            };
+            xhr.send(JSON.stringify(payload));
         }
         
         // 注销
@@ -790,6 +985,7 @@
                             <th>等级</th>
                             <th>类型</th>
                             <th>描述</th>
+                            <th>图片</th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -806,6 +1002,7 @@
                         <td>${point.level || 'N/A'}</td>
                         <td>${point.typeName || point.type || 'N/A'}</td>
                         <td>${point.description || '无'}</td>
+                        <td>${point.image_description ? `<img src="${point.image_description}" style="max-width: 100px; max-height: 100px;">` : '无'}</td>
                         <td class="point-actions">
                             <button class="btn" onclick="confirmPoint(${point.id})">确认</button>
                             <button class="btn btn-danger" onclick="proposeDeletePoint(${point.id})">提议删除</button>
@@ -848,6 +1045,10 @@
                         <label for="point-description">描述:</label>
                         <textarea id="point-description"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label for="point-image">图片描述 (可选，支持 JPG/PNG，最大10MB):</label>
+                        <input type="file" id="point-image" accept="image/jpeg, image/png">
+                    </div>
                     <button type="submit" class="btn">添加点位</button>
                 </form>
                 <div id="point-message" class="alert hidden"></div>
@@ -863,51 +1064,112 @@
         function handleAddPoint(e) {
             e.preventDefault();
             
-            const pointData = {
-                x: parseFloat(document.getElementById('point-x').value),
-                y: parseFloat(document.getElementById('point-y').value),
-                level: parseInt(document.getElementById('point-level').value),
-                type: parseInt(document.getElementById('point-type').value),
-                description: document.getElementById('point-description').value
-            };
+            const pointImage = document.getElementById('point-image').files[0];
             
-            fetch('/api/points/save', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(pointData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                const messageDiv = document.getElementById('point-message');
-                if (data.message) {
-                    messageDiv.classList.remove('alert-danger');
-                    messageDiv.classList.add('alert-success');
-                    messageDiv.textContent = data.message;
-                    messageDiv.classList.remove('hidden');
-                    
-                    // 清空表单
-                    document.getElementById('add-point-form').reset();
-                    
-                    // 重新加载点位列表
-                    setTimeout(() => {
-                        loadPoints();
-                    }, 1000);
-                } else {
+            if (pointImage) {
+                // 检查文件类型
+                if (!pointImage.type.match('image/jpeg') && !pointImage.type.match('image/png')) {
+                    alert('只支持 JPG 或 PNG 格式的图片');
+                    return;
+                }
+                
+                // 检查文件大小 (10MB)
+                if (pointImage.size > 10 * 1024 * 1024) {
+                    alert('图片大小不能超过 10MB');
+                    return;
+                }
+                
+                // 使用 FormData 发送点位请求（包含图片文件上传）
+                const formData = new FormData();
+                formData.append('x', parseFloat(document.getElementById('point-x').value));
+                formData.append('y', parseFloat(document.getElementById('point-y').value));
+                formData.append('level', parseInt(document.getElementById('point-level').value));
+                formData.append('type', parseInt(document.getElementById('point-type').value));
+                formData.append('description', document.getElementById('point-description').value);
+                formData.append('image_description', pointImage);
+                
+                fetch('/api/points/save', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const messageDiv = document.getElementById('point-message');
+                    if (data.message) {
+                        messageDiv.classList.remove('alert-danger');
+                        messageDiv.classList.add('alert-success');
+                        messageDiv.textContent = data.message;
+                        messageDiv.classList.remove('hidden');
+                        
+                        // 清空表单
+                        document.getElementById('add-point-form').reset();
+                        
+                        // 重新加载点位列表
+                        setTimeout(() => {
+                            loadPoints();
+                        }, 1000);
+                    } else {
+                        messageDiv.classList.remove('alert-success');
+                        messageDiv.classList.add('alert-danger');
+                        messageDiv.textContent = '添加点位失败: ' + data;
+                        messageDiv.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    const messageDiv = document.getElementById('point-message');
                     messageDiv.classList.remove('alert-success');
                     messageDiv.classList.add('alert-danger');
-                    messageDiv.textContent = '添加点位失败';
+                    messageDiv.textContent = '添加点位失败: ' + error.message;
                     messageDiv.classList.remove('hidden');
-                }
-            })
-            .catch(error => {
-                const messageDiv = document.getElementById('point-message');
-                messageDiv.classList.remove('alert-success');
-                messageDiv.classList.add('alert-danger');
-                messageDiv.textContent = '添加点位失败: ' + error.message;
-                messageDiv.classList.remove('hidden');
-            });
+                });
+            } else {
+                // 没有图片文件，使用 JSON 格式发送
+                const pointData = {
+                    x: parseFloat(document.getElementById('point-x').value),
+                    y: parseFloat(document.getElementById('point-y').value),
+                    level: parseInt(document.getElementById('point-level').value),
+                    type: parseInt(document.getElementById('point-type').value),
+                    description: document.getElementById('point-description').value
+                };
+                
+                fetch('/api/points/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(pointData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const messageDiv = document.getElementById('point-message');
+                    if (data.message) {
+                        messageDiv.classList.remove('alert-danger');
+                        messageDiv.classList.add('alert-success');
+                        messageDiv.textContent = data.message;
+                        messageDiv.classList.remove('hidden');
+                        
+                        // 清空表单
+                        document.getElementById('add-point-form').reset();
+                        
+                        // 重新加载点位列表
+                        setTimeout(() => {
+                            loadPoints();
+                        }, 1000);
+                    } else {
+                        messageDiv.classList.remove('alert-success');
+                        messageDiv.classList.add('alert-danger');
+                        messageDiv.textContent = '添加点位失败';
+                        messageDiv.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    const messageDiv = document.getElementById('point-message');
+                    messageDiv.classList.remove('alert-success');
+                    messageDiv.classList.add('alert-danger');
+                    messageDiv.textContent = '添加点位失败: ' + error.message;
+                    messageDiv.classList.remove('hidden');
+                });
+            }
         }
         
         // 确认点位

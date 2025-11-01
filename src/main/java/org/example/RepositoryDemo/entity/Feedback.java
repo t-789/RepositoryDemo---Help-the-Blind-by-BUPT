@@ -1,4 +1,4 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.entity;
 
 import java.sql.Timestamp;
 import lombok.Getter;

@@ -1,21 +1,39 @@
 // PointController.java
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.controller;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.dto.PointRequest;
+import org.example.RepositoryDemo.entity.Point;
+import org.example.RepositoryDemo.entity.User;
+import org.example.RepositoryDemo.service.PointService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/points")
 @Validated
 public class PointController {
+    
+    private static final Logger logger = LogManager.getLogger(PointController.class);
     
     @Autowired
     private PointService pointService;
@@ -24,8 +42,8 @@ public class PointController {
     private UserRepository userRepository;
     
     // 保存点位
-    @PostMapping("/save")
-    public ResponseEntity<?> savePoint(@Valid @RequestBody PointRequest pointRequest, Authentication authentication) {
+    @PostMapping(value="/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> savePoint(@Valid @ModelAttribute PointRequest pointRequest, Authentication authentication) {
         try {
             // 获取当前用户ID
             String username = authentication.getName();
@@ -33,8 +51,11 @@ public class PointController {
             if (user == null) {
                 return ResponseEntity.badRequest().body("还没有登录");
             }
-            
-            int pointId = pointService.savePoint(user.id, pointRequest.getX(), pointRequest.getY(),pointRequest.getLevel(), pointRequest.getType(), pointRequest.getDescription());
+            String imagePath = null;
+            if (pointRequest.getImage_description() != null && !pointRequest.getImage_description().isEmpty()){
+                imagePath = saveImageFile(pointRequest.getImage_description());
+            }
+            int pointId = pointService.savePoint(user.id, pointRequest.getX(), pointRequest.getY(),pointRequest.getLevel(), pointRequest.getType(), pointRequest.getDescription(), imagePath);
             if (pointId > 0) {
                 return ResponseEntity.ok(Map.of("id", pointId, "message", "点位保存成功"));
             } else if (pointId == -1) {
@@ -263,6 +284,74 @@ public class PointController {
             return ResponseEntity.ok(typeMaps);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("操作失败: " + e.getMessage());
+        }
+    }
+
+    // 根据距离获取点位
+    @GetMapping("/distance")
+    public ResponseEntity<?> getPointsByDistance(@RequestParam double x, @RequestParam double y, @RequestParam double distance) {
+        if (x < 0 || y < 0 || distance <= 0) {
+            if (x <= 0){
+                return ResponseEntity.badRequest().body("x坐标不能小于0");
+            } else if (y <= 0) {
+                return ResponseEntity.badRequest().body("y坐标不能小于0");
+            }
+            return ResponseEntity.badRequest().body("距离不能小于等于0");
+        }
+        try {
+            List<Point> points = pointService.getPointsByDistance(x, y, distance);
+            return ResponseEntity.ok(points);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("操作失败: " + e.getMessage());
+        }
+    }
+
+    // 保存头像文件的辅助方法
+    private String saveImageFile(MultipartFile file) {
+        try {
+            // 检查文件是否为空
+            if (file.isEmpty()) {
+                return null;
+            }
+
+            // 检查文件类型
+            String contentType = file.getContentType();
+            if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))) {
+                return null;
+            }
+
+            // 检查文件大小（限制为10MB）
+            if (file.getSize() > 10 * 1024 * 1024) {
+                return null;
+            }
+
+            // 创建头像存储目录
+            String uploadDir = "./external/static/descriptions/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                if(!dir.mkdirs()){
+                    logger.fatal("创建点位图片描述存储目录失败");
+                    return null;
+                }
+            }
+
+            // 生成唯一文件名
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String fileName = UUID.randomUUID().toString() + extension;
+            Path filePath = Paths.get(uploadDir + fileName);
+
+            // 保存文件
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            // 返回头像访问路径
+            return "/description/" + fileName;
+        } catch (IOException e) {
+            logger.error("保存点位图片描述文件失败: " + e.getMessage());
+            return null;
         }
     }
 }

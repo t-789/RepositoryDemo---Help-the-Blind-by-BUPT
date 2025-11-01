@@ -1,5 +1,8 @@
 package org.example.RepositoryDemo;
 
+import org.example.RepositoryDemo.Repository.UserRepository;
+import org.example.RepositoryDemo.service.PointService;
+import org.example.RepositoryDemo.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,17 +16,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ComprehensiveServiceTest {
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PointService pointService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Test
     public void testDatabaseConnection() throws Exception {

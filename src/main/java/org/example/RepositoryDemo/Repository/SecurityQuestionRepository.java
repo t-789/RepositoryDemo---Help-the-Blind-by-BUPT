@@ -1,15 +1,13 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.Repository;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.RepositoryDemoApplication;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
-public class SecurityQuestionManagement {
-    private static final Logger logger = LogManager.getLogger(RepositoryDemoApplication.class);
+public class SecurityQuestionRepository {
+    private static final Logger logger = LogManager.getLogger(SecurityQuestionRepository.class);
     private static final Connection connection = RepositoryDemoApplication.connection;
     public static boolean addQuestion(String question) {
         // add question to database
@@ -74,5 +72,29 @@ public class SecurityQuestionManagement {
             logger.error("更新问题失败: {}", e.getMessage());
         }
         return false;
+    }
+
+    public static void createSecurityQuestionTable() throws SQLException {
+        String createSecurityQuestionTableSQL = "CREATE TABLE IF NOT EXISTS security_questions (" +
+                "id INTEGER PRIMARY KEY NOT NULL, " +
+                "question1 INTEGER NOT NULL, " +
+                "answer1 TEXT NOT NULL, " +
+                "question2 INTEGER NOT NULL, " +
+                "answer2 TEXT NOT NULL, " +
+                "FOREIGN KEY (id) REFERENCES users(id))";
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(createSecurityQuestionTableSQL);
+            logger.info("安全提问表创建成功！");
+        }
+    }
+
+    public static void createSecurityQuestionMapTable() throws SQLException {
+        String createSecurityQuestionMapTableSQL = "CREATE TABLE IF NOT EXISTS security_question_map (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "question TEXT NOT NULL)";
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(createSecurityQuestionMapTableSQL);
+            logger.info("安全提问映射表创建成功！");
+        }
     }
 }

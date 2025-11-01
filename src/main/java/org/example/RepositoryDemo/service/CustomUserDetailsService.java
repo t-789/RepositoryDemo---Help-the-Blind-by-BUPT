@@ -1,5 +1,8 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.service;
 
+import org.example.RepositoryDemo.Repository.UserRepository;
+import org.example.RepositoryDemo.security.WebSecurityConfig;
+import org.example.RepositoryDemo.entity.User;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,7 +16,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     
     @Autowired
     private UserRepository userRepository;
-    private static final Logger logger = LogManager.getLogger(RepositoryDemoApplication.class);
+    private static final Logger logger = LogManager.getLogger(CustomUserDetailsService.class);
 
     private static String JudgeType(int type){
         return switch (type) {

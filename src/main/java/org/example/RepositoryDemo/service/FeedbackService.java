@@ -1,11 +1,17 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.Repository.FeedbackRepository;
+import org.example.RepositoryDemo.entity.Feedback;
 import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.List;
 
 @Service
 public class FeedbackService {
+    private static final Logger logger = LogManager.getLogger(FeedbackService.class);
+    
     private final FeedbackRepository feedbackRepository;
     
     public FeedbackService(FeedbackRepository feedbackRepository) {
@@ -14,6 +20,7 @@ public class FeedbackService {
     
     // 保存用户反馈
     public boolean saveUserFeedback(Integer userId, String username, String content, String url, String userAgent) {
+        logger.debug("开始保存用户反馈: userId={}, username={}", userId, username);
         // 检查内容是否为空
         if (content == null || content.trim().isEmpty()) {
             content = "用户未提供具体反馈内容";
@@ -29,7 +36,9 @@ public class FeedbackService {
         feedback.setCreateTime(new Timestamp(System.currentTimeMillis()));
         feedback.setResolved(false);
         
-        return feedbackRepository.saveFeedback(feedback);
+        boolean result = feedbackRepository.saveFeedback(feedback);
+        logger.debug("用户反馈保存结果: userId={}, username={}, result={}", userId, username, result);
+        return result;
     }
     
     // 保存系统错误反馈

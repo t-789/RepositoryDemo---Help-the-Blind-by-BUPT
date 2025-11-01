@@ -1,5 +1,9 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.Repository.UserRepository;
+import org.example.RepositoryDemo.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -8,6 +12,8 @@ import java.util.Map;
 
 @Service
 public class UserService {
+    private static final Logger logger = LogManager.getLogger(UserService.class);
+    
     @Autowired
     private UserRepository userRepository;
 
@@ -16,7 +22,10 @@ public class UserService {
 
     // 用户注册
     public boolean register(String username, String password, int type) {
-        return registerWithAvatar(username, password, type, null);
+        logger.debug("开始注册用户: username={}, type={}", username, type);
+        boolean result = registerWithAvatar(username, password, type, null);
+        logger.debug("用户注册结果: username={}, result={}", username, result);
+        return result;
     }
 
     // 带头像的用户注册
@@ -114,4 +123,6 @@ public class UserService {
     public Map<Integer, String> getAllSecurityQuestions() {
         return userRepository.getAllSecurityQuestions();
     }
+
+
 }

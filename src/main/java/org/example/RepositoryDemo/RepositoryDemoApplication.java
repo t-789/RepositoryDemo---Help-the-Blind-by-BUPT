@@ -1,5 +1,6 @@
 package org.example.RepositoryDemo;
 
+import org.example.RepositoryDemo.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,7 +9,6 @@ import org.springframework.context.event.EventListener;
 
 import java.sql.*;
 import org.apache.logging.log4j.*;
-
 
 
 @SpringBootApplication
@@ -21,15 +21,16 @@ public class RepositoryDemoApplication {
     public static Connection connection;
     private static void createTables() throws SQLException {
         UserRepository.createUserTable();
-//        UserRepository.checkAndUpdateUserTable();
-        UserRepository.createSecurityQuestionTable();
-        UserRepository.createSecurityQuestionMapTable();
+        forumRepository.createForumTable();
+        SecurityQuestionRepository.createSecurityQuestionTable();
+        SecurityQuestionRepository.createSecurityQuestionMapTable();
         PointRepository.createPointTable();
         PointRepository.createConfigTable();
         PointRepository.createPointProposalTable();
         PointRepository.createPointConfirmTable();
         PointRepository.createTypeMapTable();
         FeedbackRepository.createFeedbackTable();
+        StatisticRepository.createTable();
     }
 
     static void main(String[] args) {

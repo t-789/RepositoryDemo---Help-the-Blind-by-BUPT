@@ -1,7 +1,12 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.errorHandle;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.service.FeedbackService;
+import org.example.RepositoryDemo.entity.User;
+import org.example.RepositoryDemo.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
@@ -16,6 +21,8 @@ import java.util.concurrent.Executors;
 
 @Controller
 public class CustomErrorController implements ErrorController {
+    
+    private static final Logger logger = LogManager.getLogger(CustomErrorController.class);
     
     @Autowired
     private UserRepository userRepository;
@@ -59,8 +66,25 @@ public class CustomErrorController implements ErrorController {
                     String content = "HTTP " + status + ": " + (errorMessage != null ? errorMessage : "未知错误");
                     String url = requestUri != null ? requestUri.toString() : request.getRequestURI();
                     String userAgent = request.getHeader("User-Agent");
-                    String stackTrace = "Status: " + status + ", Message: " + errorMessage;
                     
+                    // 获取异常对象以获取实际的堆栈跟踪
+                    Object exception = request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+                    String stackTrace;
+                    if (exception != null && exception instanceof Throwable) {
+                        StringBuilder stackTraceBuilder = new StringBuilder();
+                        stackTraceBuilder.append("Exception: ").append(exception.getClass().getName()).append("\n");
+                        stackTraceBuilder.append("Message: ").append(((Throwable) exception).getMessage()).append("\n");
+                        stackTraceBuilder.append("Stack Trace:\n");
+                        
+                        for (StackTraceElement element : ((Throwable) exception).getStackTrace()) {
+                            stackTraceBuilder.append("  at ").append(element.toString()).append("\n");
+                        }
+                        
+                        stackTrace = stackTraceBuilder.toString();
+                    } else {
+                        stackTrace = "Status: " + status + ", Message: " + errorMessage;
+                    }
+
                     // 异步提交错误反馈
                     executorService.submit(() -> {
                         feedbackService.saveSystemFeedback(finalUserId, finalUsername, content, url, userAgent, stackTrace);

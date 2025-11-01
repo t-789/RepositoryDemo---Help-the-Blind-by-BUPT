@@ -55,6 +55,13 @@
             color: #dc3545;
             text-decoration: none;
         }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -74,6 +81,7 @@
         <thead>
         <tr>
             <th>用户ID</th>
+            <th>头像</th>
             <th>用户名</th>
             <th>用户类型</th>
             <th>积分</th>
@@ -85,6 +93,7 @@
         <tbody>
         <tr th:each="user : ${users}">
             <td th:text="${user.id}"></td>
+            <td><img th:if="${user.avatar}" th:src="${user.avatar}" class="user-avatar" alt="用户头像"><span th:if="${user.avatar==null}">无</span></td>
             <td th:text="${user.username}"></td>
             <td th:text="${user.type == 2 ? '管理员' : '普通用户'}"></td>
             <td th:text="${user.credit}"></td>

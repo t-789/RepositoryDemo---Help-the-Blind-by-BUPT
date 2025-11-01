@@ -1,5 +1,9 @@
 package org.example.RepositoryDemo;
 
+import org.example.RepositoryDemo.Repository.UserRepository;
+import org.example.RepositoryDemo.entity.User;
+import org.example.RepositoryDemo.security.RateLimitInterceptor;
+import org.example.RepositoryDemo.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +25,6 @@ public class RateLimitInterceptorTest {
 
     @Autowired
     private RateLimitInterceptor rateLimitInterceptor;
-    
-    @MockBean
-    private UserService userService;
     
     @MockBean
     private UserRepository userRepository;
