@@ -10,7 +10,7 @@ CORS(app)
 
 # 直接在代码中设置DeepSeek API密钥和基础URL
 # 注意：这种方式存在安全风险，生产环境中建议使用环境变量
-DEEPSEEK_API_KEY = "your-deepseek-api-key-here"  # 请替换为你的实际API密钥
+# DEEPSEEK_API_KEY = "your-deepseek-api-key-here"  # 请替换为你的实际API密钥
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
 
 if DEEPSEEK_API_KEY and DEEPSEEK_API_KEY != "your-deepseek-api-key-here":
