@@ -1,4 +1,4 @@
-package org.example.RepositoryDemo;
+package org.example.RepositoryDemo.entity;
 
 public class QuestionSet {
     public String question1;

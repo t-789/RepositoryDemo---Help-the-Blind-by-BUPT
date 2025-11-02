@@ -1,10 +1,10 @@
 package org.example.RepositoryDemo.Repository;
 
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.RepositoryDemoApplication;
 import org.example.RepositoryDemo.entity.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.*;
@@ -17,11 +17,10 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
+@Setter
 public class UserRepository {
-    @Autowired
     private JdbcTemplate jdbcTemplate;
-    
-    @Autowired
+
     private PasswordEncoder passwordEncoder;
     
     private static final Logger logger = LogManager.getLogger(UserRepository.class);
@@ -140,7 +139,7 @@ public class UserRepository {
     public User findByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
         try {
-            return jdbcTemplate.queryForObject(sql, new Object[]{username}, (rs, rowNum) -> {
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
                 User user = new User();
                 user.id = rs.getInt("id");
                 user.username = rs.getString("username");
@@ -151,7 +150,7 @@ public class UserRepository {
                 user.banEndTime = rs.getTimestamp("banEndTime");
                 user.avatar = rs.getString("avatar"); // 读取头像字段
                 return user;
-            });
+            }, username);
         } catch (DataAccessException e) {
             if (e.getMessage().contains("Incorrect result size: expected 1, actual 0")){
                 logger.info("用户{}不存在",  username);
@@ -165,7 +164,7 @@ public class UserRepository {
     public User findById(int id) {
         String sql = "SELECT * FROM users WHERE id = ?";
         try {
-            return jdbcTemplate.queryForObject(sql, new Object[]{id}, (rs, rowNum) -> {
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
                 User user = new User();
                 user.id = rs.getInt("id");
                 user.username = rs.getString("username");
@@ -176,7 +175,7 @@ public class UserRepository {
                 user.banEndTime = rs.getTimestamp("banEndTime");
                 user.avatar = rs.getString("avatar"); // 读取头像字段
                 return user;
-            });
+            }, id);
         } catch (DataAccessException e) {
             logger.error("findById()：查询用户失败: {}", e.getMessage());
             return null; // 用户不存在
@@ -333,9 +332,9 @@ public class UserRepository {
                     pstmt.setInt(1, userId);
                     int rowsUpdated = pstmt.executeUpdate();
                     if (rowsUpdated > 0) {
-                        logger.info("用户{}已被永久封禁", id);
+                        logger.info("handleBanUser(): 用户{}已被永久封禁", id);
                     } else {
-                        logger.warn("用户{}不存在", userId);
+                        logger.warn("handleBanUser(): 永久封禁：用户{}不存在", userId);
                     }
                 }
             } else {
@@ -355,9 +354,9 @@ public class UserRepository {
                     pstmt.setInt(2, userId);
                     int rowsUpdated = pstmt.executeUpdate();
                     if (rowsUpdated > 0) {
-                        logger.info("用户{}已封禁至：{}", id, unbanTime);
+                        logger.info("handleBanUser(): 用户{}已封禁至：{}", id, unbanTime);
                     } else {
-                        logger.warn("用户{}不存在", userId);
+                        logger.warn("handleBanUser(): 临时封禁：用户{}不存在", userId);
                     }
                 }
             }
@@ -380,7 +379,7 @@ public class UserRepository {
                 if (rowsUpdated > 0) {
                     logger.info("用户{}已被解禁", id);
                 } else {
-                    logger.warn("用户{}不存在", id);
+                    logger.warn("handleUnbanUser(): 用户{}不存在", id);
                 }
             }
         } catch (SQLException e) {
@@ -396,14 +395,14 @@ public class UserRepository {
                 pstmt.setInt(1, Integer.parseInt(id));
                 int rowsDeleted = pstmt.executeUpdate();
                 if (rowsDeleted > 0) {
-                    logger.info("用户{}已被删除", id);
+                    logger.info("deleteUser(): 用户{}已被删除", id);
                     StatisticRepository.updateUserCount(-1);
                 } else {
-                    logger.warn("用户{}不存在", id);
+                    logger.warn("deleteUser(): 用户{}不存在", id);
                 }
             }
         } catch (SQLException e) {
-            logger.error("删除用户{}失败: {}", id, e.getMessage());
+            logger.error("deleteUser(): 删除用户{}失败: {}", id, e.getMessage());
         }
     }
     

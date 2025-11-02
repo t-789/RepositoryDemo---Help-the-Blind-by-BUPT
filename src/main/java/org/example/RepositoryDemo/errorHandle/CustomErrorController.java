@@ -2,12 +2,12 @@ package org.example.RepositoryDemo.errorHandle;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.service.FeedbackService;
 import org.example.RepositoryDemo.entity.User;
 import org.example.RepositoryDemo.Repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -20,14 +20,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Controller
+@Setter
 public class CustomErrorController implements ErrorController {
     
     private static final Logger logger = LogManager.getLogger(CustomErrorController.class);
-    
-    @Autowired
+
     private UserRepository userRepository;
-    
-    @Autowired
+
     private FeedbackService feedbackService;
     
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -57,7 +56,7 @@ public class CustomErrorController implements ErrorController {
         // 自动提交系统错误反馈
         if (status != null) {
             try {
-                HttpStatus httpStatus = HttpStatus.valueOf(Integer.valueOf(status.toString()));
+                HttpStatus httpStatus = HttpStatus.valueOf(Integer.parseInt(status.toString()));
                 
                 // 记录5xx系列服务器错误
                 if (httpStatus.is5xxServerError()) {
@@ -70,7 +69,7 @@ public class CustomErrorController implements ErrorController {
                     // 获取异常对象以获取实际的堆栈跟踪
                     Object exception = request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
                     String stackTrace;
-                    if (exception != null && exception instanceof Throwable) {
+                    if (exception instanceof Throwable) {
                         StringBuilder stackTraceBuilder = new StringBuilder();
                         stackTraceBuilder.append("Exception: ").append(exception.getClass().getName()).append("\n");
                         stackTraceBuilder.append("Message: ").append(((Throwable) exception).getMessage()).append("\n");
@@ -102,18 +101,14 @@ public class CustomErrorController implements ErrorController {
         
         // 根据错误状态码返回不同的错误页面
         if (status != null) {
-            int statusCode = Integer.valueOf(status.toString());
-            
-            switch (statusCode) {
-                case 403:
-                    return "error/403";
-                case 404:
-                    return "error/404";
-                case 500:
-                    return "error/500";
-                default:
-                    return "error/general";
-            }
+            int statusCode = Integer.parseInt(status.toString());
+
+            return switch (statusCode) {
+                case 403 -> "error/403";
+                case 404 -> "error/404";
+                case 500 -> "error/500";
+                default -> "error/general";
+            };
         }
         
         return "error/general";

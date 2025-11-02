@@ -1,5 +1,6 @@
 package org.example.RepositoryDemo.controller;
 
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
@@ -13,7 +14,6 @@ import org.example.RepositoryDemo.dto.LoginRequest;
 import org.example.RepositoryDemo.entity.User;
 import org.example.RepositoryDemo.service.PointService;
 import org.example.RepositoryDemo.service.ForumService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,23 +46,18 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/users")
 @Validated
+@Setter
 public class UserController {
-    @Autowired
     private UserService userService;
-    
-    @Autowired
+
     private UserRepository userRepository;
-    
-    @Autowired
+
     private PasswordEncoder passwordEncoder;
-    
-    @Autowired
+
     private UserDetailsService userDetailsService;
 
-    @Autowired
     private PointService pointService;
 
-    @Autowired
     private ForumService forumService;
 
     private static final Logger logger = LogManager.getLogger(UserController.class);
@@ -140,7 +135,7 @@ public class UserController {
             File dir = new File(uploadDir);
             if (!dir.exists()) {
                 if(!dir.mkdirs()){
-                    logger.fatal("创建头像存储目录失败");
+                    logger.fatal("saveAvatarFile(): 创建头像存储目录失败");
                     return null;
                 }
             }
@@ -152,15 +147,22 @@ public class UserController {
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
             String fileName = UUID.randomUUID() + extension;
-            Path filePath = Paths.get(uploadDir + fileName);
+            Path path = Paths.get(uploadDir);
+            Path filePath = path.resolve(fileName).normalize();
 
+            // 验证文件路径是否在允许的目录内
+            Path allowedDir = path.toAbsolutePath().normalize();
+            if (!filePath.toAbsolutePath().normalize().startsWith(allowedDir)) {
+                logger.error("saveAvatarFile(): 非法文件路径访问尝试");
+                return null;
+            }
             // 保存文件
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             // 返回头像访问路径
             return "/avatars/" + fileName;
         } catch (IOException e) {
-            logger.error("保存头像文件失败: " + e.getMessage());
+            logger.error("保存头像文件失败: {}", e.getMessage());
             return null;
         }
     }
@@ -278,7 +280,7 @@ public class UserController {
             File dir = new File(uploadDir);
             if (!dir.exists()) {
                 if (!dir.mkdirs()) {
-                    logger.fatal("创建头像存储目录失败");
+                    logger.fatal("uploadAvatar(): 创建头像存储目录失败");
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("创建头像存储目录失败");
                 }
             }
@@ -290,8 +292,15 @@ public class UserController {
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
             String fileName = UUID.randomUUID() + extension;
-            Path filePath = Paths.get(uploadDir + fileName);
+            Path path = Paths.get(uploadDir);
+            Path filePath = path.resolve(fileName).normalize();
 
+            // 验证文件路径是否在允许的目录内
+            Path allowedDir = path.toAbsolutePath().normalize();
+            if (!filePath.toAbsolutePath().normalize().startsWith(allowedDir)) {
+                logger.error("uploadAvatar(): 非法文件路径访问尝试");
+                return null;
+            }
             // 保存文件
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 

@@ -242,13 +242,13 @@ public class PointRepository {
             try (ResultSet rs = checkDeletedStmt.executeQuery()) {
                 if (rs.next()) {
                     if (rs.getBoolean("deleted")) {
-                        logger.info("点位{}已删除，无法再次删除。", pointId);
+                        logger.info("proposeDeletePoint(): 点位{}已删除，无法再次删除。", pointId);
                         return -4; // 点位已删除，无法再次删除
                     }
                 }
             }
         } catch (SQLException e) {
-            logger.error("检查点位删除状态失败: {}", e.getMessage());
+            logger.error("proposeDeletePoint(): 检查点位删除状态失败: {}", e.getMessage());
             return -3;
         }
 
@@ -329,13 +329,13 @@ public class PointRepository {
             try (ResultSet rs = checkDeletedStmt.executeQuery()) {
                 if (rs.next()) {
                     if (rs.getBoolean("deleted")) {
-                        logger.info("点位{}已删除，无法再次删除。", pointId);
+                        logger.info("ConfirmPoint(): 点位{}已删除，无法再次删除。", pointId);
                         return -4; // 点位已删除，无法再次删除
                     }
                 }
             }
         } catch (SQLException e) {
-            logger.error("检查点位删除状态失败: {}", e.getMessage());
+            logger.error("ConfirmPoint(): 检查点位删除状态失败: {}", e.getMessage());
             return -3;
         }
 

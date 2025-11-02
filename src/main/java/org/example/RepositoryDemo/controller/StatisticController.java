@@ -1,10 +1,10 @@
 package org.example.RepositoryDemo.controller;
 
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.entity.Statistic;
 import org.example.RepositoryDemo.service.StatisticService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/statistic")
 @Validated
+@Setter
 public class StatisticController {
     private static final Logger logger = LogManager.getLogger(StatisticController.class);
 
-    @Autowired
     private StatisticService statisticService;
 
     @RequestMapping("/get")

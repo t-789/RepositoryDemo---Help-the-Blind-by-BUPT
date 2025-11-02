@@ -1,17 +1,18 @@
 package org.example.RepositoryDemo.controller;
 
+import lombok.Setter;
 import org.example.RepositoryDemo.service.AIService;
 import org.example.RepositoryDemo.ChatRequest;
 import org.example.RepositoryDemo.ChatResponse;
 import org.example.RepositoryDemo.dto.DeepSeekRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+@Setter
 @RestController
 @RequestMapping("/api/ai")
 public class AIController {
 
-    @Autowired
+
     private AIService aiService;
 
     @PostMapping("/chat")
@@ -42,4 +43,5 @@ public class AIController {
     public ChatResponse deepseekChat(@RequestBody DeepSeekRequest request) {
         return aiService.processDeepSeekPrompt(request.getPrompt());
     }
+
 }

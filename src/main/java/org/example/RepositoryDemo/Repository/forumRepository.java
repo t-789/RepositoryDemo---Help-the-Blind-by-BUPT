@@ -1,11 +1,11 @@
 package org.example.RepositoryDemo.Repository;
 
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.RepositoryDemoApplication;
 import org.example.RepositoryDemo.entity.Forum;
 import org.example.RepositoryDemo.entity.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -13,11 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
+@Setter
 public class forumRepository {
     private static final Logger logger = LogManager.getLogger(forumRepository.class);
     private static final Connection connection = RepositoryDemoApplication.connection;
-    
-    @Autowired
+
     private UserRepository userRepository;
 
     public static void createForumTable() throws SQLException {

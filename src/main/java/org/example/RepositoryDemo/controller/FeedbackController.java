@@ -7,7 +7,6 @@ import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.dto.FeedbackRequest;
 import org.example.RepositoryDemo.entity.Feedback;
 import org.example.RepositoryDemo.entity.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -19,11 +18,9 @@ import java.util.Map;
 public class FeedbackController {
     
     private static final Logger logger = LogManager.getLogger(FeedbackController.class);
-    
-    @Autowired
+
     private FeedbackService feedbackService;
-    
-    @Autowired
+
     private UserRepository userRepository;
     
     // 用户提交反馈
@@ -113,7 +110,7 @@ public class FeedbackController {
     @GetMapping("/all")
     public ResponseEntity<?> getAllFeedback(Authentication authentication) {
         try {
-            if (!isAdmin(authentication)) {
+            if (isNotAdmin(authentication)) {
                 return ResponseEntity.badRequest().body(Map.of("error", "权限不足"));
             }
             
@@ -128,7 +125,7 @@ public class FeedbackController {
     @GetMapping("/type/{type}")
     public ResponseEntity<?> getFeedbackByType(@PathVariable String type, Authentication authentication) {
         try {
-            if (!isAdmin(authentication)) {
+            if (isNotAdmin(authentication)) {
                 return ResponseEntity.badRequest().body(Map.of("error", "权限不足"));
             }
             
@@ -145,7 +142,7 @@ public class FeedbackController {
                                            @RequestBody Map<String, Object> payload,
                                            Authentication authentication) {
         try {
-            if (!isAdmin(authentication)) {
+            if (isNotAdmin(authentication)) {
                 return ResponseEntity.badRequest().body(Map.of("error", "权限不足"));
             }
             
@@ -168,13 +165,13 @@ public class FeedbackController {
     }
     
     // 检查是否为管理员
-    private boolean isAdmin(Authentication authentication) {
+    private boolean isNotAdmin(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return false;
+            return true;
         }
         
         String username = authentication.getName();
         User user = userRepository.findByUsername(username);
-        return user != null && user.type == 2;
+        return user == null || user.type != 2;
     }
 }

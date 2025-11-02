@@ -51,7 +51,7 @@ public class HomeController {
         if (authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             // 获取所有用户信息
-            List<User> users = userRepository.ListUsers();
+            List<User> users = UserRepository.ListUsers();
             model.addAttribute("users", users);
             return "user_management";
         } else {
@@ -95,7 +95,7 @@ public class HomeController {
         }
     }
     
-    @GetMapping("/feedback_management")
+    @GetMapping("/admin/feedback_management")
     public String feedbackManagement(Authentication authentication) {
         // 检查用户是否为管理员
         if (authentication != null && authentication.getAuthorities().stream()

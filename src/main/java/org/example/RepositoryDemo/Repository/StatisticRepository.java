@@ -13,7 +13,7 @@ import java.sql.Statement;
 @Repository
 public class StatisticRepository {
 
-    private static final Logger logger = LogManager.getLogger(UserRepository.class);
+    private static final Logger logger = LogManager.getLogger(StatisticRepository.class);
     private static final Connection connection = RepositoryDemoApplication.connection;
 
     public static void createTable() {

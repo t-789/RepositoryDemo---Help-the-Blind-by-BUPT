@@ -1,6 +1,7 @@
 // ForumService.java
 package org.example.RepositoryDemo.service;
 
+import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
@@ -16,6 +17,7 @@ public class ForumService {
     private static final Logger logger = LogManager.getLogger(ForumService.class);
     
     private final forumRepository forumRepository;
+    @Getter
     private final UserRepository userRepository;
 
     public ForumService(forumRepository forumRepository, UserRepository userRepository) {
@@ -26,7 +28,7 @@ public class ForumService {
     // 创建论坛帖子
     public int createForum(int userId, String title, String content) throws SQLException {
         logger.debug("开始创建论坛帖子: userId={}, title={}", userId, title);
-        int result = forumRepository.createForum(userId, title, content);
+        int result = org.example.RepositoryDemo.Repository.forumRepository.createForum(userId, title, content);
         logger.debug("论坛帖子创建结果: userId={}, title={}, result={}", userId, title, result);
         return result;
     }
@@ -48,6 +50,7 @@ public class ForumService {
 
     // 删除论坛帖子（管理员）
     public void deleteForum(int id) throws SQLException {
-        forumRepository.deleteForum(id);
+        org.example.RepositoryDemo.Repository.forumRepository.deleteForum(id);
     }
+
 }

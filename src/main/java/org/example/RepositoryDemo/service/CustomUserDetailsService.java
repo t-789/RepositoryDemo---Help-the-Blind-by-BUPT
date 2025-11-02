@@ -1,9 +1,9 @@
 package org.example.RepositoryDemo.service;
 
+import lombok.Setter;
 import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.security.WebSecurityConfig;
 import org.example.RepositoryDemo.entity.User;
-import org.springframework.beans.factory.annotation.*;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,9 +12,9 @@ import org.springframework.stereotype.*;
 import org.apache.logging.log4j.*;
 
 @Service
+@Setter
 public class CustomUserDetailsService implements UserDetailsService {
-    
-    @Autowired
+
     private UserRepository userRepository;
     private static final Logger logger = LogManager.getLogger(CustomUserDetailsService.class);
 

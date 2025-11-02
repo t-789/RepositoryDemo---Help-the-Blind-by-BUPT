@@ -1,5 +1,6 @@
 package org.example.RepositoryDemo.security;
 
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.service.CustomUserDetailsService;
@@ -21,11 +22,11 @@ import java.nio.charset.StandardCharsets;
 
 @Configuration
 @EnableWebSecurity
+@Setter
 public class WebSecurityConfig {
 
     private static final Logger logger = LogManager.getLogger(WebSecurityConfig.class);
-    
-    @Autowired
+
     private CustomUserDetailsService userDetailsService;
 
     @Bean
@@ -46,17 +47,16 @@ public class WebSecurityConfig {
                         .requestMatchers("/about").permitAll()
                         .requestMatchers("/index").permitAll()
                         .requestMatchers("/index*").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/error/**").permitAll()
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**").permitAll()
+                        .requestMatchers("/static/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/feedback_management").hasRole("ADMIN")
+                        .requestMatchers("/admin/feedback_management").hasRole("ADMIN")
                         .requestMatchers("/api/users/security-questions").permitAll()
                         .requestMatchers("/api/users/register-with-security").permitAll()
                         .requestMatchers("api/points/distance").permitAll()
                         .requestMatchers("/errortest").permitAll()
-                        .requestMatchers("api/statistic/**").permitAll()
+                        .requestMatchers("/api/statistic/**").permitAll()
                         .requestMatchers("/").permitAll()
                         .anyRequest().authenticated()
                 )

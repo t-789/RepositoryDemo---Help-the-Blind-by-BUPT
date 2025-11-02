@@ -1,6 +1,7 @@
 // PointController.java
 package org.example.RepositoryDemo.controller;
 
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
@@ -8,7 +9,6 @@ import org.example.RepositoryDemo.dto.PointRequest;
 import org.example.RepositoryDemo.entity.Point;
 import org.example.RepositoryDemo.entity.User;
 import org.example.RepositoryDemo.service.PointService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -26,19 +26,19 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/points")
 @Validated
+@Setter
 public class PointController {
     
     private static final Logger logger = LogManager.getLogger(PointController.class);
-    
-    @Autowired
+
     private PointService pointService;
-    
-    @Autowired
+
     private UserRepository userRepository;
     
     // 保存点位
@@ -203,7 +203,7 @@ public class PointController {
                 return ResponseEntity.badRequest().body("点位不存在");
             }
             
-            if (point.userId == user.id) {
+            if (Objects.equals(point.userId, user.id)) {
                 return ResponseEntity.badRequest().body("不能确认自己创建的点位");
             }
             
@@ -340,9 +340,21 @@ public class PointController {
             String extension = "";
             if (originalFilename != null && originalFilename.contains(".")) {
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                // 验证扩展名是否合法
+                if (!extension.equals(".jpg") && !extension.equals(".jpeg") && !extension.equals(".png")) {
+                    return null;
+                }
             }
-            String fileName = UUID.randomUUID().toString() + extension;
-            Path filePath = Paths.get(uploadDir + fileName);
+            String fileName = UUID.randomUUID() + extension;
+            Path path = Paths.get(uploadDir);
+            Path filePath = path.resolve(fileName).normalize();
+            
+            // 验证文件路径是否在允许的目录内
+            Path allowedDir = path.toAbsolutePath().normalize();
+            if (!filePath.toAbsolutePath().normalize().startsWith(allowedDir)) {
+                logger.error("非法文件路径访问尝试");
+                return null;
+            }
 
             // 保存文件
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -350,7 +362,7 @@ public class PointController {
             // 返回头像访问路径
             return "/description/" + fileName;
         } catch (IOException e) {
-            logger.error("保存点位图片描述文件失败: " + e.getMessage());
+            logger.error("保存点位图片描述文件失败: {}", e.getMessage());
             return null;
         }
     }

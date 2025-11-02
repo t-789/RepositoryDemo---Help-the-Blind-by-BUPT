@@ -1,13 +1,11 @@
 package org.example.RepositoryDemo.controller;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.Setter;
 import org.example.RepositoryDemo.service.ForumService;
 import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.dto.ForumRequest;
 import org.example.RepositoryDemo.entity.Forum;
 import org.example.RepositoryDemo.entity.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
@@ -18,17 +16,14 @@ import jakarta.validation.constraints.Min;
 import java.sql.SQLException;
 import java.util.List;
 
+@Setter
 @RestController
 @RequestMapping("/api/forum")
 @Validated
 public class ForumController {
 
-    private static final Logger logger = LogManager.getLogger(ForumController.class);
-    
-    @Autowired
     private ForumService forumService;
 
-    @Autowired
     private UserRepository userRepository;
 
     // 创建论坛帖子
@@ -123,4 +118,5 @@ public class ForumController {
             return ResponseEntity.badRequest().body("删除帖子失败: " + e.getMessage());
         }
     }
+
 }

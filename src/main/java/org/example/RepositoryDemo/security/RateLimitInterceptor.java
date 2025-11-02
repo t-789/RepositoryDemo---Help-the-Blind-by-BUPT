@@ -2,12 +2,13 @@ package org.example.RepositoryDemo.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.entity.User;
 import org.example.RepositoryDemo.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Component
+@Setter
 public class RateLimitInterceptor implements HandlerInterceptor {
     
     private static final Logger logger = LogManager.getLogger(RateLimitInterceptor.class);
@@ -29,10 +31,8 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     // 存储用户请求时间戳：用户ID -> 时间戳
     private final ConcurrentHashMap<Integer, Long> requestTimestamps = new ConcurrentHashMap<>();
 
-    @Autowired
     private UserService userService;
-    
-    @Autowired
+
     private UserRepository userRepository;
     
     public RateLimitInterceptor() {
@@ -43,7 +43,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     }
     
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) throws Exception {
         // 获取当前认证用户
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
