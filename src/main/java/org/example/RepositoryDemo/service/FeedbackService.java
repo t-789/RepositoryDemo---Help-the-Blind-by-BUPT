@@ -25,6 +25,9 @@ public class FeedbackService {
         if (content == null || content.trim().isEmpty()) {
             content = "用户未提供具体反馈内容";
         }
+        if (userId == null){
+            userId = -1;
+        }
         
         Feedback feedback = new Feedback();
         feedback.setUserId(userId);
@@ -50,6 +53,9 @@ public class FeedbackService {
         }
         
         Feedback feedback = new Feedback();
+        if (userId == null){
+            feedback.setUserId(-1);
+        }
         feedback.setUserId(userId);
         feedback.setUsername(username);
         feedback.setContent(content);

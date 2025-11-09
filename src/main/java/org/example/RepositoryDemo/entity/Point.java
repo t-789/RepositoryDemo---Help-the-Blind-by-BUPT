@@ -39,4 +39,15 @@ public class Point {
         // 默认构造函数
     }
 
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Point point = (Point) obj;
+        return id.equals(point.id);
+    }
+
 }

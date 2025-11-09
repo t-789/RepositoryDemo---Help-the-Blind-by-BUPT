@@ -72,5 +72,17 @@ public class User {
         return this;
     }
 
-    // 构造函数、getter和setter方法
+    public boolean equals(Object obj){
+        if (obj == null) {
+            return false;
+        }
+        if (this == obj){
+            return true;
+        }
+        if (obj instanceof User user) {
+            return this.id.equals(user.id);
+        } else {
+            return false;
+        }
+    }
 }

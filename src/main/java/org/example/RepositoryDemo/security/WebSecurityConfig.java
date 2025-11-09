@@ -22,11 +22,11 @@ import java.nio.charset.StandardCharsets;
 
 @Configuration
 @EnableWebSecurity
-@Setter
 public class WebSecurityConfig {
 
     private static final Logger logger = LogManager.getLogger(WebSecurityConfig.class);
 
+    @Autowired
     private CustomUserDetailsService userDetailsService;
 
     @Bean

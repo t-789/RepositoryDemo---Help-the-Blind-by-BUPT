@@ -7,9 +7,11 @@ import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.dto.FeedbackRequest;
 import org.example.RepositoryDemo.entity.Feedback;
 import org.example.RepositoryDemo.entity.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +21,10 @@ public class FeedbackController {
     
     private static final Logger logger = LogManager.getLogger(FeedbackController.class);
 
+    @Autowired
     private FeedbackService feedbackService;
 
+    @Autowired
     private UserRepository userRepository;
     
     // 用户提交反馈
@@ -111,12 +115,13 @@ public class FeedbackController {
     public ResponseEntity<?> getAllFeedback(Authentication authentication) {
         try {
             if (isNotAdmin(authentication)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "权限不足"));
+                return ResponseEntity.status(403).body(Map.of("error", "权限不足"));
             }
             
             List<Feedback> feedbacks = feedbackService.getAllFeedback();
             return ResponseEntity.ok(feedbacks);
         } catch (Exception e) {
+            logger.error("获取反馈列表失败: ", e);
             return ResponseEntity.badRequest().body(Map.of("error", "获取反馈列表失败: " + e.getMessage()));
         }
     }
@@ -126,12 +131,13 @@ public class FeedbackController {
     public ResponseEntity<?> getFeedbackByType(@PathVariable String type, Authentication authentication) {
         try {
             if (isNotAdmin(authentication)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "权限不足"));
+                return ResponseEntity.status(403).body(Map.of("error", "权限不足"));
             }
             
             List<Feedback> feedbacks = feedbackService.getFeedbackByType(type);
             return ResponseEntity.ok(feedbacks);
         } catch (Exception e) {
+            logger.error("获取反馈列表失败: ", e);
             return ResponseEntity.badRequest().body(Map.of("error", "获取反馈列表失败: " + e.getMessage()));
         }
     }
@@ -143,7 +149,7 @@ public class FeedbackController {
                                            Authentication authentication) {
         try {
             if (isNotAdmin(authentication)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "权限不足"));
+                return ResponseEntity.status(403).body(Map.of("error", "权限不足"));
             }
             
             String resolvedBy = authentication.getName();
@@ -160,18 +166,35 @@ public class FeedbackController {
                 return ResponseEntity.badRequest().body(Map.of("error", "反馈状态更新失败"));
             }
         } catch (Exception e) {
+            logger.error("更新反馈状态失败: ", e);
             return ResponseEntity.badRequest().body(Map.of("error", "参数错误: " + e.getMessage()));
         }
     }
     
     // 检查是否为管理员
     private boolean isNotAdmin(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        // 检查认证状态
+        if (authentication == null || !authentication.isAuthenticated() || 
+            "anonymousUser".equals(authentication.getPrincipal())) {
+            logger.warn("用户未认证或为匿名用户");
             return true;
         }
         
         String username = authentication.getName();
         User user = userRepository.findByUsername(username);
-        return user == null || user.type != 2;
+        
+        // 检查用户是否存在且为管理员（type=2）
+        if (user == null) {
+            logger.warn("用户 {} 不存在", username);
+            return true;
+        }
+        
+        if (user.type != 2) {
+            logger.warn("用户 {} 不是管理员，类型: {}", username, user.type);
+            return true;
+        }
+        
+        logger.debug("用户 {} 是管理员", username);
+        return false; // 用户是管理员
     }
 }

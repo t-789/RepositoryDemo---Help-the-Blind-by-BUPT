@@ -1,7 +1,6 @@
 // PointController.java
 package org.example.RepositoryDemo.controller;
 
-import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
@@ -14,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,13 +33,14 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/points")
 @Validated
-@Setter
 public class PointController {
     
     private static final Logger logger = LogManager.getLogger(PointController.class);
 
+    @Autowired
     private PointService pointService;
 
+    @Autowired
     private UserRepository userRepository;
     
     // 保存点位

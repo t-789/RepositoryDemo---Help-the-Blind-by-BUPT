@@ -93,6 +93,11 @@
             color: #007bff;
             text-decoration: underline;
         }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -116,6 +121,8 @@
         <button onclick="loadFeedbackByStatus(false)">未解决</button>
         <button onclick="loadFeedback('all')">刷新</button>
     </div>
+    
+    <div id="errorMessage" class="error-message" style="display: none;"></div>
 
     <table id="feedbackTable">
         <thead>
@@ -155,31 +162,62 @@
         }
         
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                // 检查响应状态
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        throw new Error('权限不足，请确认您是管理员');
+                    } else {
+                        throw new Error('服务器返回错误: ' + response.status);
+                    }
+                }
+                return response.json();
+            })
             .then(feedbacks => {
+                hideErrorMessage();
                 renderFeedbackTable(feedbacks);
             })
             .catch(error => {
                 console.error('获取反馈列表失败:', error);
+                showErrorMessage('获取反馈列表失败: ' + error.message);
             });
     }
     
     function loadFeedbackByStatus(resolved) {
         // 这里需要获取所有反馈然后在前端过滤，因为后端没有提供此接口
         fetch('/api/feedback/all')
-            .then(response => response.json())
+            .then(response => {
+                // 检查响应状态
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        throw new Error('权限不足，请确认您是管理员');
+                    } else {
+                        throw new Error('服务器返回错误: ' + response.status);
+                    }
+                }
+                return response.json();
+            })
             .then(feedbacks => {
+                hideErrorMessage();
                 const filtered = feedbacks.filter(f => f.resolved === resolved);
                 renderFeedbackTable(filtered);
             })
             .catch(error => {
                 console.error('获取反馈列表失败:', error);
+                showErrorMessage('获取反馈列表失败: ' + error.message);
             });
     }
 
     function renderFeedbackTable(feedbacks) {
         const tbody = document.getElementById('feedbackTableBody');
         tbody.innerHTML = '';
+
+        if (!feedbacks || feedbacks.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="10" style="text-align: center;">暂无反馈数据</td>`;
+            tbody.appendChild(row);
+            return;
+        }
 
         feedbacks.forEach(feedback => {
             const row = document.createElement('tr');
@@ -216,7 +254,7 @@
 
             row.innerHTML = `
                 <td>${feedback.id}</td>
-                <td>${feedback.username}${feedback.userId ? '(' + feedback.userId + ')' : ''}</td>
+                <td>${feedback.username}${feedback.userId !== -1 ? '(' + feedback.userId + ')' : ''}</td>
                 <td>${feedback.type === 'system' ? '系统错误' : '用户反馈'}</td>
                 <td>
                     ${contentCell}
@@ -280,7 +318,16 @@
                 },
                 body: JSON.stringify({resolved: true})
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            throw new Error('权限不足，请确认您是管理员');
+                        } else {
+                            throw new Error('服务器返回错误: ' + response.status);
+                        }
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.message) {
                         alert(data.message);
@@ -290,7 +337,8 @@
                     }
                 })
                 .catch(error => {
-                    alert('操作失败: ' + error);
+                    alert('操作失败: ' + error.message);
+                    showErrorMessage('操作失败: ' + error.message);
                 });
         }
     }
@@ -304,7 +352,16 @@
                 },
                 body: JSON.stringify({resolved: false})
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            throw new Error('权限不足，请确认您是管理员');
+                        } else {
+                            throw new Error('服务器返回错误: ' + response.status);
+                        }
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.message) {
                         alert(data.message);
@@ -314,7 +371,8 @@
                     }
                 })
                 .catch(error => {
-                    alert('操作失败: ' + error);
+                    alert('操作失败: ' + error.message);
+                    showErrorMessage('操作失败: ' + error.message);
                 });
         }
     }
@@ -323,6 +381,17 @@
         if (!timestamp) return 'N/A';
         const date = new Date(timestamp);
         return date.toLocaleString('zh-CN');
+    }
+    
+    function showErrorMessage(message) {
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+    
+    function hideErrorMessage() {
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.style.display = 'none';
     }
 </script>
 </body>

@@ -1,8 +1,7 @@
-package org.example.RepositoryDemo.errorHandle;
+package org.example.RepositoryDemo.exception;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.service.FeedbackService;
@@ -15,18 +14,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Controller
-@Setter
 public class CustomErrorController implements ErrorController {
     
     private static final Logger logger = LogManager.getLogger(CustomErrorController.class);
 
+    @Autowired
     private UserRepository userRepository;
 
+    @Autowired
     private FeedbackService feedbackService;
     
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();

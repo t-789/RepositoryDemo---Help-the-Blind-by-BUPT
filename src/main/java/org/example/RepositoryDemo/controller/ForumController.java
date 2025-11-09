@@ -1,6 +1,5 @@
 package org.example.RepositoryDemo.controller;
 
-import lombok.Setter;
 import org.example.RepositoryDemo.service.ForumService;
 import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.dto.ForumRequest;
@@ -10,20 +9,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import java.sql.SQLException;
 import java.util.List;
 
-@Setter
 @RestController
 @RequestMapping("/api/forum")
 @Validated
 public class ForumController {
 
+    @Autowired
     private ForumService forumService;
 
+    @Autowired
     private UserRepository userRepository;
 
     // 创建论坛帖子

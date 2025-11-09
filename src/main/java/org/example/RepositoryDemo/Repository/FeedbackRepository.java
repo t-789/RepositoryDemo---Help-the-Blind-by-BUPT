@@ -41,7 +41,11 @@ public class FeedbackRepository {
         String sql = "INSERT INTO feedback (user_id, username, content, type, url, user_agent, stack_trace, create_time, resolved) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setObject(1, feedback.getUserId(), Types.INTEGER);
+            if (feedback.getUserId() == null) {
+                pstmt.setInt(1, -1);
+            } else {
+                pstmt.setObject(1, feedback.getUserId(), Types.INTEGER); // may have bugs in the future. Beware.
+            }
             pstmt.setString(2, feedback.getUsername());
             pstmt.setString(3, feedback.getContent());
             pstmt.setString(4, feedback.getType());

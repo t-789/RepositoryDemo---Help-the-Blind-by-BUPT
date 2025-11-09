@@ -2,6 +2,7 @@ package org.example.RepositoryDemo;
 
 import lombok.Setter;
 import org.example.RepositoryDemo.Repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -12,9 +13,9 @@ import org.apache.logging.log4j.*;
 
 
 @SpringBootApplication
-@Setter
 public class RepositoryDemoApplication {
 
+    @Autowired
     private UserRepository userRepository;
 
     public static final Logger logger = LogManager.getLogger(RepositoryDemoApplication.class);

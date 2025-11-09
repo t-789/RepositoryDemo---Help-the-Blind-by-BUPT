@@ -1,4 +1,4 @@
-package org.example.RepositoryDemo.dto;
+package org.example.RepositoryDemo.entity;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -2,7 +2,6 @@ package org.example.RepositoryDemo.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
@@ -13,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -20,7 +20,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Component
-@Setter
 public class RateLimitInterceptor implements HandlerInterceptor {
     
     private static final Logger logger = LogManager.getLogger(RateLimitInterceptor.class);
@@ -31,8 +30,10 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     // 存储用户请求时间戳：用户ID -> 时间戳
     private final ConcurrentHashMap<Integer, Long> requestTimestamps = new ConcurrentHashMap<>();
 
+    @Autowired
     private UserService userService;
 
+    @Autowired
     private UserRepository userRepository;
     
     public RateLimitInterceptor() {

@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.RepositoryDemoApplication;
 import org.example.RepositoryDemo.entity.Point;
 import org.springframework.stereotype.Repository;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,9 +14,12 @@ import java.util.List;
 
 @Repository
 public class PointRepository {
+    @Autowired
+    private org.example.RepositoryDemo.service.FeedbackService feedbackService;
+    
     private static final Logger logger = LogManager.getLogger(PointRepository.class);
     private static final Connection connection = RepositoryDemoApplication.connection;
-    
+
     // 初始化表
     public static void createPointTable() throws SQLException {
         String createPointTableSQL = "CREATE TABLE IF NOT EXISTS points (" +
@@ -121,6 +125,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("点位查重失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "点位查重失败: " + e.getMessage(),
+                        "/api/points/save",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
 
         String sql = "INSERT INTO points (user_id, x, y, marked_time, deleted, propose_delete, confirm_count, level, type, description, image_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -153,6 +171,20 @@ public class PointRepository {
                     }
                 } catch (SQLException e) {
                     logger.error("更新用户{}积分失败: {}", point.userId, e.getMessage());
+                    try {
+                        if (feedbackService != null) {
+                            feedbackService.saveSystemFeedback(
+                                null,
+                                "system",
+                                "更新用户" + point.userId + "积分失败: " + e.getMessage(),
+                                "/api/points/save",
+                                "Point Service",
+                                "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                            );
+                        }
+                    } catch (Exception fe) {
+                        logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+                    }
                 }
                 logger.info("点位保存成功，ID: {}", point.id);
                 StatisticRepository.updatePointCount(1);
@@ -160,6 +192,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("保存点位失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "保存点位失败: " + e.getMessage(),
+                        "/api/points/save",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return -1;
     }
@@ -176,6 +222,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("获取点位列表失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "获取点位列表失败: " + e.getMessage(),
+                        "/api/points/list",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return points;
     }
@@ -192,6 +252,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("获取点位失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "获取点位失败: " + e.getMessage(),
+                        "/api/points/id",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return null;
     }
@@ -229,11 +303,39 @@ public class PointRepository {
                 }
             } catch (SQLException e) {
                 logger.error("检查点位提议记录失败: {}", e.getMessage());
+                try {
+                    if (feedbackService != null) {
+                        feedbackService.saveSystemFeedback(
+                            null,
+                            "system",
+                            "检查点位提议记录失败: " + e.getMessage(),
+                            "/api/points/proposal",
+                            "Point Service",
+                            "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                        );
+                    }
+                } catch (Exception fe) {
+                    logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+                }
                 return -3;
             }
 
         } catch (SQLException e) {
             logger.error("检查提议删除记录失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "检查提议删除记录失败: " + e.getMessage(),
+                        "/api/points/proposal",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return -3;
         }
         String checkDeletedSql = "SELECT * FROM points WHERE id = ?";
@@ -249,6 +351,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("proposeDeletePoint(): 检查点位删除状态失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "proposeDeletePoint(): 检查点位删除状态失败: " + e.getMessage(),
+                        "/api/points/proposal",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return -3;
         }
 
@@ -275,6 +391,20 @@ public class PointRepository {
                     logger.info("记录用户{}对点位{}的提议删除成功", userId, pointId);
                 } catch (SQLException e) {
                     logger.error("记录提议删除失败: {}", e.getMessage());
+                    try {
+                        if (feedbackService != null) {
+                            feedbackService.saveSystemFeedback(
+                                null,
+                                "system",
+                                "记录提议删除失败: " + e.getMessage(),
+                                "/api/points/proposal",
+                                "Point Service",
+                                "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                            );
+                        }
+                    } catch (Exception fe) {
+                        logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+                    }
                     return -1;
                 }
                 return 1;
@@ -285,6 +415,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("提议删除点位失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "提议删除点位失败: " + e.getMessage(),
+                        "/api/points/proposal",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return -3;
         }
     }
@@ -302,6 +446,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("管理员删除点位失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "管理员删除点位失败: " + e.getMessage(),
+                        "/api/points/admin-delete",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return false;
     }
@@ -321,6 +479,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("检查点位确认记录失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "检查点位确认记录失败: " + e.getMessage(),
+                        "/api/points/confirm",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return -3;
         }
         String checkDeletedSql = "SELECT * FROM points WHERE id = ?";
@@ -336,6 +508,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("ConfirmPoint(): 检查点位删除状态失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "ConfirmPoint(): 检查点位删除状态失败: " + e.getMessage(),
+                        "/api/points/confirm",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return -3;
         }
 
@@ -355,6 +541,20 @@ public class PointRepository {
                     logger.info("记录用户{}对点位{}的确认成功", userId, pointId);
                 } catch (SQLException e) {
                     logger.error("记录点位确认失败: {}", e.getMessage());
+                    try {
+                        if (feedbackService != null) {
+                            feedbackService.saveSystemFeedback(
+                                null,
+                                "system",
+                                "记录点位确认失败: " + e.getMessage(),
+                                "/api/points/confirm",
+                                "Point Service",
+                                "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                            );
+                        }
+                    } catch (Exception fe) {
+                        logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+                    }
                     return -1;
                 }
                 return 1;
@@ -365,6 +565,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("确认点位失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "确认点位失败: " + e.getMessage(),
+                        "/api/points/confirm",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return -3;
         }
     }
@@ -385,6 +599,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("管理员恢复点位失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "管理员恢复点位失败: " + e.getMessage(),
+                        "/api/points/admin-restore",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return false;
     }
@@ -414,6 +642,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("检查并标记删除失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "检查并标记删除失败: " + e.getMessage(),
+                        "/api/points/check-delete",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return false;
         }
         return true;
@@ -429,6 +671,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("获取删除阈值失败: {}\n默认5。", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "获取删除阈值失败: " + e.getMessage() + "\n默认5。",
+                        "/api/points/threshold",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return 5; // 默认阈值
     }
@@ -445,6 +701,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("设置删除阈值失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "设置删除阈值失败: " + e.getMessage(),
+                        "/api/points/set-threshold",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return false;
     }
@@ -461,6 +731,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("获取所有点位列表失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "获取所有点位列表失败: " + e.getMessage(),
+                        "/api/points/all",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return points;
     }
@@ -488,6 +772,20 @@ public class PointRepository {
             return true;
         } catch (SQLException e) {
             logger.error("保存类型映射失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "保存类型映射失败: " + e.getMessage(),
+                        "/api/points/type-map",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return false;
         }
     }
@@ -504,6 +802,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("获取类型映射列表失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "获取类型映射列表失败: " + e.getMessage(),
+                        "/api/points/type-map-all",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return typeMaps;
     }
@@ -520,6 +832,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("获取类型名称失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "获取类型名称失败: " + e.getMessage(),
+                        "/api/points/type-name",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return null;
     }
@@ -547,6 +873,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("获取指定距离内的点位失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "获取指定距离内的点位失败: " + e.getMessage(),
+                        "/api/points/distance",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return null;
     }
@@ -572,6 +912,20 @@ public class PointRepository {
             }
         } catch (SQLException e) {
             logger.error("获取用户{}的点位失败: {}", userId, e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "获取用户" + userId + "的点位失败: " + e.getMessage(),
+                        "/api/points/user",
+                        "Point Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return null;
     }

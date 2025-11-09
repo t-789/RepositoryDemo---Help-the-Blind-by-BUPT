@@ -1,10 +1,9 @@
 package org.example.RepositoryDemo.controller;
 
-import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
-import org.example.RepositoryDemo.dto.UserProfileResponse;
+import org.example.RepositoryDemo.entity.UserProfileResponse;
 import org.example.RepositoryDemo.dto.registerWithSecurityRequest;
 import org.example.RepositoryDemo.entity.Forum;
 import org.example.RepositoryDemo.entity.Point;
@@ -14,6 +13,7 @@ import org.example.RepositoryDemo.dto.LoginRequest;
 import org.example.RepositoryDemo.entity.User;
 import org.example.RepositoryDemo.service.PointService;
 import org.example.RepositoryDemo.service.ForumService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,18 +46,23 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/users")
 @Validated
-@Setter
 public class UserController {
+    @Autowired
     private UserService userService;
 
+    @Autowired
     private UserRepository userRepository;
 
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
     private UserDetailsService userDetailsService;
 
+    @Autowired
     private PointService pointService;
 
+    @Autowired
     private ForumService forumService;
 
     private static final Logger logger = LogManager.getLogger(UserController.class);
@@ -192,13 +197,16 @@ public class UserController {
                 
                 return ResponseEntity.ok("登录成功");
             } else {
+                logger.warn("用户 {} 登录失败，用户名或密码错误", loginRequest.getUsername());
                 return ResponseEntity.badRequest().body("登录失败，用户名或密码错误");
             }
         } catch (Exception e) {
             if (e.getMessage().contains("账户被封禁至")){
+                logger.warn("用户 {} 登录失败，{}", loginRequest.getUsername(), e.getMessage());
                 return ResponseEntity.badRequest().body("账户被封禁至" + e.getMessage());
             }
-            return ResponseEntity.badRequest().body(e.getMessage());
+            logger.error("用户 {} 登录时发生错误: {}", loginRequest.getUsername(), e.getMessage());
+            return ResponseEntity.badRequest().body("登录失败");
         }
     }
 

@@ -4,6 +4,7 @@ import lombok.Setter;
 import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.security.WebSecurityConfig;
 import org.example.RepositoryDemo.entity.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,11 +13,13 @@ import org.springframework.stereotype.*;
 import org.apache.logging.log4j.*;
 
 @Service
-@Setter
 public class CustomUserDetailsService implements UserDetailsService {
 
+    @Autowired
     private UserRepository userRepository;
+    
     private static final Logger logger = LogManager.getLogger(CustomUserDetailsService.class);
+    private static FeedbackService feedbackService;
 
     private static String JudgeType(int type){
         return switch (type) {
@@ -27,11 +30,29 @@ public class CustomUserDetailsService implements UserDetailsService {
         };
     }
     
+    public static void setFeedbackService(FeedbackService service) {
+        feedbackService = service;
+    }
+    
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username);
         if (user == null) {
             logger.error("用户{}不存在", username);
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "用户" + username + "不存在",
+                        "/login",
+                        "User Service",
+                        "Username: " + username
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             throw new UsernameNotFoundException("用户不存在");
         }
         

@@ -2,10 +2,10 @@ package org.example.RepositoryDemo.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.example.RepositoryDemo.ChatResponse;
+import org.example.RepositoryDemo.entity.ChatResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-@Setter
 public class AIService {
 
     @Value("${ai.python.service.url:http://localhost:5000/api/chat}")
@@ -24,11 +23,15 @@ public class AIService {
     @Value("${ai.python.deepseek.url:http://localhost:8000/api/deepseek}")
     private String pythonDeepSeekUrl;
 
+    @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
     private ObjectMapper objectMapper;
 
     private static final Logger logger = LogManager.getLogger(AIService.class);
+    @Autowired
+    private FeedbackService feedbackService;
 
     public ChatResponse processMessage(String userId, String message) {
         try {
@@ -71,6 +74,16 @@ public class AIService {
 
         } catch (Exception e) {
             logger.error("调用AI服务时发生错误: ", e);
+            // 记录系统错误
+            feedbackService.saveSystemFeedback(
+                null, 
+                "system", 
+                "调用AI服务时发生错误: " + e.getMessage(), 
+                "/api/ai/chat", 
+                "AI Service", 
+                "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+            );
+            // 返回错误信息给用户
             return new ChatResponse("error", "调用AI服务时发生错误: " + e.getMessage());
         }
     }
@@ -106,11 +119,32 @@ public class AIService {
 
                 return chatResponse;
             } else {
-                return new ChatResponse("error", "AI服务暂时不可用");
+                // 创建错误响应给用户
+                ChatResponse errorResponse = new ChatResponse("error", "AI服务返回错误状态: " + response.getStatusCode());
+                // 记录系统错误
+                feedbackService.saveSystemFeedback(
+                    null, 
+                    "system", 
+                    "AI服务返回错误状态: " + response.getStatusCode(), 
+                    "/api/ai/deepseek", 
+                    "AI Service", 
+                    "HTTP Status: " + response.getStatusCode()
+                );
+                return errorResponse;
             }
 
         } catch (Exception e) {
             logger.error("调用DeepSeek服务时发生错误: ", e);
+            // 记录系统错误
+            feedbackService.saveSystemFeedback(
+                null, 
+                "system", 
+                "调用DeepSeek服务时发生错误: " + e.getMessage(), 
+                "/api/ai/deepseek", 
+                "AI Service", 
+                "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+            );
+            // 返回错误信息给用户
             return new ChatResponse("error", "调用DeepSeek服务时发生错误: " + e.getMessage());
         }
     }

@@ -3,12 +3,17 @@ package org.example.RepositoryDemo.Repository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.RepositoryDemoApplication;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.*;
 
 public class SecurityQuestionRepository {
     private static final Logger logger = LogManager.getLogger(SecurityQuestionRepository.class);
     private static final Connection connection = RepositoryDemoApplication.connection;
+    
+    @Autowired
+    private static org.example.RepositoryDemo.service.FeedbackService feedbackService;
+
     public static boolean addQuestion(String question) {
         // add question to database
         String check_sql = "SELECT * FROM security_question_map WHERE question = ?";
@@ -21,6 +26,20 @@ public class SecurityQuestionRepository {
             }
         } catch (SQLException e) {
             logger.error("检查问题失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "检查问题失败: " + e.getMessage(),
+                        "/api/users/security-questions/add",
+                        "Security Question Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return false;
         }
         String sql = "INSERT INTO security_question_map (question) VALUES (?)";
@@ -35,6 +54,20 @@ public class SecurityQuestionRepository {
             }
         } catch (SQLException e) {
             logger.error("添加问题失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "添加问题失败: " + e.getMessage(),
+                        "/api/users/security-questions/add",
+                        "Security Question Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return false;
     }
@@ -52,6 +85,20 @@ public class SecurityQuestionRepository {
             }
         } catch (SQLException e) {
             logger.error("删除问题失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "删除问题失败: " + e.getMessage(),
+                        "/api/users/security-questions/delete",
+                        "Security Question Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return false;
     }
@@ -70,6 +117,20 @@ public class SecurityQuestionRepository {
             }
         } catch (SQLException e) {
             logger.error("更新问题失败: {}", e.getMessage());
+            try {
+                if (feedbackService != null) {
+                    feedbackService.saveSystemFeedback(
+                        null,
+                        "system",
+                        "更新问题失败: " + e.getMessage(),
+                        "/api/users/security-questions/update",
+                        "Security Question Service",
+                        "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                    );
+                }
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return false;
     }

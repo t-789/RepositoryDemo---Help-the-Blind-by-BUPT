@@ -1,11 +1,11 @@
 package org.example.RepositoryDemo.Repository;
 
-import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.RepositoryDemoApplication;
 import org.example.RepositoryDemo.entity.Forum;
 import org.example.RepositoryDemo.entity.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -13,11 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-@Setter
 public class forumRepository {
     private static final Logger logger = LogManager.getLogger(forumRepository.class);
     private static final Connection connection = RepositoryDemoApplication.connection;
+    
+    @Autowired
+    private org.example.RepositoryDemo.service.FeedbackService feedbackService;
 
+    @Autowired
     private UserRepository userRepository;
 
     public static void createForumTable() throws SQLException {
@@ -32,7 +35,8 @@ public class forumRepository {
             logger.info("论坛表创建成功！");
         } catch (SQLException e) {
             logger.error("创建论坛表失败！");
-            throw e;
+            // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+            // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
         }
     }
 
@@ -49,6 +53,8 @@ public class forumRepository {
             return 1;
         } catch (SQLException e) {
             logger.error("创建帖子{}失败: {}", title, e.getMessage());
+            // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+            // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
             return 0;
         }
     }
@@ -74,6 +80,18 @@ public class forumRepository {
             }
         } catch (SQLException e) {
             logger.error("获取所有帖子失败: {}", e.getMessage());
+            try {
+                feedbackService.saveSystemFeedback(
+                    null,
+                    "system",
+                    "获取所有帖子失败: " + e.getMessage(),
+                    "/api/forum/list",
+                    "Forum Service",
+                    "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return forums;
     }
@@ -98,6 +116,18 @@ public class forumRepository {
             }
         } catch (SQLException e) {
             logger.error("获取帖子{}失败: {}", id, e.getMessage());
+            try {
+                feedbackService.saveSystemFeedback(
+                    null,
+                    "system",
+                    "获取帖子" + id + "失败: " + e.getMessage(),
+                    "/api/forum/id",
+                    "Forum Service",
+                    "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return forum;
     }
@@ -124,6 +154,18 @@ public class forumRepository {
             }
         } catch (SQLException e) {
             logger.error("获取用户{}的帖子失败: {}", userId, e.getMessage());
+            try {
+                feedbackService.saveSystemFeedback(
+                    null,
+                    "system",
+                    "获取用户" + userId + "的帖子失败: " + e.getMessage(),
+                    "/api/forum/user",
+                    "Forum Service",
+                    "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return forums;
     }
@@ -137,6 +179,8 @@ public class forumRepository {
             logger.info("删除帖子{}成功！", id);
         } catch (SQLException e) {
             logger.error("删除帖子{}失败: {}", id, e.getMessage());
+            // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+            // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
         }
     }
 }

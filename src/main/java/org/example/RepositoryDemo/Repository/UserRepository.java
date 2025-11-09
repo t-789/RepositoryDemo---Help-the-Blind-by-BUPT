@@ -1,10 +1,11 @@
 package org.example.RepositoryDemo.Repository;
 
-import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.RepositoryDemoApplication;
 import org.example.RepositoryDemo.entity.User;
+import org.example.RepositoryDemo.service.FeedbackService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.*;
@@ -17,14 +18,19 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-@Setter
 public class UserRepository {
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private FeedbackService feedbackService;
     
     private static final Logger logger = LogManager.getLogger(UserRepository.class);
     private static final Connection connection = RepositoryDemoApplication.connection;
+
 
     public static void createUserTable() throws SQLException {
         String createUserTableSQL = "CREATE TABLE IF NOT EXISTS users (" +
@@ -41,6 +47,21 @@ public class UserRepository {
             logger.info("用户表创建成功！");
         } catch (Exception e) {
             logger.error("创建用户表时发生错误: {}", e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+                // feedbackService.saveSystemFeedback(
+                //     null,
+                //     "system",
+                //     "创建用户表时发生错误: " + e.getMessage(),
+                //     "/initialization",
+                //     "Database Initialization",
+                //     "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                // );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
     }
 
@@ -58,6 +79,13 @@ public class UserRepository {
             logger.info("用户表结构检查完成");
         } catch (SQLException e) {
             logger.error("检查用户表结构时发生错误: {}", e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
     }
 
@@ -114,6 +142,19 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             logger.error("检查或创建管理员用户失败: {}", e.getMessage());
+            // 记录系统错误反馈
+            try {
+                feedbackService.saveSystemFeedback(
+                    null,
+                    "system",
+                    "检查或创建管理员用户失败: " + e.getMessage(),
+                    "/initialization",
+                    "Database Initialization",
+                    "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
     }
 
@@ -131,6 +172,13 @@ public class UserRepository {
             return 1; // 注册成功
         } catch (SQLException e) {
             logger.error("用户{}注册失败: {}", user.username, e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return 0; // 注册失败
         }
     }
@@ -157,6 +205,19 @@ public class UserRepository {
                 return null;
             }
             logger.error("findByUsername()：查询用户失败: {}", e.getMessage());
+            // 记录系统错误反馈
+            try {
+                feedbackService.saveSystemFeedback(
+                    null,
+                    "system",
+                    "findByUsername()：查询用户失败: " + e.getMessage(),
+                    "/api/users/find",
+                    "User Service",
+                    "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return null; // 用户不存在
         }
     }
@@ -178,6 +239,19 @@ public class UserRepository {
             }, id);
         } catch (DataAccessException e) {
             logger.error("findById()：查询用户失败: {}", e.getMessage());
+            // 记录系统错误反馈
+            try {
+                feedbackService.saveSystemFeedback(
+                    null,
+                    "system",
+                    "findById()：查询用户失败: " + e.getMessage(),
+                    "/api/users/find",
+                    "User Service",
+                    "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return null; // 用户不存在
         }
     }
@@ -199,6 +273,19 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             logger.error("更新用户{}权限失败: {}", userId, e.getMessage());
+            // 记录系统错误反馈
+            try {
+                feedbackService.saveSystemFeedback(
+                    null,
+                    "system",
+                    "更新用户" + userId + "权限失败: " + e.getMessage(),
+                    "/api/users/update-type",
+                    "User Service",
+                    "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return -2;
         }
     }
@@ -233,6 +320,19 @@ public class UserRepository {
             return rowsUpdated > 0;
         } catch (SQLException e) {
             logger.error("更新用户{}头像失败: {}", userId, e.getMessage());
+            // 记录系统错误反馈
+            try {
+                feedbackService.saveSystemFeedback(
+                    null,
+                    "system",
+                    "更新用户" + userId + "头像失败: " + e.getMessage(),
+                    "/api/users/update-avatar",
+                    "User Service",
+                    "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return false;
         }
     }
@@ -256,6 +356,13 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             logger.error("获取用户列表失败: {}", e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return users;
     }
@@ -286,6 +393,13 @@ public class UserRepository {
                 number = Integer.parseInt(timeStr.substring(numStart, i));
             } catch (NumberFormatException e) {
                 logger.error("时间字符串无效\n报错信息：", e);
+                // 记录系统错误反馈
+                try {
+                    // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                    // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+                } catch (Exception fe) {
+                    logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+                }
                 return -1;
             }
 
@@ -362,8 +476,22 @@ public class UserRepository {
             }
         } catch (NumberFormatException e) {
             logger.warn("用户ID必须是数字。");
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         } catch (SQLException e) {
             logger.error("封禁用户{}失败: {}", id, e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
     }
 
@@ -384,6 +512,13 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             logger.error("解禁用户{}失败: {}", id, e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
     }
 
@@ -403,6 +538,13 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             logger.error("deleteUser(): 删除用户{}失败: {}", id, e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
     }
     
@@ -416,6 +558,19 @@ public class UserRepository {
             return rowsUpdated > 0;
         } catch (SQLException e) {
             logger.error("更新用户{}密码失败: {}", userId, e.getMessage());
+            // 记录系统错误反馈
+            try {
+                feedbackService.saveSystemFeedback(
+                    null,
+                    "system",
+                    "更新用户" + userId + "密码失败: " + e.getMessage(),
+                    "/api/users/update-password",
+                    "User Service",
+                    "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return false;
         }
     }
@@ -433,6 +588,13 @@ public class UserRepository {
             }
         } catch (java.sql.SQLException e) {
             logger.error("findQuestionById()：查询用户失败: {}", e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return null; // 用户不存在
         }
     }
@@ -466,6 +628,13 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             logger.error("getQuestionsById()：查询用户密保问题失败: {}", e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
             return null;
         }
         return null;
@@ -492,6 +661,13 @@ public class UserRepository {
                     }
                 } catch (SQLException e) {
                     logger.error("setQuestionForUser()：更新用户密保问题失败: {}", e.getMessage());
+                    // 记录系统错误反馈
+                    try {
+                        // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                        // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+                    } catch (Exception fe) {
+                        logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+                    }
                 }
             } else {
                 String insert_sql = "INSERT INTO security_questions (id, question1, answer1, question2, answer2) VALUES (?, ?, ?, ?, ?)";
@@ -509,10 +685,24 @@ public class UserRepository {
                     }
                 } catch (SQLException e) {
                     logger.error("setQuestionForUser()：插入用户密保问题失败: {}", e.getMessage());
+                    // 记录系统错误反馈
+                    try {
+                        // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                        // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+                    } catch (Exception fe) {
+                        logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+                    }
                 }
             }
         } catch (SQLException e) {
             logger.error("setQuestionForUser()：查询用户密保问题失败: {}", e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
     }
 
@@ -532,6 +722,19 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             logger.error("验证用户{}密保问题答案失败: {}", userId, e.getMessage());
+            // 记录系统错误反馈
+            try {
+                feedbackService.saveSystemFeedback(
+                    null,
+                    "system",
+                    "验证用户" + userId + "密保问题答案失败: " + e.getMessage(),
+                    "/api/users/verify-security-answers",
+                    "User Service",
+                    "Exception: " + e.getClass().getName() + "\nMessage: " + e.getMessage()
+                );
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return false;
     }
@@ -549,6 +752,13 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             logger.error("获取安全问题列表失败: {}", e.getMessage());
+            // 记录系统错误反馈
+            try {
+                // 由于这是静态方法，我们需要通过其他方式获取feedbackService
+                // 这里暂时注释掉，因为静态方法中无法直接使用注入的feedbackService
+            } catch (Exception fe) {
+                logger.error("记录系统错误反馈时发生错误: {}", fe.getMessage());
+            }
         }
         return questions;
     }
