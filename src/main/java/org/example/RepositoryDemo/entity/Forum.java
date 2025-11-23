@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 public class Forum {
     // Getters and setters
@@ -25,6 +26,30 @@ public class Forum {
     @Setter
     @Getter
     public String username;
+    
+    @Setter
+    @Getter
+    public Integer like;
+    
+    @Setter
+    @Getter
+    public Integer favorite;
+    
+    @Setter
+    @Getter
+    public Integer comment;
+    
+    @Setter
+    @Getter
+    public Integer userLiked;
+    
+    @Setter
+    @Getter
+    public Integer userFavorited;
+    
+    @Setter
+    @Getter
+    public List<Comment> comments;
 
     public Forum() {
     }
@@ -37,6 +62,4 @@ public class Forum {
         this.release_time = release_time;
         this.username = username;
     }
-
-
 }

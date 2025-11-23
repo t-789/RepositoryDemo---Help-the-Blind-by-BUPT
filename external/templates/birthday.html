@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>「限定浪漫」专属生日祝福</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .welcome {
+            color: #0ff;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #0ff;
+        }
+
+        .loading-bar-container {
+            width: 80%;
+            height: 30px;
+            border: 2px solid #0f0;
+            margin: 20px auto;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .loading-bar {
+            height: 100%;
+            background-color: #0f0;
+            width: 0%;
+            transition: width 1.6s ease;
+        }
+
+        .message {
+            font-size: 18px;
+            margin: 15px 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        .message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .highlight {
+            color: #ff0;
+            font-weight: bold;
+        }
+
+        .pink {
+            color: #f0f;
+        }
+
+        .blue {
+            color: #0ff;
+        }
+
+        .red {
+            color: #f00;
+        }
+
+        .green {
+            color: #0f0;
+        }
+
+        .heart {
+            font-size: 30px;
+            margin: 20px 0;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.5s ease;
+        }
+
+        .heart.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .flash {
+            animation: flash 0.5s infinite alternate;
+        }
+
+        @keyframes flash {
+            from { opacity: 1; }
+            to { opacity: 0.3; }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .signature {
+            margin-top: 30px;
+            font-style: italic;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="welcomeSection">
+            <div class="welcome">========================================</div>
+            <div class="welcome">🌟 生日祝福限定版 🌟</div>
+            <div class="welcome">========================================</div>
+            
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loadingBar"></div>
+            </div>
+            <div class="green">🎁 正在加载专属生日祝福... <span id="loadingPercent">0%</span></div>
+        </div>
+        
+        <div id="blessingSection" class="hidden">
+            <!-- 祝福内容将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        // 加载进度条动画
+        function loadingAnimation() {
+            const loadingBar = document.getElementById('loadingBar');
+            const loadingPercent = document.getElementById('loadingPercent');
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                    // 加载完成，显示祝福内容
+                    setTimeout(showBlessings, 500);
+                } else {
+                    width += 5;
+                    loadingBar.style.width = width + '%';
+                    loadingPercent.textContent = width + '%';
+                }
+            }, 80);
+        }
+
+        // 显示祝福内容
+        function showBlessings() {
+            document.getElementById('welcomeSection').classList.add('hidden');
+            const blessingSection = document.getElementById('blessingSection');
+            blessingSection.classList.remove('hidden');
+            
+            // 使用固定名称
+            const yourName = "我";
+            const herName = "你";
+            
+            // 添加标题
+            const title = document.createElement('h2');
+            title.className = 'highlight';
+            title.textContent = '✨ 致我藏在心底的 ' + herName + ' ✨';
+            blessingSection.appendChild(title);
+            
+            // 祝福消息数组
+            const messages = [
+                {text: '今天是属于你的特别日子', class: 'blue'},
+                {text: '我学了一些代码，写了点儿祝福给你 🎉', class: 'blue'},
+                {text: '愿你的世界里：', class: 'blue'},
+                {text: '阳光温柔，晚风浪漫 🌙', class: 'pink'},
+                {text: '三餐四季，平安喜乐 🥳', class: 'pink'},
+                {text: '所有美好，都如期而至', class: 'red', id: 'promiseMessage'},
+                {delay: 1500},
+                {text: '这颗心，只为你跳动：', class: 'red'},
+                {heart: true},
+                {delay: 2000},
+                {text: '其实，认识你之后 🥰', class: 'pink'},
+                {text: '每个平凡的日子都多了一份期待', class: 'blue'},
+                {text: '每个早晨都有了早起的动力', class: 'blue'},
+                {text: '每次自习都有你的身影相伴', class: 'blue'},
+                {text: '当然，还有', class: 'blue'},
+                {text: '很开心能陪你走过这一段时光', class: 'blue'},
+                {text: '往后的日子，' + yourName + '想继续默默守护你 💌', class: 'red'},
+                {delay: 1500},
+                {cake: true},
+                {text: '生日快乐！我最珍视的 ' + herName + '～', class: 'highlight flash'},
+                {cake: true},
+                {text: '愿你永远眼里有光，笑里藏糖 🍬', class: 'pink'}
+            ];
+            
+            // 显示消息
+            showMessages(messages, 0, blessingSection, yourName, herName);
+        }
+
+        // 显示消息序列
+        function showMessages(messages, index, container, yourName, herName) {
+            if (index >= messages.length) return;
+            
+            const msg = messages[index];
+            
+            if (msg.delay) {
+                // 处理延迟
+                setTimeout(() => {
+                    showMessages(messages, index + 1, container, yourName, herName);
+                }, msg.delay);
+                return;
+            }
+            
+            if (msg.heart) {
+                // 显示爱心
+                const heartDiv = document.createElement('div');
+                heartDiv.className = 'heart';
+                heartDiv.innerHTML = `
+                    ❤️❤️   ❤️❤️<br>
+                    ❤️❤️❤️❤️❤️❤️❤️<br>
+                    ❤️❤️❤️❤️❤️❤️❤️<br>
+                    &nbsp;&nbsp; ❤️❤️❤️❤️❤️ &nbsp;&nbsp;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp; ❤️❤️❤️ &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ❤️ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                `;
+                container.appendChild(heartDiv);
+                
+                // 添加动画效果
+                setTimeout(() => {
+                    heartDiv.classList.add('show');
+                    // 给"如期而至"添加闪烁效果
+                    const promiseMessage = document.getElementById('promiseMessage');
+                    if (promiseMessage) {
+                        promiseMessage.classList.add('flash');
+                    }
+                    showMessages(messages, index + 1, container, yourName, herName);
+                }, 100);
+                return;
+            }
+            
+            if (msg.cake) {
+                // 显示蛋糕
+                const cakeDiv = document.createElement('div');
+                cakeDiv.className = 'signature';
+                cakeDiv.textContent = '🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂🎂';
+                container.appendChild(cakeDiv);
+                showMessages(messages, index + 1, container, yourName, herName);
+                return;
+            }
+            
+            // 显示普通消息
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message ' + (msg.class || '');
+            msgDiv.id = msg.id || '';
+            if (msg.text) {
+                msgDiv.textContent = msg.text;
+            }
+            container.appendChild(msgDiv);
+            
+            // 添加显示动画
+            setTimeout(() => {
+                msgDiv.classList.add('show');
+                showMessages(messages, index + 1, container, yourName, herName);
+            }, msg.text ? (msg.text.length * 60) : 800); // 调整了这里的延时参数，使显示速度变慢
+        }
+
+        // 页面加载完成后开始加载动画
+        window.onload = function() {
+            loadingAnimation();
+        };
+    </script>
+</body>
+</html>

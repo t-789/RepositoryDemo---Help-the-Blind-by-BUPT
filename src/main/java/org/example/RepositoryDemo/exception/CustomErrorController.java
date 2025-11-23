@@ -87,11 +87,16 @@ public class CustomErrorController implements ErrorController {
 
                     // 异步提交错误反馈
                     executorService.submit(() -> {
-                        feedbackService.saveSystemFeedback(finalUserId, finalUsername, content, url, userAgent, stackTrace);
+                        try {
+                            feedbackService.saveSystemFeedback(finalUserId, finalUsername, content, url, userAgent, stackTrace);
+                        } catch (Exception e) {
+                            logger.error("Failed to save system feedback: ", e);
+                        }
                     });
                 }
             } catch (Exception e) {
                 // 忽略错误处理中的异常
+                logger.error("Error in error handling: ", e);
             }
         }
         
@@ -102,14 +107,18 @@ public class CustomErrorController implements ErrorController {
         
         // 根据错误状态码返回不同的错误页面
         if (status != null) {
-            int statusCode = Integer.parseInt(status.toString());
-
-            return switch (statusCode) {
-                case 403 -> "error/403";
-                case 404 -> "error/404";
-                case 500 -> "error/500";
-                default -> "error/general";
-            };
+            try {
+                int statusCode = Integer.parseInt(status.toString());
+                
+                return switch (statusCode) {
+                    case 403 -> "error/403";
+                    case 404 -> "error/404";
+                    case 500 -> "error/500";
+                    default -> "error/general";
+                };
+            } catch (NumberFormatException e) {
+                logger.error("Invalid status code: {}", status);
+            }
         }
         
         return "error/general";
@@ -118,5 +127,9 @@ public class CustomErrorController implements ErrorController {
     @RequestMapping("/error/403")
     public String handle403Error() {
         return "error/403";
+    }
+    
+    public String getErrorPath() {
+        return "/error";
     }
 }

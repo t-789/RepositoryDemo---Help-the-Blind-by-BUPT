@@ -113,6 +113,33 @@
         .create-section button:hover {
             background-color: #218838;
         }
+        .comments-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .comment-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+        .comment-meta {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .comment-content {
+            margin-left: 10px;
+        }
+        .comment-actions button {
+            font-size: 12px;
+            padding: 2px 5px;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
@@ -151,6 +178,7 @@
             <th>标题</th>
 <!--            <th>内容</th>-->
             <th>发布时间</th>
+            <th>统计</th>
             <th>操作</th>
         </tr>
         </thead>
@@ -159,12 +187,22 @@
         </tbody>
     </table>
     
+    <div class="comments-section">
+        <h3>评论管理</h3>
+        <div id="comments-list">
+            <p>选择一个帖子以查看其评论</p>
+        </div>
+    </div>
+    
     <div style="margin-top: 20px; text-align: center;">
         <button onclick="loadForums()">刷新列表</button>
     </div>
 </div>
 
 <script>
+    // 当前选中的帖子ID
+    let selectedForumId = null;
+    
     // 页面加载时获取论坛列表
     $(document).ready(function() {
         loadForums();
@@ -228,8 +266,10 @@
                         <td class="post-title">${forum.title}</td>
 <!--                        <td class="post-content">${forum.content}</td>-->
                         <td>${formatDate(forum.release_time)}</td>
+                        <td>点赞: ${forum.like || 0}<br>收藏: ${forum.favorite || 0}<br>评论: ${forum.comment || 0}</td>
                         <td class="button-group">
                             <button onclick="viewForum(${forum.id})">查看</button>
+                            <button onclick="viewComments(${forum.id})">评论管理</button>
                             <button onclick="deleteForum(${forum.id})">删除</button>
                         </td>
                     `;
@@ -254,6 +294,63 @@
             });
     }
     
+    function viewComments(forumId) {
+        selectedForumId = forumId;
+        fetch(`/api/forum/${forumId}`)
+            .then(response => response.json())
+            .then(forum => {
+                const commentsList = document.getElementById('comments-list');
+                if (forum.comments && forum.comments.length > 0) {
+                    let commentsHtml = `<h4>帖子 "${forum.title}" 的评论</h4>`;
+                    forum.comments.forEach(comment => {
+                        commentsHtml += `
+                            <div class="comment-item">
+                                <div class="comment-meta">
+                                    用户ID: ${comment.userId} (${comment.username}) 
+                                    发布时间: ${formatDate(comment.commentTime)}
+                                    ${comment.deleted ? '<span style="color: red;">[已删除]</span>' : ''}
+                                </div>
+                                <div class="comment-content">${comment.content}</div>
+                                <div class="comment-actions">
+                                    ${comment.deleted ? 
+                                        '<span>已删除</span>' : 
+                                        `<button onclick="deleteComment(${comment.id})">删除</button>`}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    commentsList.innerHTML = commentsHtml;
+                } else {
+                    commentsList.innerHTML = `<p>帖子 "${forum.title}" 暂无评论</p>`;
+                }
+            })
+            .catch(error => {
+                alert('获取评论失败: ' + error);
+            });
+    }
+    
+    function deleteComment(commentId) {
+        if (confirm(`确定要删除评论 ID ${commentId} 吗？`)) {
+            fetch(`/api/forum/comment/${commentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    // 重新加载评论
+                    if (selectedForumId) {
+                        viewComments(selectedForumId);
+                    }
+                })
+                .catch(error => {
+                    alert('删除评论失败: ' + error);
+                });
+        }
+    }
+    
     function clearFilter() {
         document.getElementById('userIdFilter').value = '';
         loadForums();
@@ -271,6 +368,11 @@
                 .then(data => {
                     alert(data);
                     loadForums();
+                    // 如果删除的是当前选中的帖子，清空评论区域
+                    if (selectedForumId === forumId) {
+                        document.getElementById('comments-list').innerHTML = '<p>选择一个帖子以查看其评论</p>';
+                        selectedForumId = null;
+                    }
                 })
                 .catch(error => {
                     alert('删除失败: ' + error);

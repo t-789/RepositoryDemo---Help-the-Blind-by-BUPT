@@ -31,6 +31,8 @@
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
         </Logger>
+        <Logger name="org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer" level="ERROR"/>
+
 
         <!-- 根日志记录器 -->
         <Root level="WARN">

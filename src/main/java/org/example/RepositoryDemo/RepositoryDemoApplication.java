@@ -1,6 +1,5 @@
 package org.example.RepositoryDemo;
 
-import lombok.Setter;
 import org.example.RepositoryDemo.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -22,7 +21,10 @@ public class RepositoryDemoApplication {
     public static Connection connection;
     private static void createTables() throws SQLException {
         UserRepository.createUserTable();
-        forumRepository.createForumTable();
+        ForumRepository.createForumTable();
+        ForumRepository.createLikeTable();
+        ForumRepository.createFavoriteTable();
+        ForumRepository.createCommentTable();
         SecurityQuestionRepository.createSecurityQuestionTable();
         SecurityQuestionRepository.createSecurityQuestionMapTable();
         PointRepository.createPointTable();

@@ -215,3 +215,28 @@ curl -X POST "http://localhost:8080/api/ai/deepseek" \
    -H "Content-Type: application/json" \
    -d '{"prompt":"你好，DeepSeek！"}'
 {"type":"ai","content":"你好！很高兴见到你！\uD83D\uDE0A\n\n我是DeepSeek，由深度求索公司创造的AI助手。我在这里随时准备为你提供帮助，无论是回答问题、协助思考问题、创作内容，还是进行有趣的对话。\n\n有什么我可以帮你的吗？不管是学习、工作还是生活中的任何话题，我都很乐意和你一起探讨！✨","timestamp":"2025-10-26T23:02:12.760216","messageCount":null}
+
+# 点赞
+curl -X POST http://localhost:8080/api/forum/1/like -b cookie.txt
+点赞成功
+您已经点过赞了
+
+# 取消点赞
+curl -X DELETE http://localhost:8080/api/forum/1/like -b cookie.txt
+取消点赞成功
+您尚未点赞
+
+# 收藏
+curl -X POST http://localhost:8080/api/forum/1/favorite -b cookie.txt
+收藏成功
+您已经收藏过了
+
+# 取消收藏
+curl -X DELETE http://localhost:8080/api/forum/1/favorite -b cookie.txt
+取消收藏成功
+您尚未收藏
+
+# 评论
+curl -X POST -d "content=这是我的评论" http://localhost:8080/api/forum/1/comment -b cookie.txt
+curl -X POST "http://localhost:8080/api/forum/1/comment?content=%E8%BF%99%E6%98%AF%E6%88%91%E7%9A%84%E8%AF%84%E8%AE%BA" -b cookie.txt
+评论成功，评论ID:【id】

@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.entity.UserProfileResponse;
 import org.example.RepositoryDemo.dto.registerWithSecurityRequest;
+import org.example.RepositoryDemo.dto.RegisterWithSecurityJsonRequest;
 import org.example.RepositoryDemo.entity.Forum;
 import org.example.RepositoryDemo.entity.Point;
 import org.example.RepositoryDemo.service.UserService;
@@ -37,10 +38,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.Base64;
+import java.util.*;
 
 @CrossOrigin(origins = "http://127.0.0.1:5500")
 @RestController
@@ -82,37 +81,65 @@ public class UserController {
         }
     }
 
-    // 用户注册 - 带头像上传和密保问题设置
-    @PostMapping(value = "/register-with-security", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // 用户注册 - 带头像上传和密保问题设置 (表单版本)
+    @PostMapping(value = "/register-with-security", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> registerWithSecurity(@Valid @ModelAttribute registerWithSecurityRequest request) {
         try {
-            // 先进行基本的注册
-            boolean success = userService.register(request.getUsername(), request.getPassword(), 0);
-            
-            if (success) {
-                // 查找刚创建的用户
-                User user = userRepository.findByUsername(request.getUsername());
-                
-                // 如果提供了头像文件，则处理头像上传
-                if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
-                    // 处理头像上传
-                    String avatarPath = saveAvatarFile(request.getAvatar());
-                    
-                    if (avatarPath != null) {
-                        // 更新用户头像信息
-                        userService.updateUserAvatar(user.id, avatarPath);
-                    }
-                }
-                
-                // 设置密保问题
-                userService.setSecurityQuestions(user.id, request.getQuestion1(), request.getAnswer1(), request.getQuestion2(), request.getAnswer2());
-                
-                return ResponseEntity.ok("注册成功");
-            } else {
-                return ResponseEntity.badRequest().body("注册失败，用户名可能已存在");
-            }
+            return processRegistration(request.getUsername(), request.getPassword(), request.getAvatar(),
+                    request.getQuestion1(), request.getAnswer1(), request.getQuestion2(), request.getAnswer2());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("注册失败: " + e.getMessage());
+        }
+    }
+
+    // 用户注册 - 带密保问题设置 (JSON版本，可选头像Base64)
+    @PostMapping(value = "/register-with-security-json", consumes = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> registerWithSecurityJson(@Valid @RequestBody RegisterWithSecurityJsonRequest request) {
+        try {
+            // 注意：此方法不处理文件上传，如果需要上传头像，应使用Base64编码通过avatarBase64字段传递
+            return processRegistration(request.getUsername(), request.getPassword(), request.getAvatarBase64(),
+                    request.getQuestion1(), request.getAnswer1(), request.getQuestion2(), request.getAnswer2());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("注册失败: " + e.getMessage());
+        }
+    }
+
+    // 统一的注册处理逻辑
+    private ResponseEntity<?> processRegistration(String username, String password, Object avatarObj,
+                                                 Integer question1, String answer1, 
+                                                 Integer question2, String answer2) {
+        // 先进行基本的注册
+        boolean success = userService.register(username, password, 0);
+        
+        if (success) {
+            // 查找刚创建的用户
+            User user = userRepository.findByUsername(username);
+            
+            // 如果提供了头像文件或Base64数据，则处理头像
+            if (avatarObj != null) {
+                String avatarPath = null;
+                if (avatarObj instanceof MultipartFile) {
+                    // 处理文件上传形式的头像
+                    avatarPath = saveAvatarFile((MultipartFile) avatarObj);
+                } else if (avatarObj instanceof String) {
+                    // 处理Base64编码形式的头像
+                    avatarPath = saveAvatarFromBase64((String) avatarObj);
+                }
+                
+                if (avatarPath != null) {
+                    // 更新用户头像信息
+                    userService.updateUserAvatar(user.id, avatarPath);
+                }
+            }
+            
+            // 设置密保问题
+            if (question1 != null && question2 != null) {
+                userService.setSecurityQuestions(user.id, question1, answer1, question2, answer2);
+            }
+            
+            return ResponseEntity.ok("注册成功");
+        } else {
+            return ResponseEntity.badRequest().body("注册失败，用户名可能已存在");
         }
     }
 
@@ -166,6 +193,81 @@ public class UserController {
 
             // 返回头像访问路径
             return "/avatars/" + fileName;
+        } catch (IOException e) {
+            logger.error("保存头像文件失败: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    // 从Base64数据保存头像文件的辅助方法
+    private String saveAvatarFromBase64(String base64Data) {
+        try {
+            // 检查是否是DataURL格式 (data:image/png;base64,...)
+            String base64Content = base64Data;
+            String fileExtension = ".png"; // 默认扩展名
+            
+            if (base64Data.startsWith("data:")) {
+                // 解析DataURL格式
+                String[] parts = base64Data.split(",");
+                if (parts.length != 2) {
+                    logger.error("无效的DataURL格式");
+                    return null;
+                }
+                
+                // 获取MIME类型
+                String mimeTypePart = parts[0];
+                base64Content = parts[1];
+                
+                // 从MIME类型中提取文件扩展名
+                if (mimeTypePart.contains("image/jpeg") || mimeTypePart.contains("image/jpg")) {
+                    fileExtension = ".jpg";
+                } else if (mimeTypePart.contains("image/png")) {
+                    fileExtension = ".png";
+                } else {
+                    logger.error("不支持的图片格式: {}", mimeTypePart);
+                    return null;
+                }
+            }
+            
+            // 解码Base64数据
+            byte[] decodedBytes = Base64.getDecoder().decode(base64Content);
+            
+            // 检查文件大小（限制为2MB）
+            if (decodedBytes.length > 2 * 1024 * 1024) {
+                logger.error("头像文件大小超过2MB限制");
+                return null;
+            }
+            
+            // 创建头像存储目录
+            String uploadDir = "./external/static/avatars/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                if(!dir.mkdirs()){
+                    logger.fatal("saveAvatarFromBase64(): 创建头像存储目录失败");
+                    return null;
+                }
+            }
+            
+            // 生成唯一文件名
+            String fileName = UUID.randomUUID() + fileExtension;
+            Path path = Paths.get(uploadDir);
+            Path filePath = path.resolve(fileName).normalize();
+            
+            // 验证文件路径是否在允许的目录内
+            Path allowedDir = path.toAbsolutePath().normalize();
+            if (!filePath.toAbsolutePath().normalize().startsWith(allowedDir)) {
+                logger.error("saveAvatarFromBase64(): 非法文件路径访问尝试");
+                return null;
+            }
+            
+            // 保存文件
+            Files.write(filePath, decodedBytes);
+            
+            // 返回头像访问路径
+            return "/avatars/" + fileName;
+        } catch (IllegalArgumentException e) {
+            logger.error("Base64解码失败: {}", e.getMessage());
+            return null;
         } catch (IOException e) {
             logger.error("保存头像文件失败: {}", e.getMessage());
             return null;

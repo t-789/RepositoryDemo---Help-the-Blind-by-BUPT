@@ -3,6 +3,7 @@ package org.example.RepositoryDemo.controller;
 import org.example.RepositoryDemo.service.ForumService;
 import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.dto.ForumRequest;
+import org.example.RepositoryDemo.entity.Comment;
 import org.example.RepositoryDemo.entity.Forum;
 import org.example.RepositoryDemo.entity.User;
 import org.springframework.http.ResponseEntity;
@@ -58,7 +59,7 @@ public class ForumController {
                 return ResponseEntity.badRequest().body("用户未登录");
             }
 
-            List<Forum> forums = forumService.getAllForums();
+            List<Forum> forums = forumService.getAllForumsWithUserStatus(user.id);
             return ResponseEntity.ok(forums);
         } catch (SQLException e) {
             return ResponseEntity.badRequest().body("获取论坛帖子失败: " + e.getMessage());
@@ -119,5 +120,166 @@ public class ForumController {
             return ResponseEntity.badRequest().body("删除帖子失败: " + e.getMessage());
         }
     }
-
+    
+    // 点赞帖子
+    @PostMapping("/{forumId}/like")
+    public ResponseEntity<?> likeForum(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
+            
+            boolean result = forumService.likeForum(forumId, user.id);
+            if (result) {
+                return ResponseEntity.ok("点赞成功");
+            } else {
+                return ResponseEntity.badRequest().body("您已经点过赞了");
+            }
+        } catch (SQLException e) {
+            return ResponseEntity.badRequest().body("点赞失败: " + e.getMessage());
+        }
+    }
+    
+    // 取消点赞帖子
+    @DeleteMapping("/{forumId}/like")
+    public ResponseEntity<?> unlikeForum(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
+            
+            boolean result = forumService.unlikeForum(forumId, user.id);
+            if (result) {
+                return ResponseEntity.ok("取消点赞成功");
+            } else {
+                return ResponseEntity.badRequest().body("您尚未点赞");
+            }
+        } catch (SQLException e) {
+            return ResponseEntity.badRequest().body("取消点赞失败: " + e.getMessage());
+        }
+    }
+    
+    // 收藏帖子
+    @PostMapping("/{forumId}/favorite")
+    public ResponseEntity<?> favoriteForum(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
+            
+            boolean result = forumService.favoriteForum(forumId, user.id);
+            if (result) {
+                return ResponseEntity.ok("收藏成功");
+            } else {
+                return ResponseEntity.badRequest().body("您已经收藏过了");
+            }
+        } catch (SQLException e) {
+            return ResponseEntity.badRequest().body("收藏失败: " + e.getMessage());
+        }
+    }
+    
+    // 取消收藏帖子
+    @DeleteMapping("/{forumId}/favorite")
+    public ResponseEntity<?> unfavoriteForum(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
+            
+            boolean result = forumService.unfavoriteForum(forumId, user.id);
+            if (result) {
+                return ResponseEntity.ok("取消收藏成功");
+            } else {
+                return ResponseEntity.badRequest().body("您尚未收藏");
+            }
+        } catch (SQLException e) {
+            return ResponseEntity.badRequest().body("取消收藏失败: " + e.getMessage());
+        }
+    }
+    
+    // 添加评论
+    @PostMapping("/{forumId}/comment")
+    public ResponseEntity<?> addComment(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, 
+                                       @RequestParam String content, 
+                                       Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
+            
+            if (content == null || content.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("评论内容不能为空");
+            }
+            
+            int commentId = forumService.addComment(forumId, user.id, content);
+            return ResponseEntity.ok("评论成功，评论ID: " + commentId);
+        } catch (SQLException e) {
+            return ResponseEntity.badRequest().body("评论失败: " + e.getMessage());
+        }
+    }
+    
+    // 管理员删除评论（软删除）
+    @DeleteMapping("/comment/{commentId}")
+    public ResponseEntity<?> deleteComment(@Min(value = 1, message = "评论ID必须大于0") @PathVariable int commentId, Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username);
+            if (user == null || user.type != 2) {
+                return ResponseEntity.badRequest().body("权限不足");
+            }
+            
+            boolean result = forumService.deleteComment(commentId);
+            if (result) {
+                return ResponseEntity.ok("删除评论成功");
+            } else {
+                return ResponseEntity.badRequest().body("评论不存在");
+            }
+        } catch (SQLException e) {
+            return ResponseEntity.badRequest().body("删除评论失败: " + e.getMessage());
+        }
+    }
+    
+    // 获取用户所有点赞的帖子ID
+    @GetMapping("/user/liked")
+    public ResponseEntity<?> getUserLikedForums(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
+            
+            List<Integer> likedForums = forumService.getUserLikedForums(user.id);
+            return ResponseEntity.ok(likedForums);
+        } catch (SQLException e) {
+            return ResponseEntity.badRequest().body("获取点赞帖子失败: " + e.getMessage());
+        }
+    }
+    
+    // 获取用户所有收藏的帖子ID
+    @GetMapping("/user/favorited")
+    public ResponseEntity<?> getUserFavoritedForums(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("用户未登录");
+            }
+            
+            List<Integer> favoritedForums = forumService.getUserFavoritedForums(user.id);
+            return ResponseEntity.ok(favoritedForums);
+        } catch (SQLException e) {
+            return ResponseEntity.badRequest().body("获取收藏帖子失败: " + e.getMessage());
+        }
+    }
 }

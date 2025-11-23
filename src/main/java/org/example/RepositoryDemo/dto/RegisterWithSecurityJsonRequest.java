@@ -5,11 +5,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
 
 @Setter
 @Getter
-public class registerWithSecurityRequest {
+public class RegisterWithSecurityJsonRequest {
     @NotBlank(message = "用户名不能为空")
     @Size(min = 3, max = 20, message = "用户名长度必须在3-20个字符之间")
     private String username;
@@ -18,7 +17,7 @@ public class registerWithSecurityRequest {
     @Size(min = 1, max = 50, message = "密码长度必须在1-50个字符之间")
     private String password;
 
-    private MultipartFile avatar;
+    private String avatarBase64; // 可选的头像，以Base64编码形式传输
 
     @NotNull(message = "密保问题1不能为空")
     private Integer question1;

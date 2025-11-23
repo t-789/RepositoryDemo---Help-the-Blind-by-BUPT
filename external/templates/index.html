@@ -1275,13 +1275,52 @@
             
             posts.forEach(post => {
                 html += `
-                    <div class="forum-post">
+                    <div class="forum-post" data-post-id="${post.id}">
                         <div class="forum-post-title">${post.title}</div>
                         <div class="forum-post-meta">
                             作者: ${post.username} | 发布时间: ${new Date(post.release_time).toLocaleString()}
                         </div>
                         <div class="forum-post-content">
                             ${post.content}
+                        </div>
+                        <div class="forum-post-stats">
+                            <span class="like-count">👍 ${post.like || 0}</span>
+                            <span class="favorite-count">⭐ ${post.favorite || 0}</span>
+                            <span class="comment-count">💬 ${post.comment || 0}</span>
+                        </div>
+                        <div class="forum-post-actions">
+                            ${currentUser ? `
+                                <button class="btn ${post.userLiked ? 'btn-secondary' : ''}" onclick="toggleLike(${post.id})">
+                                    ${post.userLiked ? '取消点赞' : '点赞'}
+                                </button>
+                                <button class="btn ${post.userFavorited ? 'btn-secondary' : ''}" onclick="toggleFavorite(${post.id})">
+                                    ${post.userFavorited ? '取消收藏' : '收藏'}
+                                </button>
+                            ` : ''}
+                            <button class="btn" onclick="toggleComments(${post.id})">查看评论</button>
+                        </div>
+                        <div class="forum-post-comments hidden" id="comments-${post.id}">
+                            <div class="comments-list">
+                                ${post.comments && post.comments.length > 0 ? 
+                                    post.comments.map(comment => `
+                                        <div class="comment-item">
+                                            <div class="comment-meta">
+                                                ${comment.username} - ${new Date(comment.commentTime).toLocaleString()}
+                                            </div>
+                                            <div class="comment-content">
+                                                ${comment.content}
+                                            </div>
+                                        </div>
+                                    `).join('') : 
+                                    '<p>暂无评论</p>'
+                                }
+                            </div>
+                            ${currentUser ? `
+                                <div class="add-comment">
+                                    <textarea id="comment-content-${post.id}" placeholder="添加评论..."></textarea>
+                                    <button class="btn" onclick="addComment(${post.id})">评论</button>
+                                </div>
+                            ` : '<p>请登录后评论</p>'}
                         </div>
                     </div>
                 `;
@@ -1295,6 +1334,86 @@
             if (currentUser) {
                 document.getElementById('new-post-form').addEventListener('submit', handleCreatePost);
             }
+        }
+        
+        // 切换点赞状态
+        function toggleLike(postId) {
+            const button = event.target;
+            const isLiked = button.textContent.includes('取消');
+            
+            const url = `/api/forum/${postId}/like`;
+            const method = isLiked ? 'DELETE' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                loadForum(); // 重新加载论坛列表以更新状态和计数
+            })
+            .catch(error => {
+                alert('操作失败: ' + error.message);
+            });
+        }
+        
+        // 切换收藏状态
+        function toggleFavorite(postId) {
+            const button = event.target;
+            const isFavorited = button.textContent.includes('取消');
+            
+            const url = `/api/forum/${postId}/favorite`;
+            const method = isFavorited ? 'DELETE' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                loadForum(); // 重新加载论坛列表以更新状态和计数
+            })
+            .catch(error => {
+                alert('操作失败: ' + error.message);
+            });
+        }
+        
+        // 切换评论显示/隐藏
+        function toggleComments(postId) {
+            const commentsSection = document.getElementById(`comments-${postId}`);
+            commentsSection.classList.toggle('hidden');
+        }
+        
+        // 添加评论
+        function addComment(postId) {
+            const content = document.getElementById(`comment-content-${postId}`).value;
+            
+            if (!content.trim()) {
+                alert('评论内容不能为空');
+                return;
+            }
+            
+            fetch(`/api/forum/${postId}/comment?content=${encodeURIComponent(content)}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                document.getElementById(`comment-content-${postId}`).value = '';
+                loadForum(); // 重新加载论坛列表以显示新评论
+            })
+            .catch(error => {
+                alert('评论失败: ' + error.message);
+            });
         }
         
         // 显示创建帖子表单

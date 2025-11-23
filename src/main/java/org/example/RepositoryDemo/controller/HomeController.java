@@ -126,4 +126,9 @@ public class HomeController {
     public String errorTest() { // 测试错误
         throw new RuntimeException("测试错误");
     }
+
+    @GetMapping("/birthday")
+    public String birthday() {
+        return "birthday";
+    }
 }
