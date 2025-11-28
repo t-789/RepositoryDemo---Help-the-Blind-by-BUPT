@@ -77,7 +77,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         int count = requestCounts.getOrDefault(userId, 0);
         
         // 如果请求次数超过阈值（例如：1分钟内超过60次请求），则封禁用户1小时
-        if (count >= 60) {
+        if (count >= 600) {
             // 自动封禁用户1小时
             boolean banResult = userService.banUser(userId, "1h");
             if (banResult) {

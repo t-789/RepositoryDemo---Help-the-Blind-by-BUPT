@@ -35,7 +35,7 @@ public class ForumController {
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
 
             int result = forumService.createForum(user.id, forumRequest.getTitle(), forumRequest.getContent());
@@ -49,14 +49,14 @@ public class ForumController {
         }
     }
 
-    // 获取所有论坛帖子（不需要管理员权限）
+    // 获取所有论坛帖子
     @GetMapping("/all")
     public ResponseEntity<?> getAllForums(Authentication authentication) {
         try {
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
 
             List<Forum> forums = forumService.getAllForumsWithUserStatus(user.id);
@@ -70,10 +70,16 @@ public class ForumController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getForumsByUserId(@Min(value = 1, message = "用户ID必须大于0") @PathVariable int userId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
 
             List<Forum> forums = forumService.getForumsByUserId(userId);
@@ -87,10 +93,16 @@ public class ForumController {
     @GetMapping("/{forumId}")
     public ResponseEntity<?> getForumById(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
 
             Forum forum = forumService.getForumById(forumId);
@@ -108,6 +120,12 @@ public class ForumController {
     @DeleteMapping("/{forumId}")
     public ResponseEntity<?> deleteForum(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null || user.type != 2) {
@@ -125,10 +143,16 @@ public class ForumController {
     @PostMapping("/{forumId}/like")
     public ResponseEntity<?> likeForum(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             
             boolean result = forumService.likeForum(forumId, user.id);
@@ -146,10 +170,16 @@ public class ForumController {
     @DeleteMapping("/{forumId}/like")
     public ResponseEntity<?> unlikeForum(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             
             boolean result = forumService.unlikeForum(forumId, user.id);
@@ -167,10 +197,16 @@ public class ForumController {
     @PostMapping("/{forumId}/favorite")
     public ResponseEntity<?> favoriteForum(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             
             boolean result = forumService.favoriteForum(forumId, user.id);
@@ -188,10 +224,16 @@ public class ForumController {
     @DeleteMapping("/{forumId}/favorite")
     public ResponseEntity<?> unfavoriteForum(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forumId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             
             boolean result = forumService.unfavoriteForum(forumId, user.id);
@@ -211,10 +253,16 @@ public class ForumController {
                                        @RequestParam String content, 
                                        Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             
             if (content == null || content.trim().isEmpty()) {
@@ -232,6 +280,12 @@ public class ForumController {
     @DeleteMapping("/comment/{commentId}")
     public ResponseEntity<?> deleteComment(@Min(value = 1, message = "评论ID必须大于0") @PathVariable int commentId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null || user.type != 2) {
@@ -253,10 +307,16 @@ public class ForumController {
     @GetMapping("/user/liked")
     public ResponseEntity<?> getUserLikedForums(Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             
             List<Integer> likedForums = forumService.getUserLikedForums(user.id);
@@ -270,10 +330,16 @@ public class ForumController {
     @GetMapping("/user/favorited")
     public ResponseEntity<?> getUserFavoritedForums(Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             
             List<Integer> favoritedForums = forumService.getUserFavoritedForums(user.id);

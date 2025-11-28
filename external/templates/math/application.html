@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>泰勒展开与麦克劳林公式可视化</title>
+    <script src=" https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js "></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 200px;
+        }
+        .value-display {
+            min-width: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        .formula {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-radius: 5px;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .nav-link {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        .nav-link:hover {
+            background-color: #2980b9;
+        }
+        .back-to-home {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .back-to-home a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>泰勒展开与麦克劳林公式可视化</h1>
+    <h2>sin(x)函数的麦克劳林展开式逼近过程</h2>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="terms">展开项数:</label>
+            <input type="range" id="terms" min="1" max="15" value="1">
+            <span id="terms-value" class="value-display">1</span>
+        </div>
+        <div class="control-group">
+            <label for="x-range">x轴范围:</label>
+            <input type="range" id="x-range" min="1" max="15" value="5">
+            <span id="x-range-value" class="value-display">5</span>
+        </div>
+        <button id="animate-btn">播放动画</button>
+        <button id="reset-btn">重置</button>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #3498db;"></div>
+            <span>sin(x) 原函数</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #e74c3c;"></div>
+            <span>麦克劳林展开式</span>
+        </div>
+    </div>
+
+    <canvas id="graph" width="800" height="500"></canvas>
+
+    <div class="formula">
+        <p>麦克劳林展开式：</p>
+        <div id="maclaurin-formula">
+            $$ \sin(x) = x $$
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>麦克劳林展开式说明</h3>
+        <p>麦克劳林展开是泰勒展开在x=0处的特殊情况。对于sin(x)函数，其麦克劳林展开式为：</p>
+        <p>$$ \sin(x) = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \frac{x^7}{7!} + \cdots $$</p>
+        <p>随着展开项数的增加，麦克劳林多项式会越来越接近原函数sin(x)。</p>
+        <p>在本可视化中，您可以通过滑块调整展开项数，观察多项式如何逐步逼近sin(x)函数。</p>
+    </div>
+    
+    <div class="nav-links">
+        <a href="/front/math/background" class="nav-link">历史背景</a>
+        <a href="/front/math/infer" class="nav-link">公式推导</a>
+    </div>
+    
+    <div class="back-to-home">
+        <a href="/front/math/main">返回主页</a>
+    </div>
+</div>
+
+<script>
+    // 获取DOM元素
+    const canvas = document.getElementById('graph');
+    const ctx = canvas.getContext('2d');
+    const termsSlider = document.getElementById('terms');
+    const termsValue = document.getElementById('terms-value');
+    const xRangeSlider = document.getElementById('x-range');
+    const xRangeValue = document.getElementById('x-range-value');
+    const animateBtn = document.getElementById('animate-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const formulaElement = document.getElementById('maclaurin-formula');
+
+    // 初始参数
+    let terms = parseInt(termsSlider.value);
+    let xRange = parseInt(xRangeSlider.value);
+    let isAnimating = false;
+    let animationInterval;
+
+    // 更新显示值
+    termsValue.textContent = terms;
+    xRangeValue.textContent = xRange;
+
+    // 麦克劳林展开式系数 (sin(x)的展开)
+    const maclaurinCoefficients = [
+        { coef: 1, power: 1, sign: '+' },   // x
+        { coef: -1/6, power: 3, sign: '-' }, // -x^3/3!
+        { coef: 1/120, power: 5, sign: '+' }, // x^5/5!
+        { coef: -1/5040, power: 7, sign: '-' }, // -x^7/7!
+        { coef: 1/362880, power: 9, sign: '+' }, // x^9/9!
+        { coef: -1/39916800, power: 11, sign: '-' }, // -x^11/11!
+        { coef: 1/6227020800, power: 13, sign: '+' }, // x^13/13!
+        { coef: -1/1307674368000, power: 15, sign: '-' }, // -x^15/15!
+        { coef: 1/355687428096000, power: 17, sign: '+' }, // x^17/17!
+        { coef: -1/121645100408832000, power: 19, sign: '-' }, // -x^19/19!
+        { coef: 1/51090942171709440000, power: 21, sign: '+' }, // x^21/21!
+        { coef: -1/25852016738884976640000, power: 23, sign: '-' }, // -x^23/23!
+        { coef: 1/15511210043330985984000000, power: 25, sign: '+' }, // x^25/25!
+        { coef: -1/10888869450418352160768000000, power: 27, sign: '-' }, // -x^27/27!
+        { coef: 1/8841761993739701954543616000000, power: 29, sign: '+' } // x^29/29!
+    ];
+
+    // 计算阶乘
+    function factorial(n) {
+        if (n === 0 || n === 1) return 1;
+        let result = 1;
+        for (let i = 2; i <= n; i++) {
+            result *= i;
+        }
+        return result;
+    }
+
+    // 计算麦克劳林展开式在x处的值
+    function maclaurinSin(x, nTerms) {
+        let result = 0;
+        for (let i = 0; i < nTerms; i++) {
+            const term = maclaurinCoefficients[i];
+            result += term.coef * Math.pow(x, term.power);
+        }
+        return result;
+    }
+
+    // 绘制坐标轴
+    function drawAxes() {
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerY = height / 2;
+        // 将y轴移到最左边附近，只显示少量负半轴
+        const xAxisPosition = width * 0.1; // y轴位置在画布宽度的10%处
+        const scale = width / (xRange + 1); // 调整比例尺以适应新的范围
+
+        ctx.clearRect(0, 0, width, height);
+
+        // 绘制坐标轴
+        ctx.beginPath();
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+
+        // x轴
+        ctx.moveTo(0, centerY);
+        ctx.lineTo(width, centerY);
+
+        // y轴
+        ctx.moveTo(xAxisPosition, 0);
+        ctx.lineTo(xAxisPosition, height);
+
+        ctx.stroke();
+
+        // 绘制刻度
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+
+        // x轴刻度 (从0开始，只显示正半轴)
+        for (let i = 0; i <= xRange; i++) {
+            const x = xAxisPosition + i * scale;
+            ctx.beginPath();
+            ctx.moveTo(x, centerY - 5);
+            ctx.lineTo(x, centerY + 5);
+            ctx.stroke();
+            if (i !== 0) { // 不在原点重复标记
+                ctx.fillText(i.toString(), x, centerY + 10);
+            }
+        }
+
+        // 添加原点标记
+        ctx.fillText('0', xAxisPosition, centerY + 10);
+
+        // y轴刻度
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let i = -2; i <= 2; i++) {
+            if (i === 0) continue;
+            const y = centerY - i * 50; // 50像素表示1个单位
+            ctx.beginPath();
+            ctx.moveTo(xAxisPosition - 5, y);
+            ctx.lineTo(xAxisPosition + 5, y);
+            ctx.stroke();
+            ctx.fillText(i.toString(), xAxisPosition - 10, y);
+        }
+
+        // 原点标记
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('O', xAxisPosition + 5, centerY + 5);
+    }
+
+    // 绘制函数
+    function drawFunctions() {
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerY = height / 2;
+        // 将y轴移到最左边附近
+        const xAxisPosition = width * 0.1;
+        const scale = width / (xRange + 1); // 调整比例尺
+
+        // 绘制sin(x)函数 (只绘制正半轴)
+        ctx.beginPath();
+        ctx.strokeStyle = '#3498db';
+        ctx.lineWidth = 2;
+
+        for (let i = xAxisPosition; i < width; i++) {
+            const x = (i - xAxisPosition) / scale;
+            if (x <= xRange) { // 只绘制到设定的x范围
+                const y = Math.sin(x);
+                const pixelY = centerY - y * 50; // 50像素表示1个单位
+
+                if (i === xAxisPosition) {
+                    ctx.moveTo(i, pixelY);
+                } else {
+                    ctx.lineTo(i, pixelY);
+                }
+            }
+        }
+
+        ctx.stroke();
+
+        // 绘制麦克劳林展开式 (只绘制正半轴)
+        ctx.beginPath();
+        ctx.strokeStyle = '#e74c3c';
+        ctx.lineWidth = 2;
+
+        for (let i = xAxisPosition; i < width; i++) {
+            const x = (i - xAxisPosition) / scale;
+            if (x <= xRange) { // 只绘制到设定的x范围
+                const y = maclaurinSin(x, terms);
+                const pixelY = centerY - y * 50; // 50像素表示1个单位
+
+                if (i === xAxisPosition) {
+                    ctx.moveTo(i, pixelY);
+                } else {
+                    ctx.lineTo(i, pixelY);
+                }
+            }
+        }
+
+        ctx.stroke();
+    }
+
+    // 更新公式显示
+    function updateFormula() {
+        let formula = '$$ \\sin(x) = ';
+
+        for (let i = 0; i < terms; i++) {
+            const term = maclaurinCoefficients[i];
+            const absCoef = Math.abs(term.coef);
+            const denominator = factorial(term.power);
+
+            if (i === 0) {
+                formula += 'x';
+            } else {
+                formula += ` ${term.sign} \\frac{x^{${term.power}}}{${term.power}!}`;
+            }
+        }
+
+        formula += ' $$';
+        formulaElement.innerHTML = formula;
+
+        // 重新渲染MathJax
+        if (window.MathJax) {
+            MathJax.typeset();
+        }
+    }
+
+    // 绘制图形
+    function drawGraph() {
+        drawAxes();
+        drawFunctions();
+        updateFormula();
+    }
+
+    // 初始化
+    drawGraph();
+
+    // 事件监听
+    termsSlider.addEventListener('input', function() {
+        terms = parseInt(this.value);
+        termsValue.textContent = terms;
+        drawGraph();
+    });
+
+    xRangeSlider.addEventListener('input', function() {
+        xRange = parseInt(this.value);
+        xRangeValue.textContent = xRange;
+        drawGraph();
+    });
+
+    animateBtn.addEventListener('click', function() {
+        if (isAnimating) {
+            clearInterval(animationInterval);
+            isAnimating = false;
+            animateBtn.textContent = '播放动画';
+        } else {
+            isAnimating = true;
+            animateBtn.textContent = '停止动画';
+
+            let currentTerm = 1;
+            animationInterval = setInterval(() => {
+                if (currentTerm > 15) {
+                    clearInterval(animationInterval);
+                    isAnimating = false;
+                    animateBtn.textContent = '播放动画';
+                    return;
+                }
+
+                termsSlider.value = currentTerm;
+                terms = currentTerm;
+                termsValue.textContent = terms;
+                drawGraph();
+                currentTerm++;
+            }, 800);
+        }
+    });
+
+    resetBtn.addEventListener('click', function() {
+        if (isAnimating) {
+            clearInterval(animationInterval);
+            isAnimating = false;
+            animateBtn.textContent = '播放动画';
+        }
+
+        termsSlider.value = 1;
+        terms = 1;
+        termsValue.textContent = terms;
+        xRangeSlider.value = 5;
+        xRange = 5;
+        xRangeValue.textContent = xRange;
+        drawGraph();
+    });
+</script>
+</body>
+</html>

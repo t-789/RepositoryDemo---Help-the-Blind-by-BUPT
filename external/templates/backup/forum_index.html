@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    body {
+        margin: 0;
+        display: flex;
+        max-width: 100vw;
+        height: 100vh;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        background-image: url(./background.jpg);
+        background-size: cover;
+        background-repeat: no-repeat;
+    }
+
+    .top_box {
+        position: fixed;
+        height: 10.46vh;
+        width: 100vw;
+        /* background-color: blueviolet; */
+        top: 4.12vh;
+    }
+
+    .bottom_box {
+        height: 9.54vh;
+        width: 100vw;
+        /* background-color: brown; */
+        position: fixed;
+        bottom: 0px;
+    }
+
+    .search_bottom {
+        width: 6vw;
+        height: 3.8vh;
+        /* background-color:black; */
+        position: absolute;
+        top: 3.3vh;
+        left: 20vw;
+        /* z-index:6; */
+        background-image: url(./search_buttom.png);
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    input::placeholder {
+        text-align: center;
+    }
+
+    .search_input {
+        position: absolute;
+        border: 0px solid black;
+        border-radius: 10000px;
+        width: 32vw;
+        height: 4.3vh;
+        left: 18vw;
+        top: 2.4vh;
+    }
+
+    .put_essay {
+        background-color: #FFD343;
+        width: 30.9vw;
+        height: 4.9vh;
+        position: absolute;
+        top: 2.1vh;
+        right: 2vw;
+        border: 0px solid black;
+        border-radius: 1000vh;
+    }
+
+    .put_essay_word {
+        position: absolute;
+        right: -0.2vw;
+        top: -1.1vh;
+    }
+
+    .put_essay_photo {
+        width: 6.9vw;
+        height: 6.9vw;
+        /* background-color: aquamarine; */
+        position: absolute;
+        top: 0.8vh;
+        left: 1.5vw;
+        background-image: url(./put_out.png);
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    .forum_word {
+        font-size: 6vw;
+    }
+
+    .forum_word_box {
+        top: 2.5vh;
+        position: absolute;
+        left: 4vw
+    }
+
+    .little_bell {
+        width: 6.4vw;
+        height: 6.4vw;
+        background-image: url(./little_bell.png);
+        background-repeat: no-repeat;
+        background-size: contain;
+        position: absolute;
+        right: 5vw;
+        top: 3vw;
+    }
+
+    .home_box {
+        height: 7.2vh;
+        width: 8.6vw;
+        /* background-color: aquamarine; */
+        position: absolute;
+        left: 3vw;
+        top: 1vh;
+    }
+
+    .home_photo {
+        width: 5.6vw;
+        height: 5.6vw;
+        background-image: url(./home.png);
+        background-repeat: no-repeat;
+        background-size: contain;
+        position: absolute;
+        left: 1.8vw;
+    }
+
+    .home_word {
+        position: absolute;
+        top: 3vh;
+    }
+
+    .commity {
+        height: 7.2vh;
+        width: 8.6vw;
+        position: absolute;
+        left: 45.7vw;
+        top: 1vh;
+    }
+
+    .commity_photo {
+        width: 5.6vw;
+        height: 5.6vw;
+        background-image: url(./commity.png);
+        background-repeat: no-repeat;
+        background-size: contain;
+        position: absolute;
+        left: 1.8vw;
+    }
+
+    .my_photo {
+        width: 5.6vw;
+        height: 5.6vw;
+        background-image: url(./my.png);
+        background-repeat: no-repeat;
+        background-size: contain;
+        position: absolute;
+        left: 1.8vw;
+    }
+
+    .my {
+        height: 7.2vh;
+        width: 8.6vw;
+        /* background-color: aquamarine; */
+        position: absolute;
+        right: 3vw;
+        top: 1vh;
+    }
+
+    .middle {
+        position: absolute;
+        top: 12.8vh;
+        height: 77.1vh;
+        width: 85.8vw;
+        /* background-color: aquamarine; */
+        overflow: auto;
+    }
+
+    .model1 {
+        margin-top: 2vh;
+        width: 85.8vw;
+        /* background-color: bisque; */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+    }
+
+    .top_squre {
+        width: 25.6vw;
+        height: 5.29vh;
+        /* background-color: blue; */
+        display: flex;
+    }
+
+    .user_photo {
+        width: 5.29vh;
+        height: 5.29vh;
+        background-image: url(./user_photo.png);
+        background-repeat: no-repeat;
+        background-size: contain;
+    }
+
+    .user_name {
+        height: 2.645vh;
+        width: 14vw;
+        /* background-color: brown; */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .post_time {
+        height: 2.645vh;
+        width: 14vw;
+        /* background-color: black; */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+    }
+
+    .must_word {
+        display: flex;
+        justify-items: flex-start;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .word_user {
+        font-size: 1.8vh;
+        display: block;
+    }
+
+    .word_time {
+        font-size: 1.4vh;
+        display: block;
+    }
+
+    .input_photo_all_4 {
+        height: 31.6vh;
+        width: 70.4vw;
+        /* background-color: black; */
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .input_photo_all_2 {
+        height: 15.8vh;
+        width: 70.4vw;
+        /* background-color: black; */
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .block {
+        display: block;
+        margin: 1vh;
+    }
+
+    .photo1 {
+        width: 14.2vh;
+        height: 14.2vh;
+        background-image: url(./UI.jpg);
+        background-repeat: no-repeat;
+        background-size: cover;
+        margin-top: 0vh;
+        margin-bottom: 0vh;
+        margin-left: 0.5vh;
+        margin-right: 0.5vh;
+    }
+
+    .photo2 {
+        width: 9.4667vh;
+        height: 9.4667vh;
+        background-image: url(./UI.jpg);
+        background-repeat: no-repeat;
+        background-size: cover;
+        margin-top: 0vh;
+        margin-bottom: 0vh;
+        margin-left: 0.3333vh;
+        margin-right: 0.3333vh;
+    }
+
+    .input_photo_all_6 {
+        height: 21.0667vh;
+        width: 70.4vw;
+        /* background-color: black; */
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .all_box {
+        width: 70.6vw;
+        height: 2.5vh;
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+    }
+
+    .put_in {
+        background-image: url(./put_in_m.png);
+        background-size: contain;
+        background-repeat: no-repeat;
+        height: 2.3vh;
+        width: 2.3vh;
+        margin-left: 9vw;
+    }
+
+    .good {
+        background-image: url(./good.png);
+        background-size: contain;
+        background-repeat: no-repeat;
+        height: 2.3vh;
+        width: 2.3vh;
+    }
+
+    .liet {
+        background-image: url(./tiet.png);
+        background-size: contain;
+        background-repeat: no-repeat;
+        height: 2.3vh;
+        width: 2.3vh;
+        margin-left: 9vw;
+    }
+</style>
+
+<body>
+    <!-- 头部 -->
+    <div class="little_bell">
+    </div>
+    <div class="top_box">
+        <div class="forum_word_box">
+            <strong class="forum_word">社区</strong>
+        </div>
+        <div class="search_bottom">
+        </div>
+        <div class="search_input_box">
+            <input class="search_input" type="text" placeholder="搜索">
+        </div>
+        <div class="put_essay">
+            <div class="put_essay_word">
+                <p>我要发贴！</p>
+            </div>
+            <div class="put_essay_photo">
+            </div>
+        </div>
+    </div>
+    <!-- 尾部 -->
+    <div class="bottom_box">
+        <div class="home_box">
+            <div class="home_photo"></div>
+            <div class="home_word">
+                <strong>主页</strong>
+            </div>
+        </div>
+        <div class="commity">
+            <div class="commity_photo"></div>
+            <div class="home_word">
+                <strong>社区</strong>
+            </div>
+        </div>
+        <div class="my">
+            <div class="my_photo"></div>
+            <div class="home_word">
+                <strong>我的</strong>
+            </div>
+        </div>
+    </div>
+    <!-- 滚贴部分 -->
+    <div class="middle">
+    </div>
+    <!-- 设置搜索图标消失 -->
+    <!-- 设置点击搜索图标效果 -->
+    <script>
+        var search_input = document.getElementsByClassName("search_input")[0];
+        var search_bottom = document.getElementsByClassName("search_bottom")[0];
+        search_bottom.style.zIndex = 6;
+        search_bottom.addEventListener("click", () => {
+            search_input.focus();
+        })
+        search_input.addEventListener("focus", () => {
+            search_bottom.style.zIndex = 0;
+        })
+        search_input.addEventListener("blur", () => {
+            search_bottom.style.zIndex = 6;
+        })
+    </script>
+    <!-- 设置中心布局模板 -->
+    <!-- 头顶部分纯文字布局 -->
+    <script>
+        function create_model1(a, b, c) {
+            // 创建元素
+            var model1 = document.createElement("div");
+            var top_squre = document.createElement("div");
+            var user_photo = document.createElement("div");
+            var must_word = document.createElement("div");
+            var user_name = document.createElement("div");
+            var word_user = document.createElement("strong");
+            var post_time = document.createElement("div");
+            var word_time = document.createElement("p");
+            var block = document.createElement("div");
+            // 添加class
+            model1.classList.add("model1");
+            top_squre.classList.add("top_squre");
+            user_photo.classList.add("user_photo");
+            must_word.classList.add("must_word");
+            user_name.classList.add("user_name");
+            word_user.classList.add("word_user");
+            post_time.classList.add("post_time");
+            word_time.classList.add("word_time");
+            block.classList.add("block");
+            // 元素相互添加层级关系
+            model1.appendChild(top_squre);
+            top_squre.appendChild(user_photo);
+            top_squre.appendChild(must_word);
+            must_word.appendChild(user_name);
+            user_name.appendChild(word_user);
+            must_word.appendChild(post_time);
+            post_time.appendChild(word_time);
+            model1.appendChild(block);
+            // 创建文本并添加
+            var word_user_text = document.createTextNode(a);
+            var word_time_text = document.createTextNode(b);
+            var block_text = document.createTextNode(c);
+            word_user.appendChild(word_user_text);
+            word_time.appendChild(word_time_text);
+            block.appendChild(block_text);
+            return model1;
+        }
+    </script>
+    <!-- 单双图片布局 -->
+    <script>
+        function create_photo1_2(photo_num) {
+            var input_photo_all_2 = document.createElement("div");
+            input_photo_all_2.classList.add("input_photo_all_2");
+            for (let i = 0; i < photo_num; i += 1) {
+                var photo2 = document.createElement("div")
+                photo2.classList.add("photo1")
+                input_photo_all_2.appendChild(photo2);
+            }
+            return input_photo_all_2;
+        }
+    </script>
+    <!-- 3或4元素布局 -->
+    <script>
+        function create_photo3_4(photo_num) {
+            var input_photo_all_4 = document.createElement("div");
+            input_photo_all_4.classList.add("input_photo_all_4")
+            for (let i = 0; i < photo_num; i += 1) {
+                var photo1 = document.createElement("div")
+                photo1.classList.add("photo1");
+                input_photo_all_4.appendChild(photo1);
+            }
+            return input_photo_all_4;
+        }
+    </script>
+    <!-- 5或6元素布局 -->
+    <script>
+        function create_photo5_6(photo_num) {
+            var input_photo_all_6 = document.createElement("div");
+            input_photo_all_6.classList.add("input_photo_all_6")
+            for (let i = 0; i < photo_num; i += 1) {
+                var photo3 = document.createElement("div")
+                photo3.classList.add("photo2");
+                input_photo_all_6.appendChild(photo3);
+            }
+            return input_photo_all_6;
+        }
+    </script>
+    <!-- 7到9元素布局 -->
+    <script>
+        function create_photo7_9(photo_num) {
+            var input_photo_all_4 = document.createElement("div");
+            input_photo_all_4.classList.add("input_photo_all_4")
+            for (let i = 0; i < photo_num; i += 1) {
+                var photo4 = document.createElement("div")
+                photo4.classList.add("photo2");
+                input_photo_all_4.appendChild(photo4);
+            }
+            return input_photo_all_4;
+        }
+    </script>
+    <!-- 点赞评论 -->
+    <script>
+        function must_good() {
+            var all_box = document.createElement("div");
+            var good = document.createElement("div");
+            var put_in = document.createElement("div");
+            var liet = document.createElement("div");
+            put_in.classList.add("put_in");
+            all_box.classList.add("all_box");
+            good.classList.add("good");
+            liet.classList.add("liet");
+            all_box.appendChild(good);
+            all_box.appendChild(liet);
+            all_box.appendChild(put_in);
+            return all_box;
+        }
+    </script>
+    <!-- 运行部分，添加元素 -->
+    <script>
+        var middle = document.getElementsByClassName("middle")[0];
+        // middle.appendChild(create_model1("王彭一", "4小时前", "一个更比四个强，倍思1000w充电器横扫饥饿做回自己；"));
+        // middle.appendChild(create_photo1_2(1));
+        // middle.appendChild(must_good());
+        // middle.appendChild(create_model1("王彭一", "4小时前", "一个更比四个强，倍思1000w充电器横扫饥饿做回自己；"));
+        // middle.appendChild(create_photo1_2(2));
+        // middle.appendChild(must_good());
+        // middle.appendChild(create_model1("王彭一", "4小时前", "一个更比四个强，倍思1000w充电器横扫饥饿做回自己；"));
+        // middle.appendChild(create_photo3_4(3));
+        // middle.appendChild(must_good());
+        // middle.appendChild(create_model1("王彭一", "4小时前", "一个更比四个强，倍思1000w充电器横扫饥饿做回自己；"));
+        // middle.appendChild(create_photo3_4(4));
+        // middle.appendChild(must_good());
+        // middle.appendChild(create_model1("王彭一", "4小时前", "一个更比四个强，倍思1000w充电器横扫饥饿做回自己；"));
+        // middle.appendChild(create_photo5_6(5));
+        // middle.appendChild(must_good());
+        // middle.appendChild(create_model1("王彭一", "4小时前", "一个更比四个强，倍思1000w充电器横扫饥饿做回自己；"));
+        // middle.appendChild(create_photo5_6(6));
+        // middle.appendChild(must_good());
+        // middle.appendChild(create_model1("王彭一", "4小时前", "一个更比四个强，倍思1000w充电器横扫饥饿做回自己；"));
+        // middle.appendChild(create_photo7_9(7));
+        // middle.appendChild(must_good());
+        // middle.appendChild(create_model1("王彭一", "4小时前", "一个更比四个强，倍思1000w充电器横扫饥饿做回自己；"));
+        // middle.appendChild(create_photo7_9(8));
+        // middle.appendChild(must_good());
+        // middle.appendChild(create_model1("王彭一", "4小时前", "一个更比四个强，倍思1000w充电器横扫饥饿做回自己；"));
+        // middle.appendChild(create_photo7_9(9));
+        // middle.appendChild(must_good());
+    </script>
+    <!-- 获取帖子信息 -->
+    <script>
+        // DOM加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否为本地文件访问
+            if (window.location.protocol === 'file:') {
+                alert('注意：您正在通过本地文件访问页面，这可能会导致某些浏览器（如Chrome、Edge）无法正确获取登录状态。\n\n建议：\n1. 使用Safari浏览器\n2. 或者将文件部署到Web服务器上访问\n3. 或者使用本地开发服务器');
+            }
+            
+            // 添加credentials: 'include'以确保携带cookie
+            fetch("http://182.92.78.163:8080/api/forum/all", {
+            // fetch("/../api/forum/all", {
+                credentials: 'include'
+            })
+                .then(response=> {
+                    console.log('论坛列表响应状态:', response.status);
+                    if (response.status === 403) {
+                        throw new Error('未授权访问，请先登录');
+                    }
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok, status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data=>{
+                    console.log('论坛列表数据:', data);
+                    var middle = document.getElementsByClassName("middle")[0];
+                    // 这里需要根据实际返回的数据结构调整
+                    // 假设data是一个包含帖子的数组
+                    if (Array.isArray(data)) {
+                        data.forEach(post => {
+                            // 使用实际的字段名替换username, release_time等
+                            middle.appendChild(create_model1(
+                                post.username || "未知用户", 
+                                post.releaseTime || post.release_time || "时间未知", 
+                                post.content || "无内容"
+                            ));
+                        });
+                    } else {
+                        middle.appendChild(create_model1(
+                            data.username || "未知用户",
+                            data.releaseTime || data.release_time || "时间未知",
+                            data.content || "无内容"
+                        ));
+                    }
+                })
+                .catch(error=>{
+                    alert("获取帖子失败: " + error.message);
+                    console.log("error:"+error);
+                })
+        });
+
+        // 添加一个函数来检查用户登录状态
+        function checkLoginStatus() {
+            fetch("http://182.92.78.163:8080/api/users/current", {
+                credentials: 'include'
+            })
+            .then(response => {
+                if (response.status === 403) {
+                    // 用户未登录，重定向到登录页面
+                    window.location.href = './log_in';
+                    return null;
+                }
+                return response.json();
+            })
+            .then(userData => {
+                if (userData && userData.username) {
+                    console.log('用户已登录:', userData);
+                    // 可以在这里更新UI显示用户信息
+                }
+            })
+            .catch(error => {
+                console.error('检查登录状态失败:', error);
+            });
+        }
+
+        // 页面加载时检查登录状态
+        document.addEventListener('DOMContentLoaded', checkLoginStatus);
+
+        function get(){
+            fetch("/../api/users/register-with-security-json",{
+                method:'GET',
+                credentials:'include'
+            })
+            .then(response=>response.text())
+            .then(data=>{
+                var middle = document.getElementsByClassName("middle")[0];
+                middle.appendChild(create_model1(data.user_id,data.release_time,data.release_time))
+            })
+        }
+    </script>
+    <!-- 添加底部click反应 -->
+    <script>
+        // var home_box=document.getElementsByClassName("home_box");
+        // home_box.addEventListener("click",()=>{
+        //     window.location.href=
+        // })
+    </script>
+
+</body>
+
+</html>

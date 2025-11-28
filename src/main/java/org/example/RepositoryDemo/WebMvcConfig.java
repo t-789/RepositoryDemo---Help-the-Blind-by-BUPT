@@ -22,14 +22,4 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     .excludePathPatterns("/login", "/error/**", "/css/**", "/js/**", "/images/**");
         }
     }
-    
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOriginPatterns("*")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600);
-    }
 }

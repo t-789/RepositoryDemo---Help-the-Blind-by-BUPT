@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    body {
+        margin: 0;
+        max-width: 100vw;
+        max-height: 100vh;
+        display: flex;
+        background-image: url(./log_in_background.jpg);
+        background-size: cover;
+        background-repeat: no-repeat;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .top_word_div {
+        height: 30vh;
+        width: 100vw;
+        /* background: red; */
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        position: absolute;
+    }
+
+    .inter_top_word_div {
+        width: 60vw;
+        height: 18vh;
+        /* background-color: blue; */
+        margin-top: 10vh;
+        margin-left: 3vh;
+    }
+
+    .form_all {
+        width: 100vw;
+        height: 60vh;
+        /* background-color: blueviolet; */
+    }
+
+    .input_all_and_href {
+        z-index: 1000;
+        width: 100vw;
+        height: 60vh;
+        position: absolute;
+        top: 40vh;
+    }
+
+    .radio_check {
+        position: absolute;
+        bottom: 0;
+    }
+
+    .btn {
+        width: 91.4vw;
+        height: 7vh;
+        /* background-color: aquamarine; */
+        position: absolute;
+        top: 22vh;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-left: 4.2vw;
+    }
+
+    .submit {
+        width: 91.4vw;
+        height: 5vh;
+        /* background-color:rgba(255, 208, 19, 0.57); */
+        background: linear-gradient(to bottom right, rgba(255, 208, 19, 0.57), rgba(255, 177, 7, 1));
+    }
+
+    .name_input {
+        width: 91.4vw;
+        height: 10vh;
+        /* background-color: blanchedalmond; */
+        margin-top: 4.66vh;
+        margin-left: 4.2vw;
+        position: absolute;
+        top: -7vh;
+    }
+
+    .name_input_box {
+        width: 91.4vw;
+        height: 5.9vh;
+        background-color: #F4F0EB;
+        /* background:linear-gradient(to bottom right,#F4F0EB,#757575) */
+    }
+
+    .input_password {
+        width: 91.4vw;
+        height: 15vh;
+        /* background-color: rgb(34, 126, 40); */
+        position: absolute;
+        margin-left: 4.2vw;
+        top: 10vh
+    }
+
+    .password_input_box {
+        height: 5.9vh;
+        width: 91.4vw;
+        background-color: #F4F0EB;
+    }
+
+    .href {
+        position: absolute;
+        top: 30vh;
+        width: 91.4vw;
+        height: 3vh;
+        /* background-color: rgb(225, 8, 215); */
+        margin-left: 4.2vw;
+    }
+
+    .forget {
+        position: absolute;
+        left: 1.5vw;
+    }
+
+    .register {
+        position: absolute;
+        right: 1.5vw;
+    }
+
+    .topword {
+        font-size: 5vh;
+        font-weight: 700;
+    }
+
+    .border {
+        border: 0px solid black;
+        border-radius: 999vh;
+    }
+
+    .name_input_picture {
+        width: 2vh;
+        height: 2vh;
+        position: absolute;
+        top: 36.7vh;
+    }
+
+    .password_input_picture {
+        width: 2vh;
+        height: 2vh;
+        position: absolute;
+        top: 24.6vh;
+
+    }
+
+    .name_input_name {
+        position: absolute;
+        top: 34.2vh;
+        left: 6vw;
+    }
+
+    .password_input_name {
+        position: absolute;
+        top: 46.5vh;
+        left: 6vw;
+    }
+
+    .all {
+        z-index: 2;
+        /* background-color: rgba(137, 43, 226, 0.401); */
+        width: 91.4vw;
+        height: 70vh;
+        position: absolute;
+    }
+
+    .color1 {
+        color: #FFAC07
+    }
+
+    .font-sie{
+        font-size:1.5vh
+    }
+
+    .radio_check{
+        margin-left:9vw
+    }
+
+    input{
+        font-size:5vw;
+    }
+</style>
+
+<body>
+    <!-- 顶部文字 -->
+    <div class="top_word_div" id="top_word">
+        <div class="inter_top_word_div" id="inter_top_word_div">
+            <p class="topword" id="top_word">
+                HI<br>
+                欢迎登录
+            </p>
+        </div>
+
+    </div>
+    <!-- 后续输入部分 -->
+    <div class="input_all_and_href" id="input_all_and_href">
+        <!-- 表单 -->
+        <div class="form_all" id="form_all">
+            <form id="input_and_radio" name="log_in">
+                <!-- 用户名输入 -->
+                <div class="name_input">
+                    <label>用户名: </label>
+                    <br>
+                    <input class="name_input_box border" type="text" name="username" id="username" placeholder="请输入用户名">
+                </div>
+                <!-- 密码输入 -->
+                <div class="input_password">
+                    <label>密码: </label>
+                    <br>
+                    <input class="password_input_box border" type="password" name="password" id="password" placeholder="请输入密码">
+                </div>
+                <!-- 提交按钮 -->
+                <div class="btn" id="btn">
+                    <input id="submit" class="submit border" type="submit" value="登录">
+                </div>
+                <!-- 勾选同意 -->
+                <div class="radio_check" id="radio_check">
+                    <input type="checkbox" name="content" id="content">
+                    <lable for content class="font-sie">点击阅读并同意<a href="" class="color1 font-sie">《用户开展协议》</a>
+                         和<a href="" class="color1 font-sie">《隐私协议》</a>
+                    </lable>
+                </div>
+            </form>
+        </div>
+        <div class="href">
+            <div class="forget">
+                <a href="">忘记密码</a>
+            </div>
+            <div class="register">
+                <a href="../register/register.html">注册</a>
+            </div>
+        </div>
+    </div>
+    <div class="all">
+        <div class="name_input_picture_box">
+            <img src="./name_input_name_input.png" class="name_input_picture">
+        </div>
+        <div class="name_input_name">
+            <p>用户名</p>
+        </div>
+        <div class="password_input_picture">
+            <img src="./password_input.png" class="password_input_picture">
+        </div>
+        <div class="password_input_name">
+            <p>密码</p>
+        </div>
+    </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function(){
+        document.getElementById('input_and_radio').addEventListener('submit', handleLogin);
+    })
+    function handleLogin(e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        // 发送登录请求
+        fetch('http://182.92.78.163:8080/api/users/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({username, password}),
+            credentials: 'include' // 确保跨域请求携带凭据
+        })
+        .then(response => response.text())
+        .then(data => {
+            if (data === '登录成功') {
+                // 获取用户信息以确定用户类型和头像
+                fetch('http://182.92.78.163:8080/api/users/current', {
+                    credentials: 'include' // 确保跨域请求携带凭据
+                })
+                    .then(response => response.json())
+                    .then(userData => {
+                        // 保存用户信息到localStorage
+                        const user = {
+                            username: userData.username,
+                            type: userData.type,
+                            avatar: userData.avatar // 保存头像信息
+                        };
+                        window.location.href = './forum_index'
+                    }).catch(error => {
+                        console.error('获取用户信息失败:', error);
+                    })
+            } else {
+                alert('登录失败: ' + data);
+            }
+        }).catch(error => {
+            alert('登录请求失败: ' + error.message);
+        })
+    }
+</script>
+</body>
+
+</html>

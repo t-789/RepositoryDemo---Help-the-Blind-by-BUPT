@@ -41,7 +41,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Base64;
 import java.util.*;
 
-@CrossOrigin(origins = "http://127.0.0.1:5500")
+//@CrossOrigin(origins = "http://127.0.0.1:5500", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/users")
 @Validated
@@ -277,9 +277,13 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         try {
+            logger.info("收到用户登录请求: username={}", loginRequest.getUsername());
+            
             // 调用 UserService 的登录方法
             User user = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
             if (user != null) {
+                logger.info("用户 {} 登录成功", loginRequest.getUsername());
+                
                 // 通过Spring Security进行认证
                 UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
                 Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -290,25 +294,31 @@ public class UserController {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 
                 // 将认证信息存储在会话中
-                HttpSession session = request.getSession();
+                HttpSession session = request.getSession(true); // 强制创建新会话
                 session.setAttribute("user", user);
                 session.setAttribute(
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, 
                     SecurityContextHolder.getContext()
                 );
                 
-                return ResponseEntity.ok("登录成功");
+                logger.debug("用户 {} 的会话已创建，session id: {}", loginRequest.getUsername(), session.getId());
+                
+                // 设置响应头以支持跨域
+                return ResponseEntity.ok()
+                        //.header("Access-Control-Allow-Origin", request.getHeader("Origin"))
+                        //.header("Access-Control-Allow-Credentials", "true")
+                        .body("登录成功");
             } else {
                 logger.warn("用户 {} 登录失败，用户名或密码错误", loginRequest.getUsername());
                 return ResponseEntity.badRequest().body("登录失败，用户名或密码错误");
             }
         } catch (Exception e) {
+            logger.error("用户 {} 登录时发生错误: {}", loginRequest.getUsername(), e.getMessage(), e);
             if (e.getMessage().contains("账户被封禁至")){
                 logger.warn("用户 {} 登录失败，{}", loginRequest.getUsername(), e.getMessage());
                 return ResponseEntity.badRequest().body("账户被封禁至" + e.getMessage());
             }
-            logger.error("用户 {} 登录时发生错误: {}", loginRequest.getUsername(), e.getMessage());
-            return ResponseEntity.badRequest().body("登录失败");
+            return ResponseEntity.badRequest().body("登录失败: " + e.getMessage());
         }
     }
 
@@ -512,8 +522,14 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/ban")
-    public ResponseEntity<?> banUser(@PathVariable int userId, @RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> banUser(@PathVariable int userId, @RequestBody Map<String, String> payload, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String banTime = payload.get("banTime");
             if (banTime == null || banTime.isEmpty()) {
                 return ResponseEntity.badRequest().body("封禁时间不能为空");
@@ -532,8 +548,14 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/unban")
-    public ResponseEntity<?> unbanUser(@PathVariable int userId) {
+    public ResponseEntity<?> unbanUser(@PathVariable int userId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             boolean success = userService.unbanUser(userId);
             if (success) {
                 return ResponseEntity.ok("用户解封操作完成");
@@ -546,8 +568,14 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/grant-admin")
-    public ResponseEntity<?> grantAdmin(@PathVariable int userId) {
+    public ResponseEntity<?> grantAdmin(@PathVariable int userId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             int result = userService.grantAdminPermission(userId);
             return switch (result) {
                 case 1 -> ResponseEntity.ok("用户" + userId + "已被赋予管理员权限");
@@ -560,8 +588,14 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/revoke-admin")
-    public ResponseEntity<?> revokeAdmin(@PathVariable int userId) {
+    public ResponseEntity<?> revokeAdmin(@PathVariable int userId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             int result = userService.revokeAdminPermission(userId);
             return switch (result) {
                 case 1 -> ResponseEntity.ok("用户" + userId + "已被撤销管理员权限");
@@ -577,6 +611,12 @@ public class UserController {
     @PostMapping("/admin/reset-password/{userId}")
     public ResponseEntity<?> adminResetPassword(@PathVariable int userId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             // 检查权限
             String username = authentication.getName();
             User adminUser = userRepository.findByUsername(username);
@@ -611,6 +651,12 @@ public class UserController {
     @PostMapping("/admin/security-question")
     public ResponseEntity<?> addSecurityQuestion(@RequestBody Map<String, Object> payload, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             // 检查权限
             String username = authentication.getName();
             User adminUser = userRepository.findByUsername(username);
@@ -639,6 +685,12 @@ public class UserController {
     @DeleteMapping("/admin/security-question/{questionId}")
     public ResponseEntity<?> deleteSecurityQuestion(@PathVariable int questionId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             // 检查权限
             String username = authentication.getName();
             User adminUser = userRepository.findByUsername(username);
@@ -661,6 +713,12 @@ public class UserController {
     @PutMapping("/admin/security-question/{questionId}")
     public ResponseEntity<?> updateSecurityQuestion(@PathVariable int questionId, @RequestBody Map<String, Object> payload, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             // 检查权限
             String username = authentication.getName();
             User adminUser = userRepository.findByUsername(username);
@@ -689,11 +747,17 @@ public class UserController {
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile(Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             // 获取当前认证用户
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("用户未登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             
             // 获取用户点位数量

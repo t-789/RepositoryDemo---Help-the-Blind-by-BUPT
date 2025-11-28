@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>泰勒公式与麦克劳林公式</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .nav-link {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        .nav-link:hover {
+            background-color: #2980b9;
+        }
+        .intro {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 1.2em;
+        }
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            width: 250px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .card h3 {
+            color: #3498db;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>泰勒公式与麦克劳林公式</h1>
+        <h2>数学分析中的重要工具</h2>
+        
+        <div class="intro">
+            <p>泰勒公式是高等数学中一个非常重要的内容，它将复杂的函数逼近近似地表示为简单的多项式函数。</p>
+            <p>本项目将带您深入了解泰勒公式及其特殊形式——麦克劳林公式的历史背景、推导过程以及实际应用。</p>
+        </div>
+        
+        <div class="card-container">
+            <div class="card">
+                <h3>历史背景</h3>
+                <p>了解泰勒公式的发展历程，认识数学家布鲁克·泰勒的重要贡献</p>
+            </div>
+            <div class="card">
+                <h3>公式推导</h3>
+                <p>通过动画演示，深入理解泰勒公式和麦克劳林公式的数学推导过程</p>
+            </div>
+            <div class="card">
+                <h3>实际应用</h3>
+                <p>通过交互式可视化，体验麦克劳林公式如何逼近sin(x)函数</p>
+            </div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="/front/math/background" class="nav-link">历史背景</a>
+            <a href="/front/math/infer" class="nav-link">公式推导</a>
+            <a href="/front/math/application" class="nav-link">实际应用</a>
+        </div>
+    </div>
+</body>
+</html>

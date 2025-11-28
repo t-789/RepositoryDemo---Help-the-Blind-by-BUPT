@@ -117,9 +117,9 @@ public class HomeController {
         return "about";
     }
 
-    @GetMapping("/index")
+    @GetMapping("/test")
     public String indexHtml() {
-        return "index";
+        return "test_main";
     }
 
     @GetMapping("/errortest")
@@ -131,4 +131,13 @@ public class HomeController {
     public String birthday() {
         return "birthday";
     }
+
+//    @GetMapping("/front/log_in")
+//    public String logIn() {
+//        return "log_in";
+//    }
+//    @GetMapping("/front/forum_index")
+//    public String forumIndex() {
+//        return "forum_index";
+//    }
 }

@@ -47,11 +47,17 @@ public class PointController {
     @PostMapping(value="/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> savePoint(@Valid @ModelAttribute PointRequest pointRequest, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             // 获取当前用户ID
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("还没有登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             String imagePath = null;
             if (pointRequest.getImage_description() != null && !pointRequest.getImage_description().isEmpty()){
@@ -81,10 +87,16 @@ public class PointController {
     @PostMapping("/{pointId}/propose-delete")
     public ResponseEntity<?> proposeDeletePoint(@Min(value = 1, message = "点位ID必须大于0") @PathVariable int pointId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("还没有登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             
             int status = pointService.proposeDeletePoint(pointId, user.id);
@@ -114,6 +126,12 @@ public class PointController {
     @DeleteMapping("/{pointId}")
     public ResponseEntity<?> adminDeletePoint(@Min(value = 1, message = "点位ID必须大于0") @PathVariable int pointId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null || user.type != 2) {
@@ -135,6 +153,12 @@ public class PointController {
     @PostMapping("/{pointId}/restore")
     public ResponseEntity<?> adminRestorePoint(@Min(value = 1, message = "点位ID必须大于0") @PathVariable int pointId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null || user.type != 2) {
@@ -163,6 +187,12 @@ public class PointController {
     @PostMapping("/threshold")
     public ResponseEntity<?> setDeleteThreshold(@RequestBody Map<String, Integer> payload, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null || user.type != 2) {
@@ -193,10 +223,16 @@ public class PointController {
     @PostMapping("/{pointId}/confirm")
     public ResponseEntity<?> confirmPoint(@Min(value = 1, message = "点位ID必须大于0") @PathVariable int pointId, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null) {
-                return ResponseEntity.badRequest().body("还没有登录");
+                return ResponseEntity.status(403).body("请先登录");
             }
             
             // 检查点位是否由当前用户创建（如果是，则不能确认自己的点位）
@@ -236,6 +272,12 @@ public class PointController {
     @GetMapping("/all")
     public ResponseEntity<?> getAllPoints(Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null || user.type != 2) {
@@ -254,6 +296,12 @@ public class PointController {
     @PostMapping("/type-map")
     public ResponseEntity<?> saveTypeMap(@RequestBody Map<String, Object> payload, Authentication authentication) {
         try {
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() || 
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
             String username = authentication.getName();
             User user = userRepository.findByUsername(username);
             if (user == null || user.type != 2) {

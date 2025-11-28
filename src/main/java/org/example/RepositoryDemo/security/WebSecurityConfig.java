@@ -1,6 +1,5 @@
 package org.example.RepositoryDemo.security;
 
-import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.service.CustomUserDetailsService;
@@ -12,13 +11,20 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -32,38 +38,40 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/api/users/register").permitAll()
-                        .requestMatchers("/api/users/login").permitAll()
+                        .requestMatchers("/api/users/upload-avatar").authenticated()
                         .requestMatchers("/api/users/logout").authenticated()
+                        .requestMatchers("/api/users/{username}/security-questions").authenticated()
                         .requestMatchers("/api/users/{userId}/ban").hasRole("ADMIN")
                         .requestMatchers("/api/users/{userId}/unban").hasRole("ADMIN")
+                        .requestMatchers("/api/users/{userId}/grant-admin").hasRole("ADMIN")
+                        .requestMatchers("/api/users/{userId}/revoke-admin").hasRole("ADMIN")
+                        .requestMatchers("/api/users/admin/reset-password/{userId}").hasRole("ADMIN")
+                        .requestMatchers("/api/users/admin/security-question").hasRole("ADMIN")
+                        .requestMatchers("/api/users/admin/security-question/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/profile").authenticated()
                         .requestMatchers("/api/users/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/users/*/security-questions").permitAll()
-                        .requestMatchers("/api/ai/**").permitAll()
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/release-notes").permitAll()
-                        .requestMatchers("/curl.txt").permitAll()
-                        .requestMatchers("/about").permitAll()
-                        .requestMatchers("/index").permitAll()
-                        .requestMatchers("/index*").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers("/error/**").permitAll()
-                        .requestMatchers("/static/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/admin/feedback_management").hasRole("ADMIN")
-                        .requestMatchers("/api/users/security-questions").permitAll()
-                        .requestMatchers("/api/users/register-with-security").permitAll()
-                        .requestMatchers("/api/users/register-with-security-json").permitAll()
-                        .requestMatchers("/api/points/distance").permitAll()
-                        .requestMatchers("/errortest").permitAll()
-                        .requestMatchers("/api/statistic/**").permitAll()
-                        .requestMatchers("/birthday").permitAll()
-                        .requestMatchers("/").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/users/current").authenticated()
+                        .requestMatchers("/api/users/current/feedback").authenticated()
+                        .requestMatchers("/api/feedback/all").hasRole("ADMIN")
+                        .requestMatchers("/api/feedback/type/**").hasRole("ADMIN")
+                        .requestMatchers("/api/feedback/{id}/**").hasRole("ADMIN")
+                        .requestMatchers("/api/forum/create").authenticated()
+                        .requestMatchers("/api/forum/user/**").authenticated()
+                        .requestMatchers("/api/forum/{forumId}").authenticated()
+                        .requestMatchers("/api/forum/{forumId}/**").authenticated()
+                        .requestMatchers("/api/points/save").authenticated()
+                        .requestMatchers("/api/points/{pointId}/propose-delete").authenticated()
+                        .requestMatchers("/api/points/{pointId}/restore").hasRole("ADMIN")
+                        .requestMatchers("/api/points/{pointId}/confirm").hasRole("ADMIN")
+                        .requestMatchers("/api/points/all").hasRole("ADMIN")
+                        .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
+                        .loginProcessingUrl("/login")
                         .defaultSuccessUrl("/", true)
                         .failureHandler(authenticationFailureHandler())
                         .permitAll()
@@ -75,6 +83,10 @@ public class WebSecurityConfig {
                 )
                 .exceptionHandling(exception -> exception
                         .accessDeniedPage("/error/403")
+                        .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers((headers) -> headers
@@ -82,6 +94,19 @@ public class WebSecurityConfig {
                 );
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
@@ -119,5 +144,13 @@ public class WebSecurityConfig {
             super(msg, null);
         }
 
+    }
+
+    @Configuration
+    public static class CorsConfig {
+        @Bean
+        public CorsFilter corsFilter() {
+            return new CorsFilter(new UrlBasedCorsConfigurationSource());
+        }
     }
 }
