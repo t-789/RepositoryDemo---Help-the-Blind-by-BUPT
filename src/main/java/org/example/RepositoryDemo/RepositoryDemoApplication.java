@@ -25,6 +25,7 @@ public class RepositoryDemoApplication {
         ForumRepository.createLikeTable();
         ForumRepository.createFavoriteTable();
         ForumRepository.createCommentTable();
+        ForumRepository.createPictureTable();
         SecurityQuestionRepository.createSecurityQuestionTable();
         SecurityQuestionRepository.createSecurityQuestionMapTable();
         PointRepository.createPointTable();

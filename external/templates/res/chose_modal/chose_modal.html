@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    body {
+        margin: 0;
+        max-width: 100vw;
+        max-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        background-image: url(./background.jpg);
+        background-size:cover;
+        background-repeat:no-repeat;
+    }
+
+    .word {
+        position: absolute;
+        top: 17.5vh;
+        left: 9.3vw;
+    }
+
+    .first {
+        width: 83.2vw;
+        height: 10.8vh;
+        position: absolute;
+        top: 28.1vh;
+        border: 0px solid black;
+        border-radius: 1000px;
+        background-color: #FFC123;
+        display:flex;
+        justify-content: center;
+        align-items:center;
+    }
+
+    .second{
+        width: 83.2vw;
+        height: 10.8vh;
+        position: absolute;
+        top:47.5vh;
+        border: 0px solid black;
+        border-radius: 1000px;
+        background-color: #FFC123;
+        display:flex;
+        justify-content: center;
+        align-items:center;
+    }
+
+    .turn_button{
+        width:12.8vw;
+        height:12.8vh;
+        background-image: url(./turn_button.png);
+        background-repeat:no-repeat;
+        background-size: contain;
+        position:absolute;
+        bottom:0;
+        right:3.5vw;
+    }
+</style>
+
+<body>
+    <div class="word">
+        <strong>请选择您需要的模式:</strong>
+    </div>
+    <div class="first">
+        <div>
+            <strong>无障碍模式</strong>
+        </div>
+    </div>
+    <div class="second">
+        <p calss="second">普通模式</p>
+    </div>
+    <div class="turn_button"></div>
+    <!-- 添加点击事件 -->
+    <script>
+        var first=document.getElementsByClassName("first")[0];
+        var second=document.getElementsByClassName("second")[0];
+        first.addEventListener("click",)
+        second.addEventListener("click",)
+
+    </script>
+</body>
+
+</html>

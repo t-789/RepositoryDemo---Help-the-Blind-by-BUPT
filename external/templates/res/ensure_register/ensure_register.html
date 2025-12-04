@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    .top_all {
+        width: 100vw;
+        height: 41.8vh;
+        position: absolute;
+        /* background-color: blueviolet; */
+    }
+
+    body {
+        margin: 0px;
+        min-width: 100vw;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        position: absolute;
+    }
+
+    .circle_green {
+        width: 59.2vw;
+        height: 28.94vh;
+        background: linear-gradient(to bottom right, #D9D9D9, rgba(210, 255, 167, 0.67));
+        border: 0px solid black;
+        border-radius: 999px;
+        position: absolute;
+        left: -13vw;
+        top: -8.5vh;
+        z-index: 3;
+    }
+
+    .circle_orange {
+        width: 80.9vw;
+        height: 38.05vh;
+        background-color: #FFD769;
+        position: absolute;
+        border: 0px solid black;
+        border-radius: 999px;
+        right: -20.9vw;
+        top: -9.97vh;
+    }
+
+    .reutrn_photo {
+        width: 5vh;
+        height: 5vh;
+    }
+
+    .return {
+        position: absolute;
+        top: 2vh;
+        left: 1vh;
+        z-index: 4;
+    }
+
+    .top_word {
+        font-size: 3.5vh;
+        font-weight: 700;
+    }
+
+    .top_word_box {
+        z-index: 5;
+        position: absolute;
+        top: 14.66vh;
+        left: 21.22vw;
+    }
+
+    .input_and_href {
+        position: absolute;
+        top: 32.8vh;
+        width: 100vw;
+        height: 58.2vh;
+        /* background-color: bisque; */
+    }
+
+    .question1 {
+        width: 60vw;
+        height: 5.9vh;
+        border: 0px solid black;
+        border-radius: 2.6vw;
+        background-color: #F4F0EB;
+    }
+
+    .question1_box {
+        position: absolute;
+        left: 21.22vw;
+        top: -3vh;
+    }
+
+    .first_question_word {
+        position: absolute;
+        top: 1.5vh;
+        left: -15vw;
+    }
+
+    .question2 {
+        width: 60vw;
+        height: 5.9vh;
+        border: 0px solid black;
+        border-radius: 2.6vw;
+        background-color: #F4F0EB;
+    }
+
+    .first_input_word {
+        position: absolute;
+        top: 10vh;
+        left: -15vw;
+    }
+
+    .question3 {
+        width: 60vw;
+        height: 5.9vh;
+        border: 0px solid black;
+        border-radius: 2.6vw;
+        background-color: #F4F0EB;
+    }
+
+    .question2_box {
+        position: absolute;
+        left: 21.22vw;
+        top: 14vh;
+    }
+
+    .submit {
+        position: absolute;
+        width: 80vw;
+        height: 5vh;
+        background: linear-gradient(to bottom right, rgba(255, 208, 19, 0.57), rgba(255, 177, 7, 1));
+        top: 38vh;
+        left: 3vw;
+    }
+
+    .border {
+        border: 0px solid black;
+        border-radius: 999vh;
+    }
+
+    input::placeholder {
+        text-align: center;
+    }
+
+    .question1::placeholder {
+        color: black;
+    }
+
+    input {
+        font-size: 5vw;
+    }
+
+    option {
+        text-align: center;
+    }
+</style>
+
+<body>
+    <div class="top_all">
+        <div class="circle_green">
+        </div>
+        <div class="circle_orange">
+        </div>
+        <div class="return">
+            <a href="../register/register.html"><img src="./reutrn_photo.png" class="reutrn_photo"></a>
+        </div>
+        <div class="top_word_box">
+            <p class="top_word">请确认密保问题</p>
+        </div>
+    </div>
+    <div class="input_and_href">
+        <form id="ensure_register">
+            <div class="question1_box">
+                <div id="first_question">
+                    <label for="first_question_box" class="first_question_word" id="first_question_word">问题1</label>
+                    <label for="first_input_box" class="first_input_word" id="first_input_word">答案1</label>
+                </div>
+                <!-- <input type="text" readonly placeholder="恁母马生日啥时候" class="question1" id="first_question_box"> -->
+                <select id="chose1" required class="question1" id="question1">
+                    <option value="">请选择问题</option>
+                    <option value="1">您母亲名字是？</option>
+                    <option value="2">您父亲名字是？</option>
+                    <option value="3">您的小学是？</option>
+                    <option value="4">您的第一个宠物名字是？</option>
+                    <option value="5">您喜欢的颜色是？</option>
+                    <option value="6">您最喜欢的电影是？</option>
+                    <option value="7">您最好的朋友是</option>
+                    <option value="8">你还往下瞅</option>
+                    <option value="9">有女朋友吗你</option>
+                </select>
+                <p></p>
+                <input type="text" placeholder="请输入答案" class="question2" id="first_input_box">
+            </div>
+            <div class="question2_box">
+                <div id="question2_word_box">
+                    <label for="first_question_box" class="first_question_word" id="second_question_word">问题2</label>
+                    <label for="first_input_box" class="first_input_word" id="second_input_word">答案2</label>
+                </div>
+                <!-- <input type="text" readonly placeholder="泥爹是搞莫滴" class="question1" id="second_question_box"> -->
+                <select required id="chose2" class="question1" id="question2">
+                    <option value="">请选择问题</option>
+                    <option value="1">您母亲名字是？</option>
+                    <option value="2">您父亲名字是？</option>
+                    <option value="3">您的小学是？</option>
+                    <option value="4">您的第一个宠物名字是？</option>
+                    <option value="5">您喜欢的颜色是？</option>
+                    <option value="6">您最喜欢的电影是？</option>
+                    <option value="7">您最好的朋友是</option>
+                    <option value="8">你还往下瞅</option>
+                    <option value="9">有女朋友吗你</option>
+                </select>
+                <p></p>
+                <input type="text" placeholder="请输入答案" class="question2" id="second_input_box">
+            </div>
+            <input type="submit" value="注册" class="submit border" id="submit_register">
+        </form>
+    </div>
+    <!-- 来源豆包，正则表达式提取 -->
+    <script>
+        // 从localStorage读取存储的内容
+        const savedDataStr = localStorage.getItem("save_input_all_string");
+        const savedData = JSON.parse(savedDataStr);
+
+        // 提取backgroundImage里的纯URL
+        function getPureUrl(backgroundImageStr) {
+            // 匹配url(...)里的内容，去掉引号和括号
+            const match = backgroundImageStr.match(/url\(["']?(.*?)["']?\)/);
+            return match ? match[1] : ""; // 匹配到就返回URL，否则返回空
+        }
+
+        // 使用示例
+        const photoUrl = getPureUrl(savedData.photo);
+        console.log("纯URL：", photoUrl); // 输出类似 ./avatar.jpg 这样的地址
+    </script>
+    <!-- 获取url转成blob再转base64 -->
+    <script>
+        var photo_blob;
+        var photo_base64;
+        fetch(photoUrl)
+            .then(
+                response => {
+                    photo_blob = response.blob();
+                }
+            )
+        var reader=new FileReader;
+        reader.onload=function(){
+            photo_base64=reader.result;
+        }
+        reader.readAsDataURL(photo)
+    </script>
+    <!-- 构建输出表单 -->
+    <script>
+        var chose1 = document.getElementById("chose1");
+        chose1.addEventListener("change", function () {
+            console.log(chose1.value);
+        })
+        var first_input_box = document.getElementById("first_input_box");
+        var second_input_box = document.getElementById("second_input_box");
+        var chose2 = document.getElementById("chose2")
+        chose2.addEventListener("change", function () {
+            console.log(chose2.value);
+        })
+        var sbm = document.getElementById("submit_register");
+        sbm.addEventListener("click", function (e) {
+            // 构建传输对象
+            var form = {
+                username: savedData.user,
+                password: savedData.pass,
+                avatar: photoUrl,
+                base64:photo_base64,
+                question1: chose1.value,
+                answer1: first_input_box.value,
+                question2: chose2.value,
+                answer2: second_input_box.value
+            }
+            console.log(form);
+            e.preventDefault();
+            // 发送请求
+            fetch("http://182.92.78.163:8080/api/users/register-with-security-json", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(form)
+            })
+
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('注册请求失败');
+
+                })
+        })
+
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    .top_all {
+        width: 100vw;
+        height: 41.8vh;
+        position: absolute;
+        /* background-color: blueviolet; */
+    }
+
+    body {
+        margin: 0px;
+        min-width: 100vw;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        position: absolute;
+    }
+
+    .input_and_href {
+        width: 100vw;
+        height: 58.2vh;
+        /* background-color: brown; */
+        position: absolute;
+        top: 41.8vh;
+    }
+
+    .circle_green {
+        width: 59.2vw;
+        height: 28.94vh;
+        background: linear-gradient(to bottom right, #D9D9D9, rgba(210, 255, 167, 0.67));
+        border: 0px solid black;
+        border-radius: 999px;
+        position: absolute;
+        left: -13vw;
+        top: -8.5vh;
+        z-index: 3;
+    }
+
+    .circle_orange {
+        width: 80.9vw;
+        height: 38.05vh;
+        background-color: #FFD769;
+        position: absolute;
+        border: 0px solid black;
+        border-radius: 999px;
+        right: -20.9vw;
+        top: -9.97vh;
+    }
+
+    .circle_user_photo_box {
+        /* background-image: url(./user_photo.png); */
+        background-size: cover;
+        background-repeat: no-repeat;
+        width: 42vw;
+        height: 19.3vh;
+        /* background-color: aqua; */
+        border: 0px solid black;
+        border-radius: 10000px;
+        position: absolute;
+        top: 16.2vh;
+        left: 24.9vw;
+        z-index: 4;
+    }
+
+    .user_photo_href_word_box {
+
+        position: absolute;
+        top: 37vh;
+        left: 37vw;
+    }
+
+    .input_username_box {
+        position: absolute;
+        height: 5.9vh;
+        width: 85.4vw;
+        top: 3vh;
+        margin-left: 4.2vw;
+        /* background-color: aqua; */
+    }
+
+    .input_username {
+        position: absolute;
+        height: 5.9vh;
+        width: 85.4vw;
+        border: 0px solid black;
+        border-radius: 999px;
+        background-color: #F4F0EB;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .input_password_box {
+        position: absolute;
+        height: 5.9vh;
+        width: 85.4vw;
+        top: 13.5vh;
+        margin-left: 4.2vw;
+    }
+
+    .input_password {
+        position: absolute;
+        height: 5.9vh;
+        width: 85.4vw;
+        border: 0px solid black;
+        border-radius: 999px;
+        background-color: #F4F0EB
+    }
+
+    .input_password_box1 {
+        position: absolute;
+        height: 5.9vh;
+        width: 85.4vw;
+        top: 24vh;
+        margin-left: 4.2vw;
+    }
+
+    .color1 {
+        color: #FFAC07
+    }
+
+    .font-sie {
+        font-size: 1.5vh
+    }
+
+    .radio_check {
+        margin-left: 5vw;
+        position: absolute;
+        top: 32.5vh;
+    }
+
+    .turn_photo {
+        width: 5vh;
+        height: 5vh;
+    }
+
+    .turn {
+        position: absolute;
+        bottom: 6.14vh;
+        right: 3.14vh;
+    }
+
+    .reutrn_photo {
+        width: 5vh;
+        height: 5vh;
+    }
+
+    .return {
+        position: absolute;
+        top: 2vh;
+        left: 1vh;
+        z-index: 4;
+    }
+
+    .color2 {
+        color: black
+    }
+
+    .real_bottom {
+        width: 0px;
+        height: 0px;
+    }
+
+    .else_word {
+        text-decoration: underline;
+    }
+
+    .boonm {
+        position: absolute;
+        /* top: 60vh; */
+        margin-right: 6vw;
+        background-color: #F4F0EB;
+        border: 0.5px solid black;
+        padding: 0;
+    }
+
+    .boonm2 {
+        position: absolute;
+        /* top: 60vh; */
+        margin-right: 6vw;
+        background-color: #F4F0EB;
+        border: 0.5px solid black;
+        padding: 0;
+        z-index: 20;
+    }
+
+    .boonm_button {
+        margin: 0 auto;
+        display: block;
+    }
+
+    input {
+        font-size: 5vw;
+    }
+
+    .boonm3 {
+        position: absolute;
+        margin-right: 6vw;
+        background-color: #F4F0EB;
+        border: 0.5px solid black;
+        padding: 0;
+        z-index: 30;
+    }
+</style>
+
+<body>
+    <div class="top_all">
+        <div class="circle_green">
+        </div>
+        <div class="circle_orange">
+        </div>
+        <div class="circle_user_photo_box">
+        </div>
+        <div class="user_photo_href_word_box">
+            <label for="file_input" class="else_word">上传图像</label>
+        </div>
+        <div class="return">
+            <a href="./log_in"><img src="http://182.92.78.163:8080/front/res/register/reutrn_photo.png" class="reutrn_photo"></a>
+        </div>
+    </div>
+    <div class="input_and_href">
+        <form id="register_form">
+            <!-- 图像 -->
+            <input id="file_input" type="file" accept=".jpg,.png" class="real_bottom">
+            <!-- 图像 -->
+            <div class="input_username_box">
+                <input type="text" placeholder="请输入用户名" class="input_username" id="user1">
+            </div>
+            <div class="input_password_box">
+                <input type="password" placeholder="请输入密码" class="input_password" id="pass1">
+            </div>
+            <div class="input_password_box1">
+                <input type="password" placeholder="请确认密码" class="input_password" id="pass2">
+            </div>
+            <div class="radio_check" id="radio_check">
+                <input type="checkbox" name="content" id="content">
+                <lable for content class="font-sie">点击阅读并同意<a href="" class="color1 font-sie">《用户开展协议》</a>
+                    和<a href="" class="color1 font-sie">《隐私协议》</a>
+                </lable>
+            </div>
+        </form>
+        <div class="turn">
+            <a href="./ensure_register"><img src="http://182.92.78.163:8080/front/res/register/turn_photo.png" id="turn_photo"
+                    class="turn_photo"></a>
+        </div>
+    </div>
+    <!-- 第二层弹窗部分 -->
+    <div class="boonm">
+        <p>您输入的用户名与密码不一致<br>请重新输入</p>
+        <button class="boonm_button">确认</button>
+    </div>
+    <!-- 为空弹窗部分 -->
+    <div class="boonm2">
+        <p>以上内容均不能为空</p>
+        <button class="boonm_button">确认</button>
+    </div>
+    <!-- 图片大小不能超过 -->
+    <div class="boonm3">
+        <p id="boonm3_word">图片大小不能超过</p>
+        <button class="boonm_button">确认</button>
+    </div>
+    <!-- 图像录入 -->
+    <script>
+        // 获取
+        var result;
+        var file_input = document.getElementById("file_input");
+        var circle_user_photo_box = document.getElementsByClassName("circle_user_photo_box")[0];
+        circle_user_photo_box.style.backgroundImage = "url(http://182.92.78.163:8080/front/res/register/user_photo.png)";
+        // 设置点击事件，图像触发
+        // 设置改变事件，替换图片
+        circle_user_photo_box.addEventListener("click", function () {
+            file_input.click();
+        })
+        file_input.addEventListener("change", function (e) {
+            var photo = e.target.files[0];
+            // 图片大小判断
+            if (photo.size > 2 * 1024 * 1024) {
+                boonm3.style.top = "60vh";
+            }
+            else {
+                console.log(photo.size)
+                if (!photo) {
+                    return;
+                }
+                else {
+                    var reader = new FileReader();
+                    reader.onload = function () {
+                        circle_user_photo_box.style.backgroundImage = "url(" + reader.result + ")"
+                        result = reader.result;
+                    }
+                    reader.readAsDataURL(photo);
+
+                }
+            }
+
+        })
+    </script>
+    <!-- 异步跨页面表单存储 -->
+    <script>
+        // 获取读入框
+        var user = document.getElementById("user1")
+        var pass = document.getElementById("pass1")
+        var ensure_pass = document.getElementById("pass2")
+        function input_all_save() {
+            var input_all = {
+                user: user.value,
+                pass: pass.value,
+                ensure_pass: ensure_pass.value,
+                photo: circle_user_photo_box.style.backgroundImage
+            }
+            if (input_all) {
+                var input_all_string = JSON.stringify(input_all);
+                localStorage.setItem("save_input_all_string", input_all_string);
+            }
+
+        }
+        user.addEventListener("change", input_all_save);
+        pass.addEventListener("change", input_all_save);
+        ensure_pass.addEventListener("change", input_all_save);
+        turn_photo.addEventListener("click", input_all_save);
+    </script>
+    <!-- 在返回时读入localstorage数据 -->
+    <script>
+        window.addEventListener("load", function () {
+
+            var input_all1 = localStorage.getItem("save_input_all_string");
+            if (input_all1) {
+                var localStorage_read = JSON.parse(input_all1);
+                user.value = localStorage_read.user || "";
+                pass.value = localStorage_read.pass || "";
+                ensure_pass.value = localStorage_read.ensure_pass || "";
+                if (localStorage_read.photo) {
+                    circle_user_photo_box.style.backgroundImage = localStorage_read.photo
+                }
+            }
+        })
+    </script>
+    <!-- 确认密码与密码 -->
+    <script>
+        var boonm = document.getElementsByClassName("boonm")[0];
+        boonm.style.top = "-60vh";
+        var turn_photo = document.getElementById("turn_photo");
+
+        turn_photo.addEventListener("click", function (e) {
+            if (pass.value === ensure_pass.value) {
+                pass;
+            }
+            else {
+                e.preventDefault();
+                // 弹窗提示
+                boonm.style.top = "60vh";
+            }
+        })
+        // 取消弹窗
+        var button = document.getElementsByClassName("boonm_button")[0];
+        button.addEventListener("click", function () {
+            boonm.style.top = "-60vh";
+        })
+    </script>
+    <!-- 提示栏不为空 -->
+    <script>
+        var boonm2 = document.getElementsByClassName("boonm2")[0];
+        boonm2.style.top = "-60vh";
+        turn_photo.addEventListener("click", function (e) {
+            if ((user.value) && (pass.value) && (ensure_pass.value) && (reader.result)) {
+                pass;
+            }
+            else {
+                e.preventDefault();
+                // 弹窗提示
+                boonm2.style.top = "60vh";
+            }
+        })
+        // 取消弹窗
+        var button2 = document.getElementsByClassName("boonm_button")[1];
+        button2.addEventListener("click", function () {
+            boonm2.style.top = "-60vh";
+        }
+        )
+    </script>
+    <!-- 内存弹窗基础 -->
+    <script>
+        var boonm3 = document.getElementsByClassName("boonm3")[0];
+        boonm3.style.top = "-60vh";
+        var button3 = document.getElementsByClassName("boonm_button")[2];
+        button3.addEventListener("click", function () {
+            boonm2.style.top = "-60vh";
+        }
+        )
+    </script>
+
+</body>
+
+</html>

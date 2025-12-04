@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    body {
+        margin: 0;
+        display: flex;
+        max-width: 100vw;
+        height: 100vh;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/background.jpg);
+        background-size: cover;
+        background-repeat: no-repeat;
+    }
+
+    .top_box {
+        position: fixed;
+        height: 10.46vh;
+        width: 100vw;
+        /* background-color: blueviolet; */
+        top: 4.12vh;
+    }
+
+    .bottom_box {
+        height: 9.54vh;
+        width: 100vw;
+        /* background-color: brown; */
+        position: fixed;
+        bottom: 0px;
+    }
+
+    .search_bottom {
+        width: 6vw;
+        height: 3.8vh;
+        /* background-color:black; */
+        position: absolute;
+        top: 3.3vh;
+        left: 20vw;
+        /* z-index:6; */
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/search_buttom.png);
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    input::placeholder {
+        text-align: center;
+    }
+
+    .search_input {
+        position: absolute;
+        border: 0px solid black;
+        border-radius: 10000px;
+        width: 32vw;
+        height: 4.3vh;
+        left: 18vw;
+        top: 2.4vh;
+        text-align: left;
+        padding-right: 6vw;
+    }
+
+    .put_essay {
+        background-color: #FFD343;
+        width: 30.9vw;
+        height: 4.9vh;
+        position: absolute;
+        top: 2.1vh;
+        right: 2vw;
+        border: 0px solid black;
+        border-radius: 1000vh;
+    }
+
+    .put_essay_word {
+        position: absolute;
+        right: -0.2vw;
+        top: -1.1vh;
+    }
+
+    .put_essay_photo {
+        width: 6.9vw;
+        height: 6.9vw;
+        /* background-color: aquamarine; */
+        position: absolute;
+        top: 0.8vh;
+        left: 1.5vw;
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/put_out.png);
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    .forum_word {
+        font-size: 6vw;
+    }
+
+    .forum_word_box {
+        top: 2.5vh;
+        position: absolute;
+        left: 4vw
+    }
+
+    .little_bell {
+        width: 6.4vw;
+        height: 6.4vw;
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/little_bell.png);
+        background-repeat: no-repeat;
+        background-size: contain;
+        position: absolute;
+        right: 5vw;
+        top: 3vw;
+    }
+
+    .home_box {
+        height: 7.2vh;
+        width: 8.6vw;
+        /* background-color: aquamarine; */
+        position: absolute;
+        left: 3vw;
+        top: 1vh;
+    }
+
+    .home_photo {
+        width: 5.6vw;
+        height: 5.6vw;
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/home.png);
+        background-repeat: no-repeat;
+        background-size: contain;
+        position: absolute;
+        left: 1.8vw;
+    }
+
+    .home_word {
+        position: absolute;
+        top: 3vh;
+    }
+
+    .commity {
+        height: 7.2vh;
+        width: 8.6vw;
+        position: absolute;
+        left: 45.7vw;
+        top: 1vh;
+    }
+
+    .commity_photo {
+        width: 5.6vw;
+        height: 5.6vw;
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/commity.png);
+        background-repeat: no-repeat;
+        background-size: contain;
+        position: absolute;
+        left: 1.8vw;
+    }
+
+    .my_photo {
+        width: 5.6vw;
+        height: 5.6vw;
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/my.png);
+        background-repeat: no-repeat;
+        background-size: contain;
+        position: absolute;
+        left: 1.8vw;
+    }
+
+    .my {
+        height: 7.2vh;
+        width: 8.6vw;
+        /* background-color: aquamarine; */
+        position: absolute;
+        right: 3vw;
+        top: 1vh;
+    }
+
+    .middle {
+        position: absolute;
+        top: 12.8vh;
+        height: 77.1vh;
+        width: 85.8vw;
+        /* background-color: aquamarine; */
+        overflow: auto;
+    }
+
+    .model1 {
+        margin-top: 2vh;
+        width: 85.8vw;
+        /* background-color: bisque; */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+    }
+
+    .top_squre {
+        width: 25.6vw;
+        height: 5.29vh;
+        /* background-color: blue; */
+        display: flex;
+    }
+
+    .user_photo {
+        width: 5.29vh;
+        height: 5.29vh;
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/user_photo.png);
+        background-repeat: no-repeat;
+        background-size: contain;
+    }
+
+    .user_name {
+        height: 2.645vh;
+        width: 14vw;
+        /* background-color: brown; */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .post_time {
+        height: 2.645vh;
+        width: 14vw;
+        /* background-color: black; */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+    }
+
+    .must_word {
+        display: flex;
+        justify-items: flex-start;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .word_user {
+        font-size: 1.8vh;
+        display: block;
+    }
+
+    .word_time {
+        font-size: 1.4vh;
+        display: block;
+    }
+
+    .input_photo_all_4 {
+        height: 31.6vh;
+        width: 70.4vw;
+        /* background-color: black; */
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .input_photo_all_2 {
+        height: 15.8vh;
+        width: 70.4vw;
+        /* background-color: black; */
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .block {
+        display: block;
+        margin: 1vh;
+    }
+
+    .photo1 {
+        width: 14.2vh;
+        height: 14.2vh;
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/UI.jpg);
+        background-repeat: no-repeat;
+        background-size: cover;
+        margin-top: 0vh;
+        margin-bottom: 0vh;
+        margin-left: 0.5vh;
+        margin-right: 0.5vh;
+    }
+
+    .photo2 {
+        width: 9.4667vh;
+        height: 9.4667vh;
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/UI.jpg);
+        background-repeat: no-repeat;
+        background-size: cover;
+        margin-top: 0vh;
+        margin-bottom: 0vh;
+        margin-left: 0.3333vh;
+        margin-right: 0.3333vh;
+    }
+
+    .input_photo_all_6 {
+        height: 21.0667vh;
+        width: 70.4vw;
+        /* background-color: black; */
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .all_box {
+        width: 70.6vw;
+        height: 2.5vh;
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+    }
+
+    .put_in {
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/put_in_m.png);
+        background-size: contain;
+        background-repeat: no-repeat;
+        height: 2.3vh;
+        width: 2.3vh;
+        margin-left: 9vw;
+    }
+
+    .good {
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/good.png);
+        background-size: contain;
+        background-repeat: no-repeat;
+        height: 2.3vh;
+        width: 2.3vh;
+    }
+
+    .liet {
+        background-image: url(http://182.92.78.163:8080/front/res/forum_index/tiet.png);
+        background-size: contain;
+        background-repeat: no-repeat;
+        height: 2.3vh;
+        width: 2.3vh;
+        margin-left: 9vw;
+    }
+</style>
+
+
+
+
+
+
+
+<body>
+    <!-- 头部 -->
+    <div class="little_bell">
+    </div>
+    <div class="top_box">
+        <div class="forum_word_box">
+            <strong class="forum_word">社区</strong>
+        </div>
+        <div class="search_bottom">
+        </div>
+        <div class="search_input_box">
+            <input class="search_input" type="text" placeholder="搜索">
+        </div>
+        <div class="put_essay">
+            <div class="put_essay_word">
+                <p>我要发贴！</p>
+            </div>
+            <div class="put_essay_photo">
+            </div>
+        </div>
+    </div>
+    <!-- 尾部 -->
+    <div class="bottom_box">
+        <div class="home_box">
+            <div class="home_photo"></div>
+            <div class="home_word">
+                <strong>主页</strong>
+            </div>
+        </div>
+        <div class="commity">
+            <div class="commity_photo"></div>
+            <div class="home_word">
+                <strong>社区</strong>
+            </div>
+        </div>
+        <div class="my">
+            <div class="my_photo"></div>
+            <div class="home_word">
+                <strong>我的</strong>
+            </div>
+        </div>
+    </div>
+    <!-- 滚贴部分 -->
+    <div class="middle">
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- 设置搜索图标消失 -->
+    <!-- 设置点击搜索图标效果 -->
+    <script>
+        var search_input = document.getElementsByClassName("search_input")[0];
+        var search_bottom = document.getElementsByClassName("search_bottom")[0];
+        search_bottom.style.zIndex = 6;
+
+        // search_bottom.addEventListener("click", () => {
+        //     search_input.focus();
+        // })
+        // search_input.addEventListener("focus", () => {
+        //     search_bottom.style.zIndex = 0;
+        // })
+        // search_input.addEventListener("blur", () => {
+        //     search_bottom.style.zIndex = 6;
+        //     search_input.value=" "
+        // })
+    </script>
+    <!-- 设置中心布局模板 -->
+    <!-- 头顶部分纯文字布局 -->
+    <script>
+        function create_model1(a, b, c) {
+            // 创建元素
+            var model1 = document.createElement("div");
+            var top_squre = document.createElement("div");
+            var user_photo = document.createElement("div");
+            var must_word = document.createElement("div");
+            var user_name = document.createElement("div");
+            var word_user = document.createElement("strong");
+            var post_time = document.createElement("div");
+            var word_time = document.createElement("p");
+            var block = document.createElement("div");
+            // 添加class
+            model1.classList.add("model1");
+            top_squre.classList.add("top_squre");
+            user_photo.classList.add("user_photo");
+            must_word.classList.add("must_word");
+            user_name.classList.add("user_name");
+            word_user.classList.add("word_user");
+            post_time.classList.add("post_time");
+            word_time.classList.add("word_time");
+            block.classList.add("block");
+            // 元素相互添加层级关系
+            model1.appendChild(top_squre);
+            top_squre.appendChild(user_photo);
+            top_squre.appendChild(must_word);
+            must_word.appendChild(user_name);
+            user_name.appendChild(word_user);
+            must_word.appendChild(post_time);
+            post_time.appendChild(word_time);
+            model1.appendChild(block);
+            // 创建文本并添加
+            var word_user_text = document.createTextNode(a);
+            var word_time_text = document.createTextNode(b);
+            var block_text = document.createTextNode(c);
+            word_user.appendChild(word_user_text);
+            word_time.appendChild(word_time_text);
+            block.appendChild(block_text);
+            return model1;
+        }
+    </script>
+    <!-- 单双图片布局 -->
+    <script>
+        function create_photo1_2(photo_num) {
+            var input_photo_all_2 = document.createElement("div");
+            input_photo_all_2.classList.add("input_photo_all_2");
+            for (let i = 0; i < photo_num; i += 1) {
+                var photo2 = document.createElement("div")
+                photo2.classList.add("photo1")
+                input_photo_all_2.appendChild(photo2);
+            }
+            return input_photo_all_2;
+        }
+    </script>
+    <!-- 3或4元素布局 -->
+    <script>
+        function create_photo3_4(photo_num) {
+            var input_photo_all_4 = document.createElement("div");
+            input_photo_all_4.classList.add("input_photo_all_4")
+            for (let i = 0; i < photo_num; i += 1) {
+                var photo1 = document.createElement("div")
+                photo1.classList.add("photo1");
+                input_photo_all_4.appendChild(photo1);
+            }
+            return input_photo_all_4;
+        }
+    </script>
+    <!-- 5或6元素布局 -->
+    <script>
+        function create_photo5_6(photo_num) {
+            var input_photo_all_6 = document.createElement("div");
+            input_photo_all_6.classList.add("input_photo_all_6")
+            for (let i = 0; i < photo_num; i += 1) {
+                var photo3 = document.createElement("div")
+                photo3.classList.add("photo2");
+                input_photo_all_6.appendChild(photo3);
+            }
+            return input_photo_all_6;
+        }
+    </script>
+    <!-- 7到9元素布局 -->
+    <script>
+        function create_photo7_9(photo_num) {
+            var input_photo_all_4 = document.createElement("div");
+            input_photo_all_4.classList.add("input_photo_all_4")
+            for (let i = 0; i < photo_num; i += 1) {
+                var photo4 = document.createElement("div")
+                photo4.classList.add("photo2");
+                input_photo_all_4.appendChild(photo4);
+            }
+            return input_photo_all_4;
+        }
+    </script>
+    <!-- 点赞评论 -->
+    <script>
+        function must_good() {
+            var all_box = document.createElement("div");
+            var good = document.createElement("div");
+            var put_in = document.createElement("div");
+            var liet = document.createElement("div");
+            put_in.classList.add("put_in");
+            all_box.classList.add("all_box");
+            good.classList.add("good");
+            liet.classList.add("liet");
+            all_box.appendChild(good);
+            all_box.appendChild(liet);
+            all_box.appendChild(put_in);
+            return all_box;
+        }
+    </script>
+    <!-- 时间处理函数 -->
+    <script>
+        function cc_time(post_time) {
+            var post_time1 = new Date(post_time);
+            var now_time = new Date(Date.now())
+            if (now_time.getYear() - post_time1.getYear() == 0) {
+                if (now_time.getMonth() - post_time1.getMonth() == 0) {
+                    if (now_time.getDate() - post_time1.getDate() == 0) {
+                        if (now_time.getHours() - post_time1.getHours() == 0) {
+                            if (now_time.getMinutes() - post_time1.getMinutes() == 0) {
+                                return "刚刚"
+                            }
+                            else {
+                                return now_time.getMinutes() - post_time1.getMinutes() + "分钟前"
+                            }
+                        }
+                        else {
+                            return now_time.getHours() - post_time1.getHours() + "小时前"
+                        }
+                    }
+                    else {
+                        return now_time.getDate() - post_time1.getDate() + "天前"
+                    }
+                }
+                else {
+                    return now_time.getMonth() - post_time1.getMonth() + "个月前"
+                }
+            }
+            else {
+                return now_time.getYear() - post_time1.getYear() + "年前"
+            }
+        }
+    </script>
+    <!-- 预设帖子id -->
+    <script>
+        var forum_id_this_live = new Map;
+    </script>
+    <!-- 预设点赞所属对象名 -->
+    <!-- id对应mustgood模块 -->
+    <script>
+        var post_id = {
+
+        }
+    </script>
+    <!-- 预设id记录数组 -->
+    <script>
+        var id_array = [];
+    </script>
+    <!-- 截流函数，避免滚动事件过渡触发 -->
+    <!-- 以will_load为加载检测标志 -->
+    <!-- <script>
+        var will_load = 0;
+        var stop1 = 0;
+        function jieliu(func, delay) {
+            let timer = 0;
+            return function () {
+                if ((!timer) && (will_load === 0) && (stop1 === 0)) {
+                    timer = setTimeout(() => {
+                        timer = null
+                        func()
+                    }, 500)
+                }
+            }
+        }
+        function will_load_turn() {
+            will_load = 1
+        }
+    </script> -->
+    <!-- 检测willload函数 -->
+    <!-- <script>
+        setInterval(() => {
+            if (will_load === 1) {
+                will_load = 0;
+                stop1 = 1;
+                for (let i = 0; i < 5; i += 1) {
+                    get(i).then(dom => {
+                        if (dom) {
+                            middle.appendChild(dom);
+                        }
+                    })
+
+                }
+
+            }
+        }, 1)
+    </script> -->
+
+
+
+
+
+
+
+
+
+
+
+    <!-- 运行部分，添加元素 -->
+    <script>
+        var middle = document.getElementsByClassName("middle")[0];
+        // 添加页面加载get事件
+        window.addEventListener("load",async function () {
+                for (let i = 0; i < 13; i += 1) {
+                    get(i).then(dom => {
+                        if (dom) {
+                            middle.appendChild(dom);
+                        }
+                    })
+                    await new Promise(resolve=>setTimeout(resolve,100));
+                }
+        })
+    </script>
+    <!-- 获取帖子信息 -->
+    <script>
+        function get(i) {
+            return fetch("http://182.92.78.163:8080/api/forum/"+(Number(post_count)-i))
+                .then(response => response.json())
+                .then(data => {
+                    // console.log(data);
+                    console.log(data);
+                    // console.log(data[i].content);
+                    if (data) {
+                        if (id_array[0] != undefined) {
+                            let h = id_array[0];
+                            post_id[data.username + data.release_time + data.content] = id_array[0] + 1;
+                            id_array.unshift(id_array[0] + 1);
+                            forum_id_this_live.set(h + 1, data.like);
+                        }
+                        else {
+                            post_id[data.username + data.release_time + data.content] = 0;
+                            id_array.unshift(0);
+                            forum_id_this_live.set(0, data.like);
+                        }
+                        console.log("id_array:");
+                        console.log(id_array);
+                        console.log("post_id:");
+                        console.log(post_id);
+                        console.log("forum_id_this_live");
+                        console.log(forum_id_this_live);
+
+
+                    }
+                    return create_model1(data.username, cc_time(data.release_time), data.content)
+                })
+                .catch(error => {
+                    alert("未读取");
+                    console.log("error:" + error);
+                })
+        }
+    </script>
+    <!-- 获取当前后端总帖子数 -->
+    <script>
+        console.log(1);
+        var post_count;
+        fetch("http://182.92.78.163:8080/api/statistic/get")
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                post_count=data.post_count;
+            })
+    </script>
+    <!-- 添加底部click反应 -->
+    <script>
+        var home_box = document.getElementsByClassName("home_box")[0];
+        home_box.addEventListener("click", () => {
+            window.location.href = " ";
+        })
+        var commity = document.getElementsByClassName("commity")[0];
+        commity.addEventListener("click", () => {
+            window.location.href = "http://182.92.78.163:8080/front/forum_index"
+        })
+        var my = document.getElementsByClassName("my")[0];
+        my.addEventListener("click", () => {
+            window.location.href = " ";
+        })
+    </script>
+
+    <!-- 搜索功能 -->
+    <script>
+        // 获取搜索输入结果
+        var search_input = document.getElementsByClassName("search_input")[0];
+        var search_input_value = search_input.value;
+        fetch("http://", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(search_input_value)
+        }
+        )
+            .then(respons => response.json())
+            .then()
+    </script>
+
+
+</body>
+
+</html>
