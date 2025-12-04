@@ -42,6 +42,12 @@ public class GlobalExceptionHandler {
         } else if (ex instanceof org.springframework.web.HttpMediaTypeNotSupportedException){
             logger.warn("Media type not supported: {}", request.getDescription(false));
             return ResponseEntity.status(400).body("Unsupported media type");
+        } else if (ex instanceof jakarta.validation.ConstraintViolationException){
+            logger.warn("Constraint violation: {}", request.getDescription(false));
+            return ResponseEntity.badRequest().body("Invalid input");
+        } else if (ex instanceof org.springframework.web.method.annotation.MethodArgumentTypeMismatchException){
+            logger.warn("Method argument type mismatch: {}", request.getDescription(false));
+            return ResponseEntity.badRequest().body("Method argument type mismatch");
         }
         
         // 记录异常详细信息

@@ -1,11 +1,16 @@
 package org.example.RepositoryDemo.controller;
 
+import jakarta.validation.constraints.Max;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.example.RepositoryDemo.Repository.ForumRepository;
+import org.example.RepositoryDemo.dto.ForumPictureRequest;
 import org.example.RepositoryDemo.service.ForumService;
 import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.dto.ForumRequest;
-import org.example.RepositoryDemo.entity.Comment;
 import org.example.RepositoryDemo.entity.Forum;
 import org.example.RepositoryDemo.entity.User;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
@@ -14,8 +19,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/forum")
@@ -27,6 +41,10 @@ public class ForumController {
 
     @Autowired
     private UserRepository userRepository;
+
+    private static final Logger logger = LogManager.getLogger(ForumController.class);
+    @Autowired
+    private ForumRepository forumRepository;
 
     // 创建论坛帖子
     @PostMapping("/create")
@@ -346,6 +364,178 @@ public class ForumController {
             return ResponseEntity.ok(favoritedForums);
         } catch (SQLException e) {
             return ResponseEntity.badRequest().body("获取收藏帖子失败: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("{forum_id}/picture")
+    public ResponseEntity<?> addPicture(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forum_id, Authentication authentication, @Valid @RequestBody ForumPictureRequest forumPictureRequest){
+        try{
+            if (authentication == null || !authentication.isAuthenticated() ||
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            Forum forum = forumService.getForumById(forum_id);
+            if (forum == null || forum.getId() == null) {
+                return ResponseEntity.status(404).body("帖子不存在");
+            }
+            String username = authentication.getName();
+            if (!forum.username.equals(username) && !authentication.getAuthorities().contains("ADMIN")) {
+                return ResponseEntity.status(403).body("权限不足（非帖子发表者）");
+            }
+            
+            List<String> pictures = new ArrayList<>();
+            pictures.add(forumPictureRequest.getPicture1());
+            if (forumPictureRequest.getPicture2() != null) {
+                pictures.add(forumPictureRequest.getPicture2());
+            }
+            if (forumPictureRequest.getPicture3() != null) {
+                pictures.add(forumPictureRequest.getPicture3());
+            }
+            if (forumPictureRequest.getPicture4() != null) {
+                pictures.add(forumPictureRequest.getPicture4());
+            }
+            if (forumPictureRequest.getPicture5() != null) {
+                pictures.add(forumPictureRequest.getPicture5());
+            }
+            if (forumPictureRequest.getPicture6() != null) {
+                pictures.add(forumPictureRequest.getPicture6());
+            }
+            if (forumPictureRequest.getPicture7() != null) {
+                pictures.add(forumPictureRequest.getPicture7());
+            }
+            if (forumPictureRequest.getPicture8() != null) {
+                pictures.add(forumPictureRequest.getPicture8());
+            }
+            if (forumPictureRequest.getPicture9() != null) {
+                pictures.add(forumPictureRequest.getPicture9());
+            }
+            
+            String picturePaths = savePicture(pictures);
+            if (picturePaths == null) {
+                return ResponseEntity.badRequest().body("图片保存失败");
+            }
+            
+            ForumRepository.addPictureToForum(forum_id, picturePaths);
+            logger.info("帖子{}成功保存{}张图片", forum_id, pictures.size());
+            return ResponseEntity.ok("图片添加成功");
+        } catch (SQLException e) {
+            logger.error("添加图片失败: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("添加图片失败: " + e.getMessage());
+        }
+    }
+    private String savePicture(List<String> base64Data){
+        StringBuilder result = new StringBuilder();
+        String uploadDir = "./external/static/forum_pic/";
+        File dir = new File(uploadDir);
+        if (!dir.exists()) {
+            if (!dir.mkdirs()) {
+                logger.fatal("uploadPicture(): 创建图片存储目录失败");
+                return null;
+            }
+        }
+        for (String data:base64Data){
+            try{
+                String fileExtension = ".png";
+                String base64Content = data;
+                if (data.startsWith("data:")){
+                    String[] parts = data.split(",");
+                    if (parts.length != 2) {
+                        logger.error("无效的DataURL格式，跳过");
+                        continue;
+                    }
+                    String mimeTypePart = parts[0];
+                    base64Content = parts[1];
+                    if (mimeTypePart.contains("jpeg")) {
+                        fileExtension = ".jpg";
+                    } else if (mimeTypePart.contains("png")) {
+                        fileExtension = ".png";
+                    } else{
+                        logger.warn("不支持的图片格式: {}", mimeTypePart);
+                        continue;
+                    }
+                }
+                byte[] decodedBytes = Base64.getDecoder().decode(base64Content);
+                if (decodedBytes.length > 10 * 1024 * 1024) {
+                    logger.warn("图片大小超过10MB，跳过");
+                    continue;
+                }
+                String filename = UUID.randomUUID().toString() + fileExtension;
+                Path path = Paths.get(uploadDir);
+                Path filePath = path.resolve(filename).normalize();
+                Path allowedDir = path.toAbsolutePath().normalize();
+                if (!filePath.toAbsolutePath().normalize().startsWith(allowedDir)) {
+                    logger.error("savePicture(): 非法文件路径访问尝试");
+                    return null;
+                }
+                Files.write(filePath, decodedBytes);
+                result.append(filename).append(",");
+            } catch(IllegalArgumentException e){
+                logger.warn("无效的Base64数据。报错：{}", e.getMessage());
+            } catch (IOException e) {
+                logger.warn("保存图片失败：{}", e.getMessage());
+            } catch (Exception e) {
+                logger.warn("保存图片时发生错误：{}", e.getMessage());
+            }
+        }
+        return result.toString();
+    }
+
+    @DeleteMapping("{forum_id}/picture")
+    public ResponseEntity<?> deletePicture(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forum_id, Authentication authentication){
+        try{
+            if (authentication == null || !authentication.isAuthenticated() ||
+                "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            
+            Forum forum = forumService.getForumById(forum_id);
+            if (forum == null || forum.getId() == null) {
+                return ResponseEntity.status(404).body("帖子不存在");
+            }
+            
+            String username = authentication.getName();
+            if (!forum.username.equals(username) && !authentication.getAuthorities().contains("ADMIN")) {
+                return ResponseEntity.status(403).body("权限不足（非帖子发表者）");
+            }
+            
+            if (!ForumRepository.removePictureFromForum(forum_id)){
+                return ResponseEntity.status(404).body("帖子没有关联的图片");
+            }
+            return ResponseEntity.ok("图片删除成功");
+        } catch (SQLException e) {
+            logger.error("删除图片失败: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("删除图片失败: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{forum_id}/picture/{id}")
+    public ResponseEntity<?> getPicture(@Min(value = 1, message = "帖子ID必须大于0") @PathVariable int forum_id, @Min(value = 1, message = "图片ID必须大于0") @Max(value = 9, message = "图片ID必须小于10") @PathVariable int id){
+        try{
+            List<String> picturePaths = ForumRepository.getPicturePathsFromForum(forum_id);
+            if (picturePaths == null || picturePaths.isEmpty() || picturePaths.size() < id) {
+                return ResponseEntity.status(404).body("图片不存在");
+            }
+            String picturePath = picturePaths.get(id - 1);
+            if (picturePath == null || picturePath.isEmpty()) {
+                return ResponseEntity.status(404).body("图片不存在");
+            }
+            Path imagePath = Paths.get("./external/static/forum_pic/").resolve(picturePath).normalize();
+            Path allowedDir = Paths.get("./external/static/forum_pic/").toAbsolutePath().normalize();
+            if (!imagePath.toAbsolutePath().normalize().startsWith(allowedDir)) {
+                return ResponseEntity.status(403).body("非法文件访问尝试");
+            }
+            if (!Files.exists(imagePath)) {
+                return ResponseEntity.status(404).body("图片文件不存在");
+            }
+            byte[] imageBytes = Files.readAllBytes(imagePath);
+            MediaType mediaType = MediaType.IMAGE_PNG;
+            if (picturePath.endsWith(".jpg") || picturePath.endsWith(".jpeg")) {
+                mediaType = MediaType.IMAGE_JPEG;
+            }
+            return ResponseEntity.ok().contentType(mediaType).body(imageBytes);
+        } catch (SQLException | IOException e) {
+            logger.error("获取图片失败: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("获取图片失败: " + e.getMessage());
         }
     }
 }

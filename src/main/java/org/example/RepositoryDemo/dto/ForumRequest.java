@@ -7,7 +7,7 @@ import lombok.Setter;
 
 public class ForumRequest {
     
-    @NotBlank(message = "标题不能为空")
+//    @NotBlank(message = "标题不能为空")
     @Size(max = 100, message = "标题长度不能超过100个字符")
     @Getter
     @Setter

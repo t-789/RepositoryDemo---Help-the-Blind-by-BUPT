@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Repository
@@ -91,6 +92,20 @@ public class ForumRepository {
             logger.info("评论表创建成功！");
         } catch (SQLException e) {
             logger.error("创建评论表失败！");
+        }
+    }
+    public static void createPictureTable(){
+        String sql = "CREATE TABLE IF NOT EXISTS forum_picture (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "forum_id INTEGER NOT NULL, " +
+                "picture_count INTEGER NOT NULL," +
+                "picture_paths TEXT NOT NULL, " +
+                "FOREIGN KEY (forum_id) REFERENCES forum(id))";
+        try(Statement stmt = connection.createStatement()) {
+            stmt.execute(sql);
+            logger.info("图片表创建成功！");
+        } catch (SQLException e) {
+            logger.error("创建图片表失败！");
         }
     }
 
@@ -475,6 +490,68 @@ public class ForumRepository {
             }
         }
         return comments;
+    }
+
+    public static boolean addPictureToForum(int forumId, String picturePaths) throws SQLException {
+        if (picturePaths == null || picturePaths.split(",").length == 0) {
+            throw new SQLException("图片路径不能为空");
+        }
+        String sql = "INSERT INTO forum_picture (forum_id, picture_count, picture_paths) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, forumId);
+            stmt.setInt(2, picturePaths.split(",").length);
+            stmt.setString(3, picturePaths);
+            if (stmt.executeUpdate() > 0) {
+                logger.info("帖子{}成功添加{}张图片", forumId, picturePaths.split(",").length);
+                return true;
+            }
+        } catch (SQLException e) {
+            logger.error("帖子{}添加图片失败: {}", forumId, e.getMessage());
+        }
+        return false;
+    }
+
+    public static boolean removePictureFromForum(int forumId) throws SQLException {
+        String sql = "DELETE FROM forum_picture WHERE forum_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, forumId);
+            if (stmt.executeUpdate() > 0) {
+                logger.info("帖子{}成功删除图片", forumId);
+                return true;
+            }
+        } catch (SQLException e) {
+            logger.error("帖子{}删除图片失败: {}", forumId, e.getMessage());
+        }
+        return false;
+    }
+    public static boolean updatePicturePathsInForum(int forumId, String picturePaths) throws SQLException {
+        String sql = "UPDATE forum_picture SET picture_paths = ? WHERE forum_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, picturePaths);
+            stmt.setInt(2, forumId);
+            if (stmt.executeUpdate() > 0) {
+                logger.info("帖子{}成功更新图片", forumId);
+                return true;
+            }
+        } catch (SQLException e) {
+            logger.error("帖子{}更新图片失败: {}", forumId, e.getMessage());
+        }
+        return false;
+    }
+    public static List<String> getPicturePathsFromForum(int forumId) throws SQLException {
+        String sql = "SELECT picture_paths FROM forum_picture WHERE forum_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, forumId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String paths = rs.getString("picture_paths");
+                logger.debug("getPicturePathsFromForum(): 帖子{}有{}张图片", forumId, paths.split(",").length);
+                return Arrays.asList(paths.split(","));
+            }
+        } catch (SQLException e) {
+            logger.error("getPicturePathsFromForum(): 获取帖子{}图片路径失败: {}", forumId, e.getMessage());
+        }
+        return null;
     }
 
 }

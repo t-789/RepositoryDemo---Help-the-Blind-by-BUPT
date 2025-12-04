@@ -224,7 +224,7 @@ public class UserController {
                 } else if (mimeTypePart.contains("image/png")) {
                     fileExtension = ".png";
                 } else {
-                    logger.error("不支持的图片格式: {}", mimeTypePart);
+                    logger.warn("不支持的图片格式: {}", mimeTypePart);
                     return null;
                 }
             }
