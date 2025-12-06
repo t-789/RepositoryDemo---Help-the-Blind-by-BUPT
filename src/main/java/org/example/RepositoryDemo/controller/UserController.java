@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
 import org.example.RepositoryDemo.entity.UserProfileResponse;
-import org.example.RepositoryDemo.dto.registerWithSecurityRequest;
+import org.example.RepositoryDemo.dto.RegisterWithSecurityRequest;
 import org.example.RepositoryDemo.dto.RegisterWithSecurityJsonRequest;
 import org.example.RepositoryDemo.entity.Forum;
 import org.example.RepositoryDemo.entity.Point;
@@ -83,7 +83,7 @@ public class UserController {
 
     // 用户注册 - 带头像上传和密保问题设置 (表单版本)
     @PostMapping(value = "/register-with-security", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> registerWithSecurity(@Valid @ModelAttribute registerWithSecurityRequest request) {
+    public ResponseEntity<?> registerWithSecurity(@Valid @ModelAttribute RegisterWithSecurityRequest request) {
         try {
             return processRegistration(request.getUsername(), request.getPassword(), request.getAvatar(),
                     request.getQuestion1(), request.getAnswer1(), request.getQuestion2(), request.getAnswer2());

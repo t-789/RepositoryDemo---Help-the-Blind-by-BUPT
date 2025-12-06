@@ -24,7 +24,7 @@ public class ForumRepository {
 
     @Autowired
     private UserRepository userRepository;
-
+    // TODO: 为论坛添加分类，普通的论坛帖子，标记一处位置的帖子。
     public static void createForumTable() throws SQLException {
         String sql = "CREATE TABLE IF NOT EXISTS forum (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -552,6 +552,23 @@ public class ForumRepository {
             logger.error("getPicturePathsFromForum(): 获取帖子{}图片路径失败: {}", forumId, e.getMessage());
         }
         return null;
+    }
+    public static List<Integer> getForumsBySubstring(String substring) throws SQLException {
+        String sql = "SELECT id FROM forum WHERE content LIKE ?";
+        List<Integer> forumIds = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, "%" + substring + "%");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                forumIds.add(rs.getInt("id"));
+            }
+            logger.info("getForumsBySubstring(): 找到{}个帖子", forumIds.size());
+            if (forumIds.isEmpty()){
+                return null;
+            } else {
+                return forumIds;
+            }
+        }
     }
 
 }

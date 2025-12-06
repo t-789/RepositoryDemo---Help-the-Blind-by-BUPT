@@ -2,6 +2,7 @@ package org.example.RepositoryDemo.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
@@ -76,12 +77,17 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         // 更新用户的请求计数
         int count = requestCounts.getOrDefault(userId, 0);
         
-        // 如果请求次数超过阈值（例如：1分钟内超过60次请求），则封禁用户1小时
+        // 如果请求次数超过阈值（例如：1分钟内超过600次请求），则封禁用户1小时
         if (count >= 600) {
             // 自动封禁用户1小时
             boolean banResult = userService.banUser(userId, "1h");
             if (banResult) {
                 logger.warn("IMPORTANT 用户 {} 因高频访问被自动封禁1小时", username);
+                HttpSession session = request.getSession(false);
+                if (session != null) {
+                    session.invalidate();
+                    logger.info("已登出被封禁用户");
+                }
                 response.setStatus(429); // Too Many Requests
                 response.getWriter().write("请求过于频繁，账户已被临时封禁");
                 response.getWriter().flush();

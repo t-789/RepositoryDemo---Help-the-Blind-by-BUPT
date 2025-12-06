@@ -4,16 +4,20 @@ package org.example.RepositoryDemo.service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
+import org.example.RepositoryDemo.controller.ForumController;
 import org.example.RepositoryDemo.entity.Comment;
 import org.example.RepositoryDemo.entity.Forum;
 import org.example.RepositoryDemo.Repository.ForumRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 @Service
 public class ForumService {
@@ -238,5 +242,61 @@ public class ForumService {
         }
         
         return forums;
+    }
+
+    public String savePicture(List<String> base64Data, String uploadDir){
+        StringBuilder result = new StringBuilder();
+        File dir = new File(uploadDir);
+        if (!dir.exists()) {
+            if (!dir.mkdirs()) {
+                logger.fatal("uploadPicture(): 创建图片存储目录失败");
+                return null;
+            }
+        }
+        for (String data:base64Data){
+            try{
+                String fileExtension = ".png";
+                String base64Content = data;
+                if (data.startsWith("data:")){
+                    String[] parts = data.split(",");
+                    if (parts.length != 2) {
+                        logger.error("无效的DataURL格式，跳过");
+                        continue;
+                    }
+                    String mimeTypePart = parts[0];
+                    base64Content = parts[1];
+                    if (mimeTypePart.contains("jpeg")) {
+                        fileExtension = ".jpg";
+                    } else if (mimeTypePart.contains("png")) {
+                        fileExtension = ".png";
+                    } else{
+                        logger.warn("不支持的图片格式: {}", mimeTypePart);
+                        continue;
+                    }
+                }
+                byte[] decodedBytes = Base64.getDecoder().decode(base64Content);
+                if (decodedBytes.length > 10 * 1024 * 1024) {
+                    logger.warn("图片大小超过10MB，跳过");
+                    continue;
+                }
+                String filename = UUID.randomUUID().toString() + fileExtension;
+                Path path = Paths.get(uploadDir);
+                Path filePath = path.resolve(filename).normalize();
+                Path allowedDir = path.toAbsolutePath().normalize();
+                if (!filePath.toAbsolutePath().normalize().startsWith(allowedDir)) {
+                    logger.error("savePicture(): 非法文件路径访问尝试");
+                    return null;
+                }
+                Files.write(filePath, decodedBytes);
+                result.append(filename).append(",");
+            } catch(IllegalArgumentException e){
+                logger.warn("无效的Base64数据。报错：{}", e.getMessage());
+            } catch (IOException e) {
+                logger.warn("保存图片失败：{}", e.getMessage());
+            } catch (Exception e) {
+                logger.warn("保存图片时发生错误：{}", e.getMessage());
+            }
+        }
+        return result.toString();
     }
 }
