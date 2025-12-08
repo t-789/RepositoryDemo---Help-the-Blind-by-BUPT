@@ -70,6 +70,8 @@
         }
         .explanation {
             margin: 20px 0;
+            font-size: 18px;
+            text-indent: 36px;
         }
         .step {
             background-color: #e8f4fc;
@@ -213,6 +215,8 @@
             // 更新按钮状态
             document.getElementById('prev-btn').disabled = currentStep === 1;
             document.getElementById('next-btn').disabled = currentStep === totalSteps;
+            document.getElementById('prev-btn').style.visibility = (currentStep === 1)? 'hidden' : 'visible';
+            document.getElementById('next-btn').style.visibility = (currentStep === totalSteps)? 'hidden' : 'visible';
             
             // 重新渲染MathJax
             if (typeof MathJax !== 'undefined') {

@@ -32,6 +32,9 @@
             border-bottom: 2px solid #3498db;
             padding-bottom: 5px;
         }
+        h3 {
+            text-indent: 0;
+        }
         .controls {
             display: flex;
             justify-content: center;
@@ -87,6 +90,8 @@
             padding: 15px;
             background-color: #e8f4fc;
             border-radius: 5px;
+            font-size: 18px;
+            text-indent: 36px;
         }
         .legend {
             display: flex;
@@ -147,7 +152,7 @@
         </div>
         <div class="control-group">
             <label for="x-range">x轴范围:</label>
-            <input type="range" id="x-range" min="1" max="15" value="5">
+            <input type="range" id="x-range" min="5" max="15" value="5">
             <span id="x-range-value" class="value-display">5</span>
         </div>
         <button id="animate-btn">播放动画</button>
