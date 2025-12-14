@@ -35,6 +35,26 @@
         h3 {
             text-indent: 0;
         }
+        .function-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .function-btn {
+            background-color: white;
+            color: #3498db;
+            border: 2px solid #3498db;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .function-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
         .controls {
             display: flex;
             justify-content: center;
@@ -142,7 +162,13 @@
 <body>
 <div class="container">
     <h1>泰勒展开与麦克劳林公式可视化</h1>
-    <h2>sin(x)函数的麦克劳林展开式逼近过程</h2>
+    <h2 id="function-title">sin(x)函数的麦克劳林展开式逼近过程</h2>
+
+    <div class="function-selector">
+        <div class="function-btn active" data-function="sin">y = sin(x)</div>
+        <div class="function-btn" data-function="cos">y = cos(x)</div>
+        <div class="function-btn" data-function="ln">y = ln(1+x)</div>
+    </div>
 
     <div class="controls">
         <div class="control-group">
@@ -162,29 +188,29 @@
     <div class="legend">
         <div class="legend-item">
             <div class="legend-color" style="background-color: #3498db;"></div>
-            <span>sin(x) 原函数</span>
+            <span id="original-function-name">sin(x) 原函数</span>
         </div>
         <div class="legend-item">
             <div class="legend-color" style="background-color: #e74c3c;"></div>
-            <span>麦克劳林展开式</span>
+            <span id="taylor-function-name">麦克劳林展开式</span>
         </div>
     </div>
 
     <canvas id="graph" width="800" height="500"></canvas>
 
     <div class="formula">
-        <p>麦克劳林展开式：</p>
+        <p id="formula-title">麦克劳林展开式：</p>
         <div id="maclaurin-formula">
             $$ \sin(x) = x $$
         </div>
     </div>
 
     <div class="explanation">
-        <h3>麦克劳林展开式说明</h3>
-        <p>麦克劳林展开是泰勒展开在x=0处的特殊情况。对于sin(x)函数，其麦克劳林展开式为：</p>
-        <p>$$ \sin(x) = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \frac{x^7}{7!} + \cdots $$</p>
-        <p>随着展开项数的增加，麦克劳林多项式会越来越接近原函数sin(x)。</p>
-        <p>在本可视化中，您可以通过滑块调整展开项数，观察多项式如何逐步逼近sin(x)函数。</p>
+        <h3 id="explanation-title">麦克劳林展开式说明</h3>
+        <p id="explanation-text-1">麦克劳林展开是泰勒展开在x=0处的特殊情况。对于sin(x)函数，其麦克劳林展开式为：</p>
+        <p id="explanation-formula">$$ \sin(x) = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \frac{x^7}{7!} + \cdots $$</p>
+        <p id="explanation-text-2">随着展开项数的增加，麦克劳林多项式会越来越接近原函数sin(x)。</p>
+        <p id="explanation-text-3">在本可视化中，您可以通过滑块调整展开项数，观察多项式如何逐步逼近sin(x)函数。</p>
     </div>
     
     <div class="nav-links">
@@ -208,35 +234,82 @@
     const animateBtn = document.getElementById('animate-btn');
     const resetBtn = document.getElementById('reset-btn');
     const formulaElement = document.getElementById('maclaurin-formula');
+    const functionButtons = document.querySelectorAll('.function-btn');
+    const functionTitle = document.getElementById('function-title');
+    const originalFunctionName = document.getElementById('original-function-name');
+    const taylorFunctionName = document.getElementById('taylor-function-name');
+    const formulaTitle = document.getElementById('formula-title');
+    const explanationTitle = document.getElementById('explanation-title');
+    const explanationText1 = document.getElementById('explanation-text-1');
+    const explanationFormula = document.getElementById('explanation-formula');
+    const explanationText2 = document.getElementById('explanation-text-2');
+    const explanationText3 = document.getElementById('explanation-text-3');
 
     // 初始参数
     let terms = parseInt(termsSlider.value);
     let xRange = parseInt(xRangeSlider.value);
     let isAnimating = false;
     let animationInterval;
+    let currentFunction = 'sin'; // 默认显示sin函数
 
     // 更新显示值
     termsValue.textContent = terms;
     xRangeValue.textContent = xRange;
 
-    // 麦克劳林展开式系数 (sin(x)的展开)
-    const maclaurinCoefficients = [
-        { coef: 1, power: 1, sign: '+' },   // x
-        { coef: -1/6, power: 3, sign: '-' }, // -x^3/3!
-        { coef: 1/120, power: 5, sign: '+' }, // x^5/5!
-        { coef: -1/5040, power: 7, sign: '-' }, // -x^7/7!
-        { coef: 1/362880, power: 9, sign: '+' }, // x^9/9!
-        { coef: -1/39916800, power: 11, sign: '-' }, // -x^11/11!
-        { coef: 1/6227020800, power: 13, sign: '+' }, // x^13/13!
-        { coef: -1/1307674368000, power: 15, sign: '-' }, // -x^15/15!
-        { coef: 1/355687428096000, power: 17, sign: '+' }, // x^17/17!
-        { coef: -1/121645100408832000, power: 19, sign: '-' }, // -x^19/19!
-        { coef: 1/51090942171709440000, power: 21, sign: '+' }, // x^21/21!
-        { coef: -1/25852016738884976640000, power: 23, sign: '-' }, // -x^23/23!
-        { coef: 1/15511210043330985984000000, power: 25, sign: '+' }, // x^25/25!
-        { coef: -1/10888869450418352160768000000, power: 27, sign: '-' }, // -x^27/27!
-        { coef: 1/8841761993739701954543616000000, power: 29, sign: '+' } // x^29/29!
-    ];
+    // 各函数的麦克劳林展开式系数
+    const functionCoefficients = {
+        sin: [
+            { coef: 1, power: 1, sign: '+' },   // x
+            { coef: -1/6, power: 3, sign: '-' }, // -x^3/3!
+            { coef: 1/120, power: 5, sign: '+' }, // x^5/5!
+            { coef: -1/5040, power: 7, sign: '-' }, // -x^7/7!
+            { coef: 1/362880, power: 9, sign: '+' }, // x^9/9!
+            { coef: -1/39916800, power: 11, sign: '-' }, // -x^11/11!
+            { coef: 1/6227020800, power: 13, sign: '+' }, // x^13/13!
+            { coef: -1/1307674368000, power: 15, sign: '-' }, // -x^15/15!
+            { coef: 1/355687428096000, power: 17, sign: '+' }, // x^17/17!
+            { coef: -1/121645100408832000, power: 19, sign: '-' }, // -x^19/19!
+            { coef: 1/51090942171709440000, power: 21, sign: '+' }, // x^21/21!
+            { coef: -1/25852016738884976640000, power: 23, sign: '-' }, // -x^23/23!
+            { coef: 1/15511210043330985984000000, power: 25, sign: '+' }, // x^25/25!
+            { coef: -1/10888869450418352160768000000, power: 27, sign: '-' }, // -x^27/27!
+            { coef: 1/8841761993739701954543616000000, power: 29, sign: '+' } // x^29/29!
+        ],
+        cos: [
+            { coef: 1, power: 0, sign: '+' },   // 1
+            { coef: -1/2, power: 2, sign: '-' }, // -x^2/2!
+            { coef: 1/24, power: 4, sign: '+' }, // x^4/4!
+            { coef: -1/720, power: 6, sign: '-' }, // -x^6/6!
+            { coef: 1/40320, power: 8, sign: '+' }, // x^8/8!
+            { coef: -1/3628800, power: 10, sign: '-' }, // -x^10/10!
+            { coef: 1/479001600, power: 12, sign: '+' }, // x^12/12!
+            { coef: -1/87178291200, power: 14, sign: '-' }, // -x^14/14!
+            { coef: 1/20922789888000, power: 16, sign: '+' }, // x^16/16!
+            { coef: -1/6402373705728000, power: 18, sign: '-' }, // -x^18/18!
+            { coef: 1/2432902008176640000, power: 20, sign: '+' }, // x^20/20!
+            { coef: -1/1124000727777607680000, power: 22, sign: '-' }, // -x^22/22!
+            { coef: 1/620448401730000000000000, power: 24, sign: '+' }, // x^24/24!
+            { coef: -1/403291461127000000000000000, power: 26, sign: '-' }, // -x^26/26!
+            { coef: 1/304888344612000000000000000000, power: 28, sign: '+' } // x^28/28!
+        ],
+        ln: [
+            { coef: 1, power: 1, sign: '+' },   // x
+            { coef: -1/2, power: 2, sign: '-' }, // -x^2/2
+            { coef: 1/3, power: 3, sign: '+' }, // x^3/3
+            { coef: -1/4, power: 4, sign: '-' }, // -x^4/4
+            { coef: 1/5, power: 5, sign: '+' }, // x^5/5
+            { coef: -1/6, power: 6, sign: '-' }, // -x^6/6
+            { coef: 1/7, power: 7, sign: '+' }, // x^7/7
+            { coef: -1/8, power: 8, sign: '-' }, // -x^8/8
+            { coef: 1/9, power: 9, sign: '+' }, // x^9/9
+            { coef: -1/10, power: 10, sign: '-' }, // -x^10/10
+            { coef: 1/11, power: 11, sign: '+' }, // x^11/11
+            { coef: -1/12, power: 12, sign: '-' }, // -x^12/12
+            { coef: 1/13, power: 13, sign: '+' }, // x^13/13
+            { coef: -1/14, power: 14, sign: '-' }, // -x^14/14
+            { coef: 1/15, power: 15, sign: '+' } // x^15/15
+        ]
+    };
 
     // 计算阶乘
     function factorial(n) {
@@ -248,12 +321,30 @@
         return result;
     }
 
-    // 计算麦克劳林展开式在x处的值
-    function maclaurinSin(x, nTerms) {
+    // 计算各函数的麦克劳林展开式在x处的值
+    function calculateTaylor(x, nTerms, funcType) {
         let result = 0;
-        for (let i = 0; i < nTerms; i++) {
-            const term = maclaurinCoefficients[i];
-            result += term.coef * Math.pow(x, term.power);
+        const coeffs = functionCoefficients[funcType];
+        for (let i = 0; i < nTerms && i < coeffs.length; i++) {
+            const term = coeffs[i];
+            // 检查是否会产生过大的数值
+            let powerResult;
+            try {
+                powerResult = Math.pow(x, term.power);
+            } catch (e) {
+                // 幂运算出错，跳过此项
+                continue;
+            }
+            
+            if (!isFinite(powerResult)) {
+                // 如果x的幂次导致无穷大，跳过此项
+                continue;
+            }
+            
+            const termValue = term.coef * powerResult;
+            if (isFinite(termValue)) {
+                result += termValue;
+            }
         }
         return result;
     }
@@ -262,9 +353,10 @@
     function drawAxes() {
         const width = canvas.width;
         const height = canvas.height;
-        const centerY = height / 2;
+        // 将x轴位置调整到画布高度的2/3处，这样正半轴占2/3，负半轴占1/3
+        const xAxisPosition = height * 2 / 3;
         // 将y轴移到最左边附近，只显示少量负半轴
-        const xAxisPosition = width * 0.1; // y轴位置在画布宽度的10%处
+        const yAxisPosition = width * 0.1; // y轴位置在画布宽度的10%处
         const scale = width / (xRange + 1); // 调整比例尺以适应新的范围
 
         ctx.clearRect(0, 0, width, height);
@@ -275,12 +367,12 @@
         ctx.lineWidth = 1;
 
         // x轴
-        ctx.moveTo(0, centerY);
-        ctx.lineTo(width, centerY);
+        ctx.moveTo(0, xAxisPosition);
+        ctx.lineTo(width, xAxisPosition);
 
         // y轴
-        ctx.moveTo(xAxisPosition, 0);
-        ctx.lineTo(xAxisPosition, height);
+        ctx.moveTo(yAxisPosition, 0);
+        ctx.lineTo(yAxisPosition, height);
 
         ctx.stroke();
 
@@ -292,103 +384,201 @@
 
         // x轴刻度 (从0开始，只显示正半轴)
         for (let i = 0; i <= xRange; i++) {
-            const x = xAxisPosition + i * scale;
+            const x = yAxisPosition + i * scale;
             ctx.beginPath();
-            ctx.moveTo(x, centerY - 5);
-            ctx.lineTo(x, centerY + 5);
+            ctx.moveTo(x, xAxisPosition - 5);
+            ctx.lineTo(x, xAxisPosition + 5);
             ctx.stroke();
             if (i !== 0) { // 不在原点重复标记
-                ctx.fillText(i.toString(), x, centerY + 10);
+                ctx.fillText(i.toString(), x, xAxisPosition + 10);
             }
         }
 
         // 添加原点标记
-        ctx.fillText('0', xAxisPosition, centerY + 10);
+        ctx.fillText('0', yAxisPosition, xAxisPosition + 10);
 
-        // y轴刻度
+        // y轴刻度 (-2 到 2)
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         for (let i = -2; i <= 2; i++) {
             if (i === 0) continue;
-            const y = centerY - i * 50; // 50像素表示1个单位
+            // y轴刻度位置基于x轴位置，注意Canvas的y轴向下为正方向
+            const y = xAxisPosition - i * 50; // 50像素表示1个单位
             ctx.beginPath();
-            ctx.moveTo(xAxisPosition - 5, y);
-            ctx.lineTo(xAxisPosition + 5, y);
+            ctx.moveTo(yAxisPosition - 5, y);
+            ctx.lineTo(yAxisPosition + 5, y);
             ctx.stroke();
-            ctx.fillText(i.toString(), xAxisPosition - 10, y);
+            ctx.fillText(i.toString(), yAxisPosition - 10, y);
         }
 
         // 原点标记
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        ctx.fillText('O', xAxisPosition + 5, centerY + 5);
+        ctx.fillText('O', yAxisPosition + 5, xAxisPosition + 10);
     }
 
     // 绘制函数
     function drawFunctions() {
         const width = canvas.width;
         const height = canvas.height;
-        const centerY = height / 2;
+        // 将x轴位置调整到画布高度的2/3处
+        const xAxisPosition = height * 2 / 3;
         // 将y轴移到最左边附近
-        const xAxisPosition = width * 0.1;
+        const yAxisPosition = width * 0.1;
         const scale = width / (xRange + 1); // 调整比例尺
 
-        // 绘制sin(x)函数 (只绘制正半轴)
+        // 绘制原函数
         ctx.beginPath();
         ctx.strokeStyle = '#3498db';
         ctx.lineWidth = 2;
 
-        for (let i = xAxisPosition; i < width; i++) {
-            const x = (i - xAxisPosition) / scale;
+        let isFirstPoint = true;
+        for (let i = yAxisPosition; i < width; i++) {
+            const x = (i - yAxisPosition) / scale;
             if (x <= xRange) { // 只绘制到设定的x范围
-                const y = Math.sin(x);
-                const pixelY = centerY - y * 50; // 50像素表示1个单位
+                let y;
+                switch(currentFunction) {
+                    case 'sin':
+                        y = Math.sin(x);
+                        break;
+                    case 'cos':
+                        y = Math.cos(x);
+                        break;
+                    case 'ln':
+                        // ln(1+x)的定义域是x>-1，这里限制在(-1, xRange]
+                        y = x > -1 ? Math.log(1 + x) : NaN;
+                        break;
+                }
+                
+                // 只有当y是有效数字时才绘制
+                if (!isNaN(y) && isFinite(y)) {
+                    // 注意这里y轴方向与Canvas坐标系相反，所以要用减法
+                    const pixelY = xAxisPosition - y * 50; // 50像素表示1个单位
 
-                if (i === xAxisPosition) {
-                    ctx.moveTo(i, pixelY);
-                } else {
-                    ctx.lineTo(i, pixelY);
+                    if (isFirstPoint) {
+                        ctx.moveTo(i, pixelY);
+                        isFirstPoint = false;
+                    } else {
+                        ctx.lineTo(i, pixelY);
+                    }
+                } else if (!isFirstPoint) {
+                    // 如果遇到无效值，则结束当前路径
+                    ctx.stroke();
+                    ctx.beginPath();
+                    isFirstPoint = true;
                 }
             }
         }
 
-        ctx.stroke();
+        // 如果还有未完成的路径，将其绘制出来
+        if (!isFirstPoint) {
+            ctx.stroke();
+        }
 
-        // 绘制麦克劳林展开式 (只绘制正半轴)
+        // 绘制麦克劳林展开式
         ctx.beginPath();
         ctx.strokeStyle = '#e74c3c';
         ctx.lineWidth = 2;
 
-        for (let i = xAxisPosition; i < width; i++) {
-            const x = (i - xAxisPosition) / scale;
+        isFirstPoint = true;
+        for (let i = yAxisPosition; i < width; i++) {
+            const x = (i - yAxisPosition) / scale;
             if (x <= xRange) { // 只绘制到设定的x范围
-                const y = maclaurinSin(x, terms);
-                const pixelY = centerY - y * 50; // 50像素表示1个单位
+                let y;
+                switch(currentFunction) {
+                    case 'sin':
+                        y = calculateTaylor(x, terms, 'sin');
+                        break;
+                    case 'cos':
+                        y = calculateTaylor(x, terms, 'cos');
+                        break;
+                    case 'ln':
+                        // ln(1+x)的麦克劳林级数在|x|<1时绝对收敛
+                        // 为了可视化效果，我们在这里限制在(-1,1]范围内
+                        y = x > -1 && x <= 1 ? calculateTaylor(x, terms, 'ln') : NaN;
+                        break;
+                }
+                
+                // 只有当y是有效数字且不太大时才绘制
+                if (!isNaN(y) && isFinite(y) && Math.abs(y) < 100) {
+                    // 注意这里y轴方向与Canvas坐标系相反，所以要用减法
+                    const pixelY = xAxisPosition - y * 50; // 50像素表示1个单位
 
-                if (i === xAxisPosition) {
-                    ctx.moveTo(i, pixelY);
-                } else {
-                    ctx.lineTo(i, pixelY);
+                    if (isFirstPoint) {
+                        ctx.moveTo(i, pixelY);
+                        isFirstPoint = false;
+                    } else {
+                        ctx.lineTo(i, pixelY);
+                    }
+                } else if (!isFirstPoint) {
+                    // 如果遇到无效值，则结束当前路径
+                    ctx.stroke();
+                    ctx.beginPath();
+                    isFirstPoint = true;
                 }
             }
         }
 
-        ctx.stroke();
+        // 如果还有未完成的路径，将其绘制出来
+        if (!isFirstPoint) {
+            ctx.stroke();
+        }
     }
 
     // 更新公式显示
     function updateFormula() {
-        let formula = '$$ \\sin(x) = ';
-
-        for (let i = 0; i < terms; i++) {
-            const term = maclaurinCoefficients[i];
-            const absCoef = Math.abs(term.coef);
-            const denominator = factorial(term.power);
-
+        let formula = '';
+        let funcName = '';
+        
+        switch(currentFunction) {
+            case 'sin':
+                funcName = '\\sin(x)';
+                break;
+            case 'cos':
+                funcName = '\\cos(x)';
+                break;
+            case 'ln':
+                funcName = '\\ln(1+x)';
+                break;
+        }
+        
+        formula = `$$ ${funcName} = `;
+        
+        const coeffs = functionCoefficients[currentFunction];
+        for (let i = 0; i < terms && i < coeffs.length; i++) {
+            const term = coeffs[i];
+            
             if (i === 0) {
-                formula += 'x';
+                if (term.power === 0) {
+                    formula += '1';
+                } else if (term.power === 1) {
+                    formula += term.sign === '+' ? 'x' : '-x';
+                } else {
+                    if (currentFunction === 'ln') {
+                        formula += term.sign === '+' ? 
+                            `\\frac{x^{${term.power}}}{${term.power}}` : 
+                            `-\\frac{x^{${term.power}}}{${term.power}}`;
+                    } else {
+                        formula += term.sign === '+' ? 
+                            `\\frac{x^{${term.power}}}{${term.power}!}` : 
+                            `-\\frac{x^{${term.power}}}{${term.power}!}`;
+                    }
+                }
             } else {
-                formula += ` ${term.sign} \\frac{x^{${term.power}}}{${term.power}!}`;
+                if (currentFunction === 'ln' && term.power > 0) {
+                    // ln(1+x)的级数是交替的分数形式
+                    formula += ` ${term.sign} \\frac{x^{${term.power}}}{${term.power}}`;
+                } else if (term.power === 0) {
+                    formula += ` ${term.sign} 1`;
+                } else if (term.power === 1) {
+                    formula += ` ${term.sign} x`;
+                } else {
+                    if (currentFunction === 'ln') {
+                        formula += ` ${term.sign} \\frac{x^{${term.power}}}{${term.power}}`;
+                    } else {
+                        formula += ` ${term.sign} \\frac{x^{${term.power}}}{${term.power}!}`;
+                    }
+                }
             }
         }
 
@@ -401,6 +591,61 @@
         }
     }
 
+    // 更新界面文本
+    function updateInterfaceText() {
+        switch(currentFunction) {
+            case 'sin':
+                functionTitle.textContent = 'sin(x)函数的麦克劳林展开式逼近过程';
+                originalFunctionName.textContent = 'sin(x) 原函数';
+                taylorFunctionName.textContent = '麦克劳林展开式';
+                formulaTitle.textContent = '麦克劳林展开式：';
+                explanationTitle.textContent = '麦克劳林展开式说明';
+                explanationText1.textContent = '麦克劳林展开是泰勒展开在x=0处的特殊情况。对于sin(x)函数，其麦克劳林展开式为：';
+                // document.querySelector('.explanation p:nth-child(2)').innerHTML = '$$ \\sin(x) = x - \\frac{x^3}{3!} + \\frac{x^5}{5!} - \\frac{x^7}{7!} + \\cdots $$';
+                explanationFormula.textContent = '$$ \\sin(x) = x - \\frac{x^3}{3!} + \\frac{x^5}{5!} - \\frac{x^7}{7!} + \\cdots $$';
+                explanationText2.textContent = '随着展开项数的增加，麦克劳林多项式会越来越接近原函数sin(x)。';
+                explanationText3.textContent = '在本可视化中，您可以通过滑块调整展开项数，观察多项式如何逐步逼近sin(x)函数。';
+                break;
+            case 'cos':
+                functionTitle.textContent = 'cos(x)函数的麦克劳林展开式逼近过程';
+                originalFunctionName.textContent = 'cos(x) 原函数';
+                taylorFunctionName.textContent = '麦克劳林展开式';
+                formulaTitle.textContent = '麦克劳林展开式：';
+                explanationTitle.textContent = '麦克劳林展开式说明';
+                explanationText1.textContent = '麦克劳林展开是泰勒展开在x=0处的特殊情况。对于cos(x)函数，其麦克劳林展开式为：';
+                // document.querySelector('.explanation p:nth-child(2)').innerHTML = '$$ \\cos(x) = 1 - \\frac{x^2}{2!} + \\frac{x^4}{4!} - \\frac{x^6}{6!} + \\cdots $$';
+                explanationFormula.textContent = '$$ \\cos(x) = 1 - \\frac{x^2}{2!} + \\frac{x^4}{4!} - \\frac{x^6}{6!} + \\cdots $$';
+                explanationText2.textContent = '随着展开项数的增加，麦克劳林多项式会越来越接近原函数cos(x)。';
+                explanationText3.textContent = '在本可视化中，您可以通过滑块调整展开项数，观察多项式如何逐步逼近cos(x)函数。';
+                break;
+            case 'ln':
+                functionTitle.textContent = 'ln(1+x)函数的麦克劳林展开式逼近过程';
+                originalFunctionName.textContent = 'ln(1+x) 原函数';
+                taylorFunctionName.textContent = '麦克劳林展开式';
+                formulaTitle.textContent = '麦克劳林展开式：';
+                explanationTitle.textContent = '麦克劳林展开式说明';
+                explanationText1.textContent = '麦克劳林展开是泰勒展开在x=0处的特殊情况。对于ln(1+x)函数，其麦克劳林展开式为：';
+                // document.querySelector('.explanation p:nth-child(2)').innerHTML = '$$ \\ln(1+x) = x - \\frac{x^2}{2} + \\frac{x^3}{3} - \\frac{x^4}{4} + \\cdots $$';
+                explanationFormula.textContent = '$$ \\ln(1+x) = x - \\frac{x^2}{2} + \\frac{x^3}{3} - \\frac{x^4}{4} + \\cdots $$';
+                explanationText2.textContent = '随着展开项数的增加，麦克劳林多项式会越来越接近原函数ln(1+x)。注意该级数仅在-1<x≤1范围内收敛，因此我们只能在这个区间内观察函数的逼近效果。';
+                explanationText3.textContent = '在本可视化中，您可以通过滑块调整展开项数，观察多项式如何逐步逼近ln(1+x)函数。由于收敛域的限制，x轴范围被固定为1以内。';
+                break;
+        }
+        
+        // 重新渲染MathJax以更新静态公式
+        if (window.MathJax) {
+            setTimeout(function() {
+                MathJax.typesetPromise().then(() => {
+                    // 等待MathJax渲染完成后更新动态公式
+                    updateFormula();
+                });
+            }, 0);
+        } else {
+            // 如果MathJax还未加载完成，直接更新动态公式
+            updateFormula();
+        }
+    }
+
     // 绘制图形
     function drawGraph() {
         drawAxes();
@@ -408,7 +653,51 @@
         updateFormula();
     }
 
+    // 切换函数
+    function switchFunction(funcType) {
+        // 更新当前函数类型
+        currentFunction = funcType;
+        
+        // 更新按钮样式
+        functionButtons.forEach(btn => {
+            if (btn.dataset.function === funcType) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        
+        // 重置滑块范围（ln函数可能需要不同的默认值）
+        if (currentFunction === 'ln') {
+            // 对于ln函数，设置x轴范围为1到2，默认值为1
+            xRangeSlider.min = 1;
+            xRangeSlider.max = 2;
+            xRangeSlider.value = 1;
+            xRange = 1;
+            xRangeValue.textContent = xRange;
+        } else {
+            // 对于sin和cos函数，保持原来的范围
+            xRangeSlider.min = 5;
+            xRangeSlider.max = 15;
+            xRangeSlider.value = 5;
+            xRange = 5;
+            xRangeValue.textContent = xRange;
+        }
+        
+        // 重置项数滑块
+        termsSlider.value = 1;
+        terms = 1;
+        termsValue.textContent = terms;
+        
+        // 更新界面文本
+        updateInterfaceText();
+        
+        // 重新绘制
+        drawGraph();
+    }
+
     // 初始化
+    updateInterfaceText();
     drawGraph();
 
     // 事件监听
@@ -424,6 +713,13 @@
         drawGraph();
     });
 
+    // 函数选择按钮事件
+    functionButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            switchFunction(this.dataset.function);
+        });
+    });
+
     animateBtn.addEventListener('click', function() {
         if (isAnimating) {
             clearInterval(animationInterval);
@@ -434,8 +730,9 @@
             animateBtn.textContent = '停止动画';
 
             let currentTerm = 1;
+            const maxTerms = 15;
             animationInterval = setInterval(() => {
-                if (currentTerm > 15) {
+                if (currentTerm > maxTerms) {
                     clearInterval(animationInterval);
                     isAnimating = false;
                     animateBtn.textContent = '播放动画';
@@ -461,9 +758,16 @@
         termsSlider.value = 1;
         terms = 1;
         termsValue.textContent = terms;
-        xRangeSlider.value = 5;
-        xRange = 5;
+        
+        if (currentFunction === 'ln') {
+            xRangeSlider.value = 1;
+            xRange = 1;
+        } else {
+            xRangeSlider.value = 5;
+            xRange = 5;
+        }
         xRangeValue.textContent = xRange;
+        
         drawGraph();
     });
 </script>
