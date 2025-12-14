@@ -4,6 +4,7 @@ package org.example.RepositoryDemo.controller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.RepositoryDemo.Repository.UserRepository;
+import org.example.RepositoryDemo.dto.PointJsonRequest;
 import org.example.RepositoryDemo.dto.PointRequest;
 import org.example.RepositoryDemo.entity.Point;
 import org.example.RepositoryDemo.entity.User;
@@ -25,10 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/points")
@@ -73,6 +71,38 @@ public class PointController {
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("参数错误: " + e.getMessage());
+        }
+    }
+    @PostMapping(value="/save-json", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> savePointJson(@Valid @RequestBody PointJsonRequest pointRequest, Authentication authentication) {
+        try {
+
+            // 检查用户是否已认证
+            if (authentication == null || !authentication.isAuthenticated() ||
+                    "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+
+            // 获取当前用户ID
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.status(403).body("请先登录");
+            }
+            String imagePath = null;
+            if (pointRequest.getImage() != null && !pointRequest.getImage().isEmpty()){
+                imagePath = saveDescriptionFromBase64(pointRequest.getImage());
+            }
+            int pointId = pointService.savePoint(user.id, pointRequest.getX(), pointRequest.getY(),pointRequest.getLevel(), pointRequest.getType(), pointRequest.getDescription(), imagePath);
+            if (pointId > 0) {
+                return ResponseEntity.ok(Map.of("id", pointId, "message", "点位保存成功"));
+            } else if (pointId == -1) {
+                return ResponseEntity.badRequest().body("点位已存在");
+            } else {
+                return ResponseEntity.badRequest().body("点位保存失败");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("点位保存失败: " + e.getMessage());
         }
     }
     
@@ -375,8 +405,8 @@ public class PointController {
                 return null;
             }
 
-            // 创建头像存储目录
-            String uploadDir = "./external/static/descriptions/";
+            // 创建点位图片存储目录
+            String uploadDir = "./external/static/description/";
             File dir = new File(uploadDir);
             if (!dir.exists()) {
                 if(!dir.mkdirs()){
@@ -413,6 +443,79 @@ public class PointController {
             return "/description/" + fileName;
         } catch (IOException e) {
             logger.error("保存点位图片描述文件失败: {}", e.getMessage());
+            return null;
+        }
+    }
+    private String saveDescriptionFromBase64(String base64Data){
+        try {
+            // 检查是否是DataURL格式 (data:image/png;base64,...)
+            String base64Content = base64Data;
+            String fileExtension = ".png"; // 默认扩展名
+
+            if (base64Data.startsWith("data:")) {
+                // 解析DataURL格式
+                String[] parts = base64Data.split(",");
+                if (parts.length != 2) {
+                    logger.error("无效的DataURL格式");
+                    return null;
+                }
+
+                // 获取MIME类型
+                String mimeTypePart = parts[0];
+                base64Content = parts[1];
+
+                // 从MIME类型中提取文件扩展名
+                if (mimeTypePart.contains("image/jpeg") || mimeTypePart.contains("image/jpg")) {
+                    fileExtension = ".jpg";
+                } else if (mimeTypePart.contains("image/png")) {
+                    fileExtension = ".png";
+                } else {
+                    logger.warn("不支持的图片格式: {}", mimeTypePart);
+                    return null;
+                }
+            }
+
+            // 解码Base64数据
+            byte[] decodedBytes = Base64.getDecoder().decode(base64Content);
+
+            // 检查文件大小（限制为2MB）
+            if (decodedBytes.length > 2 * 1024 * 1024) {
+                logger.error("点位描述图片文件大小超过2MB限制");
+                return null;
+            }
+
+            // 创建点位描述图片存储目录
+            String uploadDir = "./external/static/description/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                if(!dir.mkdirs()){
+                    logger.fatal("saveDescriptionFromBase64(): 创建点位描述图片存储目录失败");
+                    return null;
+                }
+            }
+
+            // 生成唯一文件名
+            String fileName = UUID.randomUUID() + fileExtension;
+            Path path = Paths.get(uploadDir);
+            Path filePath = path.resolve(fileName).normalize();
+
+            // 验证文件路径是否在允许的目录内
+            Path allowedDir = path.toAbsolutePath().normalize();
+            if (!filePath.toAbsolutePath().normalize().startsWith(allowedDir)) {
+                logger.error("saveDescriptionFromBase64(): 非法文件路径访问尝试");
+                return null;
+            }
+
+            // 保存文件
+            Files.write(filePath, decodedBytes);
+
+            // 返回点位描述图片访问路径
+            return "/description/" + fileName;
+        } catch (IllegalArgumentException e) {
+            logger.error("Base64解码失败: {}", e.getMessage());
+            return null;
+        } catch (IOException e) {
+            logger.error("保存点位描述图片文件失败: {}", e.getMessage());
             return null;
         }
     }

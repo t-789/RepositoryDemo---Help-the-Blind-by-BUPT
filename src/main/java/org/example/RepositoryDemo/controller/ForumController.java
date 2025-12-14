@@ -57,7 +57,7 @@ public class ForumController {
                 return ResponseEntity.status(403).body("请先登录");
             }
 
-            int result = forumService.createForum(user.id, forumRequest.getTitle(), forumRequest.getContent());
+            int result = forumService.createForum(user.id, forumRequest.getTitle(), forumRequest.getContent(), 1);
             if (result > 0) {
                 return ResponseEntity.ok("帖子创建成功");
             } else {
@@ -543,7 +543,7 @@ public class ForumController {
                 logger.error("创建帖子失败");
                 return ResponseEntity.badRequest().body("创建帖子失败");
             }
-            forumService.createForum(userid, "标点帖", forumAndPointRequest.getDescription());
+            forumService.createForum(userid, "标点帖", forumAndPointRequest.getDescription(), 2);
             return ResponseEntity.ok("创建点位帖子成功");
         } catch (Exception e) {
             logger.error("创建帖子且标点失败: {}", e.getMessage());

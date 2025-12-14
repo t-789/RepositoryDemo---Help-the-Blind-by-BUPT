@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     );
     
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleException(Exception ex, WebRequest request) throws NoResourceFoundException, RuntimeException, HttpRequestMethodNotSupportedException {
+    public ResponseEntity<String> handleException(Exception ex, WebRequest request) throws RuntimeException {
         // 不再直接提交反馈到系统，而是让异常继续传播到 CustomErrorController 处理
         // 这样可以避免重复提交反馈的问题
         if (isBotRequest(request.getHeader("User-Agent"))) {
@@ -48,6 +48,14 @@ public class GlobalExceptionHandler {
         } else if (ex instanceof org.springframework.web.method.annotation.MethodArgumentTypeMismatchException){
             logger.warn("Method argument type mismatch: {}", request.getDescription(false));
             return ResponseEntity.badRequest().body("Method argument type mismatch");
+        } else if (ex instanceof org.springframework.web.bind.MethodArgumentNotValidException){
+            logger.warn("Method argument not valid: {}", request.getDescription(false));
+            return ResponseEntity.badRequest().body("Method argument not valid.");
+        } else if (ex instanceof org.springframework.web.bind.MissingServletRequestParameterException){
+            logger.warn("Missing servlet request parameter: {}", request.getDescription(false));
+            return ResponseEntity.badRequest().body("Missing servlet request parameter.");
+        } else if (ex instanceof org.springframework.security.authentication.InternalAuthenticationServiceException){
+            logger.warn("InternalAuthenticationServiceException: {}", request.getDescription(false));
         }
         
         // 记录异常详细信息

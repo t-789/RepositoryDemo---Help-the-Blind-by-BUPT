@@ -34,12 +34,12 @@ public class ForumService {
     }
 
     // 创建论坛帖子
-    public int createForum(int userId, String title, String content) throws SQLException {
+    public int createForum(int userId, String title, String content, int type) throws SQLException {
         if (title == null){
             title = "无标题";
         }
-        logger.debug("开始创建论坛帖子: userId={}, title={}", userId, title);
-        int result = ForumRepository.createForum(userId, title, content);
+        logger.debug("开始创建论坛帖子: userId={}, title={}, type={}", userId, title, type);
+        int result = ForumRepository.createForum(userId, title, content, type);
         logger.debug("论坛帖子创建结果: userId={}, title={}, result={}", userId, title, result);
         return result;
     }

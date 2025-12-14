@@ -34,7 +34,8 @@ public class ForumRepository {
                 "release_time TIMESTAMP NOT NULL, " +
                 "like INTEGER NOT NULL DEFAULT 0, " +
                 "favorite INTEGER NOT NULL DEFAULT 0, " +
-                "comment INTEGER NOT NULL DEFAULT 0)";
+                "comment INTEGER NOT NULL DEFAULT 0, " +
+                "type INTEGER NOT NULL DEFAULT 1)"; // 1 为普通帖子，2 为标记处位置的帖子
         try(Statement stmt = connection.createStatement()){
             stmt.execute(sql);
             logger.info("论坛表创建成功！");
@@ -109,13 +110,14 @@ public class ForumRepository {
         }
     }
 
-    public static int createForum(int userId, String title, String content) throws SQLException {
-        String sql = "INSERT INTO forum (user_id, title, content, release_time) VALUES (?, ?, ?, ?)";
+    public static int createForum(int userId, String title, String content, int type) throws SQLException {
+        String sql = "INSERT INTO forum (user_id, title, content, release_time, type) VALUES (?, ?, ?, ?, ?)";
         try(PreparedStatement stmt = connection.prepareStatement(sql)){
             stmt.setInt(1, userId);
             stmt.setString(2, title);
             stmt.setString(3, content);
             stmt.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+            stmt.setInt(5, type);
             stmt.executeUpdate();
             logger.info("{}创建的帖子{}创建成功！", userId, title);
             StatisticRepository.updatePostCount(1);

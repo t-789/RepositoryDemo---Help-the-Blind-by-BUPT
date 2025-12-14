@@ -41,7 +41,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.Base64;
 import java.util.*;
 
-//@CrossOrigin(origins = "http://127.0.0.1:5500", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/users")
 @Validated
@@ -96,7 +95,6 @@ public class UserController {
     @PostMapping(value = "/register-with-security-json", consumes = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> registerWithSecurityJson(@Valid @RequestBody RegisterWithSecurityJsonRequest request) {
         try {
-            // 注意：此方法不处理文件上传，如果需要上传头像，应使用Base64编码通过avatarBase64字段传递
             return processRegistration(request.getUsername(), request.getPassword(), request.getAvatarBase64(),
                     request.getQuestion1(), request.getAnswer1(), request.getQuestion2(), request.getAnswer2());
         } catch (Exception e) {
