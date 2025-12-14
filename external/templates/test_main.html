@@ -1273,67 +1273,101 @@
             
             html += `<div id="posts-list">`;
             
-            posts.forEach(post => {
-                html += `
-                    <div class="forum-post" data-post-id="${post.id}">
-                        <div class="forum-post-title">${post.title}</div>
-                        <div class="forum-post-meta">
-                            作者: ${post.username} | 发布时间: ${new Date(post.release_time).toLocaleString()}
-                        </div>
-                        <div class="forum-post-content">
-                            ${post.content}
-                        </div>
-                        <div class="forum-post-stats">
-                            <span class="like-count">👍 ${post.like || 0}</span>
-                            <span class="favorite-count">⭐ ${post.favorite || 0}</span>
-                            <span class="comment-count">💬 ${post.comment || 0}</span>
-                        </div>
-                        <div class="forum-post-actions">
-                            ${currentUser ? `
-                                <button class="btn ${post.userLiked ? 'btn-secondary' : ''}" onclick="toggleLike(${post.id})">
-                                    ${post.userLiked ? '取消点赞' : '点赞'}
-                                </button>
-                                <button class="btn ${post.userFavorited ? 'btn-secondary' : ''}" onclick="toggleFavorite(${post.id})">
-                                    ${post.userFavorited ? '取消收藏' : '收藏'}
-                                </button>
-                            ` : ''}
-                            <button class="btn" onclick="toggleComments(${post.id})">查看评论</button>
-                        </div>
-                        <div class="forum-post-comments hidden" id="comments-${post.id}">
-                            <div class="comments-list">
-                                ${post.comments && post.comments.length > 0 ? 
-                                    post.comments.map(comment => `
-                                        <div class="comment-item">
-                                            <div class="comment-meta">
-                                                ${comment.username} - ${new Date(comment.commentTime).toLocaleString()}
-                                            </div>
-                                            <div class="comment-content">
-                                                ${comment.content}
-                                            </div>
-                                        </div>
-                                    `).join('') : 
-                                    '<p>暂无评论</p>'
-                                }
-                            </div>
-                            ${currentUser ? `
-                                <div class="add-comment">
-                                    <textarea id="comment-content-${post.id}" placeholder="添加评论..."></textarea>
-                                    <button class="btn" onclick="addComment(${post.id})">评论</button>
-                                </div>
-                            ` : '<p>请登录后评论</p>'}
-                        </div>
-                    </div>
-                `;
+            // 创建一个Promise数组来处理所有帖子的图片获取
+            const promises = posts.map(post => {
+                return fetch(`/api/forum/${post.id}/picture/`)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json().then(count => ({postId: post.id, count: count}));
+                        }
+                        return Promise.resolve({postId: post.id, count: 0});
+                    })
+                    .catch(() => ({postId: post.id, count: 0}));
             });
             
-            html += `</div>`;
-            
-            contentDiv.innerHTML = html;
-            
-            // 如果用户已登录，绑定创建帖子表单事件
-            if (currentUser) {
-                document.getElementById('new-post-form').addEventListener('submit', handleCreatePost);
-            }
+            // 等待所有图片数量获取完成后再渲染
+            Promise.all(promises).then(results => {
+                const pictureCounts = {};
+                results.forEach(result => {
+                    pictureCounts[result.postId] = result.count;
+                });
+                
+                posts.forEach(post => {
+                    const pictureCount = pictureCounts[post.id] || 0;
+                    html += `
+                        <div class="forum-post" data-post-id="${post.id}">
+                            <div class="forum-post-title">${post.title}</div>
+                            <div class="forum-post-meta">
+                                作者: ${post.username} | 发布时间: ${new Date(post.release_time).toLocaleString()}
+                            </div>
+                            <div class="forum-post-content">
+                                ${post.content}
+                            </div>
+                            ${pictureCount > 0 ? `
+                                <div class="forum-post-images">
+                                    <h4>图片 (${pictureCount} 张)</h4>
+                                    <div class="images-container" id="images-container-${post.id}">
+                                        ${Array.from({length: pictureCount}, (_, i) => `
+                                            <img src="/api/forum/${post.id}/picture/${i+1}" 
+                                                 alt="图片${i+1}" 
+                                                 style="max-width: 200px; max-height: 200px; margin: 5px; cursor: pointer;"
+                                                 onclick="enlargeImage(this)">
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            <div class="forum-post-stats">
+                                <span class="like-count">👍 ${post.like || 0}</span>
+                                <span class="favorite-count">⭐ ${post.favorite || 0}</span>
+                                <span class="comment-count">💬 ${post.comment || 0}</span>
+                            </div>
+                            <div class="forum-post-actions">
+                                ${currentUser ? `
+                                    <button class="btn ${post.userLiked ? 'btn-secondary' : ''}" onclick="toggleLike(${post.id})">
+                                        ${post.userLiked ? '取消点赞' : '点赞'}
+                                    </button>
+                                    <button class="btn ${post.userFavorited ? 'btn-secondary' : ''}" onclick="toggleFavorite(${post.id})">
+                                        ${post.userFavorited ? '取消收藏' : '收藏'}
+                                    </button>
+                                    <button class="btn" onclick="showUploadPictureForm(${post.id})">上传图片</button>
+                                ` : ''}
+                                <button class="btn" onclick="toggleComments(${post.id})">查看评论</button>
+                            </div>
+                            <div class="forum-post-comments hidden" id="comments-${post.id}">
+                                <div class="comments-list">
+                                    ${post.comments && post.comments.length > 0 ? 
+                                        post.comments.map(comment => `
+                                            <div class="comment-item">
+                                                <div class="comment-meta">
+                                                    ${comment.username} - ${new Date(comment.commentTime).toLocaleString()}
+                                                </div>
+                                                <div class="comment-content">
+                                                    ${comment.content}
+                                                </div>
+                                            </div>
+                                        `).join('') : 
+                                        '<p>暂无评论</p>'
+                                    }
+                                </div>
+                                ${currentUser ? `
+                                    <div class="add-comment">
+                                        <textarea id="comment-content-${post.id}" placeholder="添加评论..."></textarea>
+                                        <button class="btn" onclick="addComment(${post.id})">评论</button>
+                                    </div>
+                                ` : '<p>请登录后评论</p>'}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+                contentDiv.innerHTML = html;
+                
+                // 如果用户已登录，绑定创建帖子表单事件
+                if (currentUser) {
+                    document.getElementById('new-post-form').addEventListener('submit', handleCreatePost);
+                }
+            });
         }
         
         // 切换点赞状态
@@ -1571,6 +1605,210 @@
                 messageDiv.textContent = '提交反馈失败: ' + error.message;
                 messageDiv.classList.remove('hidden');
             });
+        }
+        
+        // 显示上传图片表单
+        function showUploadPictureForm(postId) {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'upload-picture-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 1000;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background:white;padding:20px;border-radius:5px;width:500px;max-width:90%;">
+                    <h3>为帖子上传图片</h3>
+                    <form id="upload-picture-form">
+                        <input type="hidden" id="picture-post-id" value="${postId}">
+                        <div class="form-group">
+                            <label for="picture1">图片1 (必填):</label>
+                            <input type="file" id="picture1" accept="image/*" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="picture2">图片2 (可选):</label>
+                            <input type="file" id="picture2" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label for="picture3">图片3 (可选):</label>
+                            <input type="file" id="picture3" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label for="picture4">图片4 (可选):</label>
+                            <input type="file" id="picture4" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label for="picture5">图片5 (可选):</label>
+                            <input type="file" id="picture5" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label for="picture6">图片6 (可选):</label>
+                            <input type="file" id="picture6" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label for="picture7">图片7 (可选):</label>
+                            <input type="file" id="picture7" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label for="picture8">图片8 (可选):</label>
+                            <input type="file" id="picture8" accept="image/*">
+                        </div>
+                        <div class="form-group">
+                            <label for="picture9">图片9 (可选):</label>
+                            <input type="file" id="picture9" accept="image/*">
+                        </div>
+                        <button type="submit" class="btn">上传图片</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeUploadPictureModal()">取消</button>
+                    </form>
+                    <div id="upload-picture-message" class="alert hidden"></div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 绑定表单提交事件
+            document.getElementById('upload-picture-form').addEventListener('submit', handleUploadPicture);
+        }
+        
+        // 关闭上传图片模态框
+        function closeUploadPictureModal() {
+            const modal = document.getElementById('upload-picture-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // 处理图片上传
+        function handleUploadPicture(e) {
+            e.preventDefault();
+            
+            const postId = document.getElementById('picture-post-id').value;
+            const pictureFiles = [];
+            
+            // 收集所有选择的图片文件
+            for (let i = 1; i <= 9; i++) {
+                const fileInput = document.getElementById(`picture${i}`);
+                if (fileInput && fileInput.files[0]) {
+                    pictureFiles.push(fileInput.files[0]);
+                }
+            }
+            
+            if (pictureFiles.length === 0) {
+                alert('请至少选择一张图片');
+                return;
+            }
+            
+            // 构建请求数据
+            const pictureData = {};
+            pictureFiles.forEach((file, index) => {
+                // 将图片转换为Base64编码
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    pictureData[`picture${index+1}`] = event.target.result;
+                    
+                    // 当所有图片都处理完后发送请求
+                    if (Object.keys(pictureData).length === pictureFiles.length) {
+                        sendPictureUploadRequest(postId, pictureData);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // 发送图片上传请求
+        function sendPictureUploadRequest(postId, pictureData) {
+            fetch(`/api/forum/${postId}/picture`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(pictureData)
+            })
+            .then(response => response.text())
+            .then(data => {
+                const messageDiv = document.getElementById('upload-picture-message');
+                if (data === '图片添加成功') {
+                    messageDiv.classList.remove('alert-danger');
+                    messageDiv.classList.add('alert-success');
+                    messageDiv.textContent = '图片上传成功';
+                    messageDiv.classList.remove('hidden');
+                    
+                    // 2秒后关闭模态框并刷新论坛列表
+                    setTimeout(() => {
+                        closeUploadPictureModal();
+                        loadForum();
+                    }, 2000);
+                } else {
+                    messageDiv.classList.remove('alert-success');
+                    messageDiv.classList.add('alert-danger');
+                    messageDiv.textContent = data;
+                    messageDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                const messageDiv = document.getElementById('upload-picture-message');
+                messageDiv.classList.remove('alert-success');
+                messageDiv.classList.add('alert-danger');
+                messageDiv.textContent = '上传图片失败: ' + error.message;
+                messageDiv.classList.remove('hidden');
+            });
+        }
+        
+        // 放大图片显示
+        function enlargeImage(imgElement) {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.id = 'image-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.8);
+                z-index: 2000;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+            `;
+            
+            // 创建放大图片
+            const enlargedImg = document.createElement('img');
+            enlargedImg.src = imgElement.src;
+            enlargedImg.style.cssText = `
+                max-width: 90%;
+                max-height: 90%;
+                object-fit: contain;
+            `;
+            
+            modal.appendChild(enlargedImg);
+            
+            // 点击模态框或按ESC键关闭
+            modal.onclick = function() {
+                document.body.removeChild(modal);
+            };
+            
+            document.onkeydown = function(event) {
+                if (event.key === "Escape") {
+                    if (document.getElementById('image-modal')) {
+                        document.body.removeChild(document.getElementById('image-modal'));
+                    }
+                    document.onkeydown = null;
+                }
+            };
+            
+            document.body.appendChild(modal);
         }
     </script>
 </body>
