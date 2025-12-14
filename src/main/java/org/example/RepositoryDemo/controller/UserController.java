@@ -38,8 +38,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Base64;
 import java.util.*;
+
+import static org.example.RepositoryDemo.util.ImageSaver.saveImage;
 
 @RestController
 @RequestMapping("/api/users")
@@ -115,14 +116,7 @@ public class UserController {
             
             // 如果提供了头像文件或Base64数据，则处理头像
             if (avatarObj != null) {
-                String avatarPath = null;
-                if (avatarObj instanceof MultipartFile) {
-                    // 处理文件上传形式的头像
-                    avatarPath = saveAvatarFile((MultipartFile) avatarObj);
-                } else if (avatarObj instanceof String) {
-                    // 处理Base64编码形式的头像
-                    avatarPath = saveAvatarFromBase64((String) avatarObj);
-                }
+                String avatarPath = saveImage(avatarObj, "avatars");
                 
                 if (avatarPath != null) {
                     // 更新用户头像信息
@@ -138,137 +132,6 @@ public class UserController {
             return ResponseEntity.ok("注册成功");
         } else {
             return ResponseEntity.badRequest().body("注册失败，用户名可能已存在");
-        }
-    }
-
-    // 保存头像文件的辅助方法
-    private String saveAvatarFile(MultipartFile file) {
-        try {
-            // 检查文件是否为空
-            if (file.isEmpty()) {
-                return null;
-            }
-
-            // 检查文件类型
-            String contentType = file.getContentType();
-            if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))) {
-                return null;
-            }
-
-            // 检查文件大小（限制为2MB）
-            if (file.getSize() > 2 * 1024 * 1024) {
-                return null;
-            }
-
-            // 创建头像存储目录
-            String uploadDir = "./external/static/avatars/";
-            File dir = new File(uploadDir);
-            if (!dir.exists()) {
-                if(!dir.mkdirs()){
-                    logger.fatal("saveAvatarFile(): 创建头像存储目录失败");
-                    return null;
-                }
-            }
-
-            // 生成唯一文件名
-            String originalFilename = file.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-            String fileName = UUID.randomUUID() + extension;
-            Path path = Paths.get(uploadDir);
-            Path filePath = path.resolve(fileName).normalize();
-
-            // 验证文件路径是否在允许的目录内
-            Path allowedDir = path.toAbsolutePath().normalize();
-            if (!filePath.toAbsolutePath().normalize().startsWith(allowedDir)) {
-                logger.error("saveAvatarFile(): 非法文件路径访问尝试");
-                return null;
-            }
-            // 保存文件
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // 返回头像访问路径
-            return "/avatars/" + fileName;
-        } catch (IOException e) {
-            logger.error("保存头像文件失败: {}", e.getMessage());
-            return null;
-        }
-    }
-
-    // 从Base64数据保存头像文件的辅助方法
-    private String saveAvatarFromBase64(String base64Data) {
-        try {
-            // 检查是否是DataURL格式 (data:image/png;base64,...)
-            String base64Content = base64Data;
-            String fileExtension = ".png"; // 默认扩展名
-            
-            if (base64Data.startsWith("data:")) {
-                // 解析DataURL格式
-                String[] parts = base64Data.split(",");
-                if (parts.length != 2) {
-                    logger.error("无效的DataURL格式");
-                    return null;
-                }
-                
-                // 获取MIME类型
-                String mimeTypePart = parts[0];
-                base64Content = parts[1];
-                
-                // 从MIME类型中提取文件扩展名
-                if (mimeTypePart.contains("image/jpeg") || mimeTypePart.contains("image/jpg")) {
-                    fileExtension = ".jpg";
-                } else if (mimeTypePart.contains("image/png")) {
-                    fileExtension = ".png";
-                } else {
-                    logger.warn("不支持的图片格式: {}", mimeTypePart);
-                    return null;
-                }
-            }
-            
-            // 解码Base64数据
-            byte[] decodedBytes = Base64.getDecoder().decode(base64Content);
-            
-            // 检查文件大小（限制为2MB）
-            if (decodedBytes.length > 2 * 1024 * 1024) {
-                logger.error("头像文件大小超过2MB限制");
-                return null;
-            }
-            
-            // 创建头像存储目录
-            String uploadDir = "./external/static/avatars/";
-            File dir = new File(uploadDir);
-            if (!dir.exists()) {
-                if(!dir.mkdirs()){
-                    logger.fatal("saveAvatarFromBase64(): 创建头像存储目录失败");
-                    return null;
-                }
-            }
-            
-            // 生成唯一文件名
-            String fileName = UUID.randomUUID() + fileExtension;
-            Path path = Paths.get(uploadDir);
-            Path filePath = path.resolve(fileName).normalize();
-            
-            // 验证文件路径是否在允许的目录内
-            Path allowedDir = path.toAbsolutePath().normalize();
-            if (!filePath.toAbsolutePath().normalize().startsWith(allowedDir)) {
-                logger.error("saveAvatarFromBase64(): 非法文件路径访问尝试");
-                return null;
-            }
-            
-            // 保存文件
-            Files.write(filePath, decodedBytes);
-            
-            // 返回头像访问路径
-            return "/avatars/" + fileName;
-        } catch (IllegalArgumentException e) {
-            logger.error("Base64解码失败: {}", e.getMessage());
-            return null;
-        } catch (IOException e) {
-            logger.error("保存头像文件失败: {}", e.getMessage());
-            return null;
         }
     }
 

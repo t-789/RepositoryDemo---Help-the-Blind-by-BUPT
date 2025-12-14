@@ -417,7 +417,6 @@ public class ForumController {
             }
             
             ForumRepository.addPictureToForum(forum_id, picturePaths);
-            logger.info("帖子{}成功保存{}张图片", forum_id, pictures.size());
             return ResponseEntity.ok("图片添加成功");
         } catch (SQLException e) {
             logger.error("添加图片失败: {}", e.getMessage());
